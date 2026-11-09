@@ -8,6 +8,7 @@
 #   - the API readiness check fails (database or Redis down)
 #   - the API logged errors (level >= 50) in the last 5 minutes above ERROR_THRESHOLD (default 5)
 #   - the newest encrypted backup is older than 26 hours
+#   - a filesystem holding the deployment or Docker data is fuller than DISK_THRESHOLD % (default 85)
 #   - maintenance mode is on (informational reminder)
 #   - when API_DOMAIN is set: the edge container, the public HTTPS readiness URL (with full
 #     certificate verification) and certificate expiry (< 14 days)
@@ -56,6 +57,14 @@ errors="$(dc logs --since 5m api worker 2>/dev/null | grep -cE '"level":(50|60)'
 if [ "${errors:-0}" -gt "${ERROR_THRESHOLD:-5}" ]; then
   add "$errors error-level log lines in the last 5 minutes (threshold ${ERROR_THRESHOLD:-5})"
 fi
+
+for path in . /var/lib/docker; do
+  [ -d "$path" ] || continue
+  used="$(df -P "$path" 2>/dev/null | awk 'NR==2 {gsub("%", "", $5); print $5}')"
+  if [ -n "$used" ] && [ "$used" -ge "${DISK_THRESHOLD:-85}" ]; then
+    add "disk $(df -P "$path" | awk 'NR==2 {print $6}') is ${used}% full (threshold ${DISK_THRESHOLD:-85}%)"
+  fi
+done
 
 newest="$(find "${BACKUP_DIR:-./backups}" -name 'db-*.dump.gpg' -mmin -1560 2>/dev/null | head -n 1)"
 [ -n "$newest" ] || add "no encrypted database backup newer than 26 hours in ${BACKUP_DIR:-./backups}"

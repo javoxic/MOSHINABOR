@@ -11,24 +11,35 @@ Status values used here and in [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md):
 | **Blocked by external credentials**  | Cannot proceed until the account or credential exists                              |
 | **Requires physical device testing** | Only a real phone can prove it                                                     |
 
+## Setup guides (onboarding package)
+
+| Guide                                                    | Covers                                                                                                 | Owner role                             |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| [VPS_SETUP_GUIDE.md](VPS_SETUP_GUIDE.md)                 | Server spec, Ubuntu, SSH hardening, firewall, Docker, DNS, HTTPS verification                          | Server operator                        |
+| [SMS_PROVIDER_SETUP.md](SMS_PROVIDER_SETUP.md)           | Eskiz account, sender, template approval, env mapping, safe test, delivery and failure checks          | SMS provider contact + server operator |
+| [MOBILE_PUSH_SETUP.md](MOBILE_PUSH_SETUP.md)             | Expo/EAS, Firebase (FCM v1), Apple (APNs, ad-hoc, TestFlight), pilot build commands, push verification | Mobile release administrator           |
+| [BACKUP_MONITORING_SETUP.md](BACKUP_MONITORING_SETUP.md) | Off-server encrypted backups, retention, restore proof, uptime monitors, alert webhook                 | Server operator                        |
+| [OPERATOR_HANDOVER.md](OPERATOR_HANDOVER.md)             | Who does what, what is handed back, dependency order                                                   | All, release owner                     |
+| [DEPLOYMENT_RUNBOOK.md](DEPLOYMENT_RUNBOOK.md)           | The deployment itself                                                                                  | Server operator                        |
+
 Secrets are never pasted into chat, tickets, commits or shell history. On the server they live only in `infrastructure/deployment/.env.staging` (mode 600) and `infrastructure/deployment/secrets/` (mode 600). Both are git-ignored, and `check-config.sh` checks their permissions and strength.
 
 ## Summary
 
-| #   | Dependency                             | Owner action                                             | Status                                                 |
-| --- | -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------ |
-| 1   | VPS / server and SSH access            | Rent the server, create the deploy user and SSH key      | Blocked by external credentials                        |
-| 2   | DNS records                            | Create A records for both hostnames                      | Blocked by external credentials                        |
-| 3   | HTTPS certificates                     | Automatic (Caddy + Let's Encrypt) once 1 and 2 exist     | Prepared but not verified                              |
-| 4   | Eskiz SMS                              | Account, sender approval, OTP template approval          | Blocked by external credentials                        |
-| 5   | Expo / EAS project                     | Create the project; set the project ID                   | Blocked by external credentials                        |
-| 6   | Firebase (Android push)                | Create the Android app for the pilot package; FCM V1 key | Blocked by external credentials                        |
-| 7   | Apple Developer (iOS push, TestFlight) | Membership, App ID, APNs key, testers                    | Blocked by external credentials                        |
-| 8   | Alert webhook                          | Create an incoming webhook                               | Blocked by external credentials                        |
-| 9   | External uptime monitoring             | Create the monitors                                      | Blocked by external credentials                        |
-| 10  | Off-server encrypted backup storage    | Bucket plus a write-only key                             | Blocked by external credentials                        |
-| 11  | Operator IP addresses                  | List fixed office or VPN egress IPs                      | Blocked by external credentials (operator information) |
-| 12  | Repository access from the server      | Read-only deploy key for `javoxic/MOSHINABOR`            | Blocked by external credentials                        |
+| #   | Dependency                             | Owner action                                                                      | Status                                                 |
+| --- | -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 1   | VPS / server and SSH access            | Rent the server, create the deploy user and SSH key ([guide](VPS_SETUP_GUIDE.md)) | Blocked by external credentials                        |
+| 2   | DNS records                            | Create A records for both hostnames                                               | Blocked by external credentials                        |
+| 3   | HTTPS certificates                     | Automatic (Caddy + Let's Encrypt) once 1 and 2 exist                              | Prepared but not verified                              |
+| 4   | Eskiz SMS                              | Account, sender approval, OTP template approval ([guide](SMS_PROVIDER_SETUP.md))  | Blocked by external credentials                        |
+| 5   | Expo / EAS project                     | Create the project; set the project ID ([guide](MOBILE_PUSH_SETUP.md))            | Blocked by external credentials                        |
+| 6   | Firebase (Android push)                | Create the Android app for the pilot package; FCM V1 key                          | Blocked by external credentials                        |
+| 7   | Apple Developer (iOS push, TestFlight) | Membership, App ID, APNs key, testers                                             | Blocked by external credentials                        |
+| 8   | Alert webhook                          | Create an incoming webhook                                                        | Blocked by external credentials                        |
+| 9   | External uptime monitoring             | Create the monitors                                                               | Blocked by external credentials                        |
+| 10  | Off-server encrypted backup storage    | Bucket, upload key, restore key ([guide](BACKUP_MONITORING_SETUP.md))             | Blocked by external credentials                        |
+| 11  | Operator IP addresses                  | List fixed office or VPN egress IPs                                               | Blocked by external credentials (operator information) |
+| 12  | Repository access from the server      | Read-only deploy key for `javoxic/MOSHINABOR`                                     | Blocked by external credentials                        |
 
 ## 1. VPS / server and SSH access
 
@@ -42,9 +53,11 @@ Secrets are never pasted into chat, tickets, commits or shell history. On the se
 | SSH         | Key-only login for a non-root `deploy` user in the `docker` group; `PasswordAuthentication no`; `PermitRootLogin no`                                                                                                          |
 | Separation  | A dedicated host for staging. Production must not run on the same host.                                                                                                                                                       |
 
-**Verify:** `ssh deploy@<ip> 'docker version && docker compose version'` works from an operator IP and fails from anywhere else.
+**Verify:** `ssh deploy@<ip> 'docker version && docker compose version'` works from an operator IP and fails from anywhere else. Step-by-step: [VPS_SETUP_GUIDE.md](VPS_SETUP_GUIDE.md).
 
 ## 2. DNS records
+
+Full guide: [VPS_SETUP_GUIDE.md §7–§8](VPS_SETUP_GUIDE.md).
 
 | Name                          | Type | Value           | TTL |
 | ----------------------------- | ---- | --------------- | --- |
@@ -63,6 +76,8 @@ Secrets are never pasted into chat, tickets, commits or shell history. On the se
 - **Status:** Prepared but not verified. In the sandbox, the verifier rejected the local-CA certificate (curl error 60) as intended. No public certificate has been issued.
 
 ## 4. Eskiz SMS
+
+Full guide: [SMS_PROVIDER_SETUP.md](SMS_PROVIDER_SETUP.md).
 
 | Item                                    | Where it goes                                          | Note                                                                                                                                                                                                                                                  |
 | --------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,6 +103,8 @@ Until the credentials are set, sign-in answers `503 SMS_NOT_CONFIGURED`. Nothing
 **Status:** Blocked by external credentials. The provider adapter is tested only against simulated HTTP responses.
 
 ## 5. Expo / EAS project
+
+Full guide, for §5–§7: [MOBILE_PUSH_SETUP.md](MOBILE_PUSH_SETUP.md).
 
 | Item                                    | Where it goes                                                                                                                                                                                                             |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -134,33 +151,38 @@ The app reads its project ID from `EAS_PROJECT_ID` (`app.config.ts` is dynamic, 
 
 - Create a Slack or Mattermost incoming webhook, or a Telegram relay that accepts `{"text": "…"}`.
 - Put it in `ALERT_WEBHOOK_URL`. It must be https; `check-config.sh` refuses to deploy without one.
-- **Verify:** stop the worker (`docker compose … stop worker`), run `./monitor.sh .env.staging`, confirm the message arrives, then start the worker again.
+- **Verify:** send the test alert, then run the outage drill (stop the worker, run `./monitor.sh`, start it again). The commands are in [BACKUP_MONITORING_SETUP.md §7](BACKUP_MONITORING_SETUP.md).
 - **Status:** delivery to a local receiver is Verified (sandbox drill: API outage and certificate alerts delivered as JSON). The real webhook is Blocked by external credentials.
 
 ## 9. External uptime monitoring
 
 `monitor.sh` runs on the server and cannot report a dead server. Create, for example in UptimeRobot, Better Stack or Healthchecks.io:
 
-| Monitor                   | Target                                                              | Interval | Expect           |
-| ------------------------- | ------------------------------------------------------------------- | -------- | ---------------- |
-| API liveness              | `https://staging.moshinabor.uz/v1/health/live`                      | 1–5 min  | HTTP 200         |
-| API readiness             | `https://staging.moshinabor.uz/v1/health/ready`                     | 5 min    | HTTP 200         |
-| Certificate               | `staging.moshinabor.uz:443`                                         | daily    | expiry > 14 days |
-| Cron heartbeat (optional) | append `&& curl -fsS <heartbeat-url>` to the `monitor.sh` cron line | 5 min    | ping received    |
+| Monitor        | Target                                                                   | Interval | Expect           |
+| -------------- | ------------------------------------------------------------------------ | -------- | ---------------- |
+| API liveness   | `https://staging.moshinabor.uz/v1/health/live`                           | 1–5 min  | HTTP 200         |
+| API readiness  | `https://staging.moshinabor.uz/v1/health/ready`                          | 5 min    | HTTP 200         |
+| Certificate    | `staging.moshinabor.uz:443`                                              | daily    | expiry > 14 days |
+| Cron heartbeat | appended to the `monitor.sh` cron line; only pinged when all checks pass | 5 min    | ping received    |
 
-Alerts go to the same channel as §8. **Status:** Blocked by external credentials.
+Alerts go to the same channel as §8. Full setup: [BACKUP_MONITORING_SETUP.md §6](BACKUP_MONITORING_SETUP.md). **Status:** Blocked by external credentials.
 
 ## 10. Off-server encrypted backup storage
 
 - Backups are already encrypted on the server with GnuPG AES-256 (`backups-staging/*.gpg`, mode 600). Only the encrypted files leave the host.
 - Create an S3-compatible bucket, e.g. Backblaze B2, Wasabi or a provider in Uzbekistan:
-  - versioning or object lock enabled;
-  - a key limited to **write/list on that bucket only**.
-- Configure `rclone` on the server (`rclone config`, stored in `~deploy/.config/rclone/rclone.conf`, mode 600) and add a cron job:
-  `30 3 * * * rclone copy /srv/moshinabor/infrastructure/deployment/backups-staging staging-backups:moshinabor-staging --include '*.gpg' --immutable`
+  - versioning on, with a lifecycle rule: current files 35 days, previous versions 7 days;
+  - an **upload key** (list + put on that bucket only, no delete) for the server;
+  - a **restore key** (list + get) kept only in the password manager.
+- Configure `rclone` on the server (`rclone config`, stored in `~deploy/.config/rclone/rclone.conf`, mode 600). Copy every 6 h with `rclone copy backups-staging staging-backups:<BUCKET_NAME>/staging --include '*.gpg' --immutable --s3-no-check-bucket`.
 - Store the **backup passphrase** (`secrets/staging_backup_passphrase`) in the team password manager, **not** in the bucket. Without it, the backups are unreadable.
-- **Verify:** monthly, download one file to another machine and restore it into a scratch project (see [ROLLBACK_PLAN.md §4](ROLLBACK_PLAN.md#4-restore-a-backup)).
-- **Status:** on-host encryption and restore are Verified (sandbox). The off-server copy is Blocked by external credentials.
+- **Verify:**
+  - weekly, automatically: `./verify-backup.sh .env.staging` restores the newest backup into a network-less throw-away container and alerts on failure;
+  - monthly: the same check with files downloaded from the bucket.
+- Full setup and retention policy: [BACKUP_MONITORING_SETUP.md](BACKUP_MONITORING_SETUP.md).
+- **Status:**
+  - on-host encryption, `verify-backup.sh`, and the rclone upload → download → restore loop (against a local S3 emulator with the server's rclone 1.60.1) are Verified;
+  - the real bucket and the key permission boundaries are Blocked by external credentials.
 
 ## 11. Operator IP addresses
 

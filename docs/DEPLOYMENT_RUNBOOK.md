@@ -16,33 +16,17 @@ Conventions:
 
 ## 1. Server bootstrap (once, as root)
 
+Follow [VPS_SETUP_GUIDE.md](VPS_SETUP_GUIDE.md) §2–§7: base system, the `deploy` user and keys, SSH hardening with the `00-moshinabor-hardening.conf` drop-in, firewall, Docker from the official repository, and DNS. Then create the application directory:
+
 ```sh
-apt-get update && apt-get -y upgrade
-apt-get install -y ca-certificates curl git openssl python3 ufw rclone
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
-  > /etc/apt/sources.list.d/docker.list
-apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-timedatectl set-timezone Asia/Tashkent       # host cron times; containers set TZ themselves
-
-adduser --disabled-password --gecos "" deploy && usermod -aG docker deploy
-install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
-# put the operators' public keys into /home/deploy/.ssh/authorized_keys (mode 600, owner deploy)
-
-# SSH: keys only, no root login
-sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/; s/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
-systemctl reload ssh
-
-# Firewall. Docker publishes only 80/443 (edge) and 127.0.0.1:8081 (admin nginx, loopback).
-ufw default deny incoming && ufw default allow outgoing
-ufw allow from <OPERATOR_IP> to any port 22 proto tcp     # repeat per operator IP
-ufw allow 80/tcp && ufw allow 443/tcp
-ufw --force enable
 mkdir -p /srv/moshinabor && chown deploy:deploy /srv/moshinabor
 ```
 
-Check: `ssh deploy@<server>` works from an operator IP, and `docker run --rm hello-world` works as `deploy`.
+Check:
+
+- `ssh deploy@<server>` works from an operator IP with a key;
+- password login is refused (`sshd -T` shows `passwordauthentication no`);
+- `docker run --rm hello-world` works as `deploy`.
 
 ## 2. Code at the exact release commit
 
@@ -135,15 +119,16 @@ Then, from an allowed IP, open `https://admin-staging.moshinabor.uz`, sign in, a
 
 ## 7. Operations wiring
 
-```sh
-$ crontab -e
-*/5 * * * * cd /srv/moshinabor/infrastructure/deployment && ./monitor.sh .env.staging >> monitor.log 2>&1
-30 3 * * * rclone copy /srv/moshinabor/infrastructure/deployment/backups-staging staging-backups:moshinabor-staging --include '*.gpg' --immutable >> /srv/moshinabor/infrastructure/deployment/offsite.log 2>&1
-```
+Follow [BACKUP_MONITORING_SETUP.md](BACKUP_MONITORING_SETUP.md):
 
-- Configure the rclone remote `staging-backups` first, with `rclone config`.
-- Configure the external uptime monitors (EXTERNAL_DEPENDENCIES §9).
-- Then run `./monitor.sh .env.staging` once. It must print `[staging] OK`.
+| Section | What                                                                                                              |
+| ------- | ----------------------------------------------------------------------------------------------------------------- |
+| §2      | Bucket with versioning and lifecycle, two keys, `rclone config`                                                   |
+| §5      | Crontab: `monitor.sh` every 5 min with heartbeat, off-server copy every 6 h, weekly `verify-backup.sh`; logrotate |
+| §6      | External uptime monitors                                                                                          |
+| §7      | Webhook test alert and outage drill                                                                               |
+
+Then run `./monitor.sh .env.staging` once. It must print `[staging] OK`.
 
 ## 8. Verification (required before calling staging "deployed")
 
@@ -181,7 +166,8 @@ The run must print `PILOT_ACCESS_ONLY`. If that phone receives an SMS, pilot acc
 **Backup and restore proof on the real host:**
 
 1. `docker compose --env-file .env.staging -p moshina-bor-staging exec -T backup sh /scripts/backup.sh once` writes `db-*.dump.gpg` and `storage-*.tar.gz.gpg` with mode 600.
-2. Run the restore drill in [ROLLBACK_PLAN.md §4](ROLLBACK_PLAN.md#4-restore-a-backup) into a scratch copy before inviting testers.
+2. `./verify-backup.sh .env.staging` must end with `BACKUP VERIFIED`. It restores into a network-less throw-away container; the live database is untouched.
+3. After the first off-server copy, repeat the check with files downloaded from the bucket ([BACKUP_MONITORING_SETUP.md §4](BACKUP_MONITORING_SETUP.md)).
 
 Record the results (date, commit, operator, outputs) in the release ticket. Only now is staging "deployed".
 

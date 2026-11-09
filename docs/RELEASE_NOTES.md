@@ -82,6 +82,14 @@ Everything below is implemented and covered by automated tests. It has **not yet
 - **EAS:** build numbers are managed remotely (`appVersionSource: remote`, `autoIncrement`); the unusable `development` profile was removed; the configuration is validated with `@expo/eas-json`.
 - **New documents:** [EXTERNAL_DEPENDENCIES.md](EXTERNAL_DEPENDENCIES.md), [DEPLOYMENT_RUNBOOK.md](DEPLOYMENT_RUNBOOK.md), [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md).
 
+## External-services onboarding package
+
+- **Guides:** [VPS_SETUP_GUIDE.md](VPS_SETUP_GUIDE.md), [SMS_PROVIDER_SETUP.md](SMS_PROVIDER_SETUP.md), [MOBILE_PUSH_SETUP.md](MOBILE_PUSH_SETUP.md), [BACKUP_MONITORING_SETUP.md](BACKUP_MONITORING_SETUP.md) and [OPERATOR_HANDOVER.md](OPERATOR_HANDOVER.md).
+- **New `verify-backup.sh`:** proves a backup restores, inside a network-less throw-away PostgreSQL container, and alerts on failure. It is intended for a weekly cron run and for files downloaded from the off-server bucket.
+- **`monitor.sh` checks disk usage** (`DISK_THRESHOLD`, default 85 %).
+- **`.gitignore` covers more credential files:** Firebase/Google service-account keys, `rclone.conf`, `*.pem`.
+- **SSH hardening uses a `00-` drop-in.** A `99-` file or edits to the main `sshd_config` lose to provider files such as `50-cloud-init.conf` that enable password login (demonstrated in the sandbox).
+
 ## Known limitations and open items
 
 - **Not verified with real services:**

@@ -6,6 +6,8 @@ Status values: **Verified** · **Prepared but not verified** · **Blocked by ext
 
 ## A. External prerequisites (owner: operator)
 
+Who does each item, and what they hand back: [OPERATOR_HANDOVER.md](OPERATOR_HANDOVER.md). How to do it: the guides listed in [EXTERNAL_DEPENDENCIES.md](EXTERNAL_DEPENDENCIES.md#setup-guides-onboarding-package).
+
 | #   | Requirement                                                                                        | Status                                       |
 | --- | -------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | A1  | VPS (2 vCPU / 4 GB / 40 GB, Ubuntu 24.04) with key-only SSH for `deploy`                           | Blocked by external credentials              |

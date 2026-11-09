@@ -158,6 +158,7 @@ Run `monitor.sh` every 5 minutes from cron:
 - the TLS certificate is valid for more than 14 more days;
 - error-level log lines in the last 5 minutes stay at or below `ERROR_THRESHOLD` (default 5);
 - a backup newer than 26 h exists;
+- the disks holding the deployment and Docker data are below `DISK_THRESHOLD` (default 85 %);
 - whether maintenance mode is switched on, as a reminder.
 
 On a problem it POSTs `{"text": …}` to `ALERT_WEBHOOK_URL` and exits 1. That format works with Slack and Mattermost incoming webhooks, and with a Telegram relay.

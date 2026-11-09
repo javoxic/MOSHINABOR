@@ -22,6 +22,12 @@ mobile/ios/
 *.keystore
 google-services.json
 GoogleService-Info.plist
+# Service-account keys and other credential files (docs/MOBILE_PUSH_SETUP.md, docs/BACKUP_MONITORING_SETUP.md)
+*-firebase-adminsdk-*.json
+*service-account*.json
+*serviceaccount*.json
+rclone.conf
+*.pem
 # Backend uploads
 backend/storage/
 # Playwright

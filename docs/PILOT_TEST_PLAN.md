@@ -140,6 +140,8 @@ Additional checks:
 
 ## 10. Builds (TASK 5)
 
+The complete, step-by-step setup (Expo, Firebase, Apple, TestFlight, push verification) is in [MOBILE_PUSH_SETUP.md](MOBILE_PUSH_SETUP.md). The summary below stays for reference.
+
 Pilot builds use the separate app identity, so they can sit next to a later production install:
 
 |                              | Pilot                                                                                         | Production                  |
@@ -153,7 +155,7 @@ One-time setup:
 
 ```sh
 cd mobile
-npm i -g eas-cli                         # ≥ 16
+npm i -g eas-cli@latest                  # validated with 16.32.0 and 27.5.0 (eas.json requires ≥ 16)
 eas login
 eas init                                 # creates the EAS project; app.config.ts is dynamic, so note the printed project ID
 export EAS_PROJECT_ID=<project-id>       # app.config.ts reads extra.eas.projectId from this variable; set it locally
