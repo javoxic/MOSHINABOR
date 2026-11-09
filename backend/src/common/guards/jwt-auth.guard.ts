@@ -10,8 +10,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 const ACTIVITY_UPDATE_INTERVAL_MS = 15 * 60_000;
 
 /**
- * Global guard for mobile-user routes. Admin routes (prefix /v1/admin) are skipped here and
- * protected by AdminAuthGuard instead.
+ * Global guard: every route requires a mobile-user token unless marked @Public(). Admin
+ * controllers are marked @Public() for this guard and protected by AdminGuard instead, so a
+ * controller that forgets its guard fails closed (requires a user token) rather than open.
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -26,7 +27,6 @@ export class JwtAuthGuard implements CanActivate {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
     if (isPublic) return true;
     const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
-    if (req.path.startsWith('/v1/admin/') || req.path === '/v1/admin') return true;
 
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) throw AppException.unauthorized();

@@ -39,6 +39,7 @@ export class AdminGuard implements CanActivate {
         secret: this.env.JWT_ADMIN_SECRET,
         issuer: 'moshina-bor',
         audience: 'moshina-bor-admin',
+        algorithms: ['HS256'],
       });
     } catch {
       throw AppException.unauthorized('Access token is invalid or expired');

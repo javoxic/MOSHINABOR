@@ -56,6 +56,7 @@ export class AdminAuthService {
     const token = await this.jwt.signAsync(payload, {
       secret: this.env.JWT_ADMIN_SECRET,
       expiresIn: this.env.ADMIN_ACCESS_TOKEN_TTL_SECONDS,
+      algorithm: 'HS256',
       issuer: 'moshina-bor',
       audience: 'moshina-bor-admin',
     });

@@ -20,9 +20,9 @@ export const envSchema = z
     PROCESS_ROLE: z.enum(['all', 'api', 'worker']).default('all'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
     TRUST_PROXY: z.coerce.number().int().min(0).default(1),
-    SWAGGER_ENABLED: bool.default('true'),
+    SWAGGER_ENABLED: bool.prefault('true'),
     API_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
-    CORS_ORIGINS: csv.default('http://localhost:5173'),
+    CORS_ORIGINS: csv.prefault('http://localhost:5173'),
 
     DATABASE_URL: z.string().min(1),
     REDIS_URL: z.string().min(1).default('redis://localhost:6379'),

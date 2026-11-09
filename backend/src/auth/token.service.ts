@@ -40,6 +40,7 @@ export class TokenService {
     const token = await this.jwt.signAsync(payload, {
       secret: this.env.JWT_ACCESS_SECRET,
       expiresIn: this.env.ACCESS_TOKEN_TTL_SECONDS,
+      algorithm: 'HS256',
       issuer: 'moshina-bor',
       audience: 'moshina-bor-mobile',
     });
@@ -52,6 +53,7 @@ export class TokenService {
         secret: this.env.JWT_ACCESS_SECRET,
         issuer: 'moshina-bor',
         audience: 'moshina-bor-mobile',
+        algorithms: ['HS256'],
       });
       if (payload.typ !== 'user' || !payload.sub || !payload.fam) throw new Error('bad payload');
       return payload;
