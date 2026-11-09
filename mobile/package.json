@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint app src",
     "test": "jest",
-    "export": "expo export --platform android --platform ios --output-dir dist",
+    "export": "expo export --clear --platform android --platform ios --output-dir dist",
     "build:android": "eas build --platform android --profile production",
-    "build:ios": "eas build --platform ios --profile production"
+    "build:ios": "eas build --platform ios --profile production",
+    "export:pilot": "APP_VARIANT=pilot expo export --clear --platform android --platform ios --output-dir dist-pilot",
+    "build:pilot": "eas build --platform all --profile pilot"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

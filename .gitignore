@@ -51,3 +51,4 @@ infrastructure/deployment/secrets/
 monitor.log
 .env.staging
 backups-staging/
+mobile/dist-pilot/
