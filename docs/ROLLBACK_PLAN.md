@@ -117,4 +117,6 @@ Native builds cannot be pulled back from devices:
 | `rollback.sh .env.staging 0cddc14 --restore-db <predeploy dump>`                 | ready on `0cddc14`; post-upgrade changes gone, pre-upgrade data present (as designed) |
 | History file                                                                     | `0cddc14`, `0cddc14-r2`, `0cddc14 rollback` entries recorded                          |
 
+Repeated after the release-engineering changes: deploy `drill-r5` (pre-deployment backup `db-20261109-204535`), write a marker via the admin API, `rollback.sh .env.staging drill-r4 --restore-db …`. The marker was gone, data from before the backup (the drill administrator) was intact, history recorded `drill-r4 rollback`, and `monitor.sh` was OK.
+
 Not drilled: a production rollback, and a rollback on a real public host.

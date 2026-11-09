@@ -2,6 +2,11 @@
 # Usage: cp .env.production.example .env && edit && docker compose up -d --build
 name: moshina-bor
 
+# Bounded container logs (json-file is what monitor.sh reads); keeps a VPS disk from filling up.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '20m', max-file: '5' }
+
 x-api-env: &api-env
   NODE_ENV: production
   DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
@@ -36,6 +41,7 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -52,6 +58,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging: *logging
     command:
       [
         'redis-server',
@@ -76,6 +83,7 @@ services:
     build: { context: ../.., dockerfile: infrastructure/docker/backend.Dockerfile }
     image: ${REGISTRY:-moshina-bor}/api:${APP_VERSION:?APP_VERSION must be set in .env}
     restart: unless-stopped
+    logging: *logging
     command: ['api']
     environment:
       <<: *api-env
@@ -90,6 +98,7 @@ services:
   worker:
     image: ${REGISTRY:-moshina-bor}/api:${APP_VERSION:?APP_VERSION must be set in .env}
     restart: unless-stopped
+    logging: *logging
     command: ['worker']
     environment:
       <<: *api-env
@@ -103,6 +112,7 @@ services:
     build: { context: ../.., dockerfile: infrastructure/docker/admin.Dockerfile }
     image: ${REGISTRY:-moshina-bor}/admin:${APP_VERSION:?APP_VERSION must be set in .env}
     restart: unless-stopped
+    logging: *logging
     environment:
       API_UPSTREAM: api:3000
       SERVER_NAME: ${ADMIN_SERVER_NAME:-_}
@@ -115,6 +125,7 @@ services:
     # Debian variant: ships GnuPG for archive encryption (same PostgreSQL major as the database).
     image: postgres:16-bookworm
     restart: unless-stopped
+    logging: *logging
     entrypoint: ['/bin/sh', '/scripts/backup.sh']
     environment:
       PGHOST: postgres
@@ -141,6 +152,7 @@ services:
     image: caddy:2.10-alpine
     profiles: [edge]
     restart: unless-stopped
+    logging: *logging
     environment:
       API_DOMAIN: ${API_DOMAIN}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN}

@@ -12,8 +12,9 @@ DUMP="${1:?path to db-*.dump or db-*.dump.gpg}"
 FILES="${2:-}"
 cd "$(dirname "$0")"
 ENV_FILE="${ENV_FILE:-.env}"
+case "$ENV_FILE" in /*|./*|../*) ;; *) ENV_FILE="./$ENV_FILE" ;; esac # relative paths are relative to this directory
 # shellcheck disable=SC1090
-. "./$ENV_FILE"
+. "$ENV_FILE"
 if [ "${DEPLOYMENT_ENVIRONMENT:-production}" = production ]; then PROJECT=moshina-bor; else PROJECT="moshina-bor-$DEPLOYMENT_ENVIRONMENT"; fi
 export APP_VERSION="${APP_VERSION:-$(tail -n 1 ".deploy-history-${DEPLOYMENT_ENVIRONMENT:-production}" 2>/dev/null | cut -d' ' -f2)}"
 dc() { docker compose --env-file "$ENV_FILE" -p "$PROJECT" "$@"; }

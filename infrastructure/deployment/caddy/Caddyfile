@@ -5,9 +5,8 @@
 {
 	email {$ACME_EMAIL}
 	{$CADDY_EXTRA_GLOBAL_OPTIONS}
-	servers {
-		trusted_proxies static private_ranges
-	}
+	# No trusted_proxies: Caddy is the first hop, so it always replaces client-supplied
+	# X-Forwarded-For with the real peer address (the API rate-limits OTP requests per IP).
 }
 
 (security_headers) {

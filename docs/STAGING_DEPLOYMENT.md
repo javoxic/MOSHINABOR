@@ -7,6 +7,8 @@ This document describes how to stand up the **staging** environment that the pil
 > - provisions a host and DNS;
 > - supplies the external credentials listed under [Required external credentials](#required-external-credentials);
 > - runs the steps below.
+>
+> The step-by-step procedure for the first real deployment is [DEPLOYMENT_RUNBOOK.md](DEPLOYMENT_RUNBOOK.md); the accounts it needs are listed in [EXTERNAL_DEPENDENCIES.md](EXTERNAL_DEPENDENCIES.md), and the go/no-go gates in [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md).
 
 Related documents:
 
@@ -59,8 +61,8 @@ cd infrastructure/deployment
 cp .env.staging.example .env.staging
 chmod 600 .env.staging
 for v in POSTGRES_PASSWORD REDIS_PASSWORD JWT_ACCESS_SECRET JWT_ADMIN_SECRET OTP_PEPPER SMS_CALLBACK_SECRET; do
-  printf '%s=%s\n' "$v" "$(openssl rand -base64 48 | tr -d '/+=\n')"
-done   # paste each line into .env.staging — never reuse a production value
+  sed -i "s|^$v=.*|$v=$(openssl rand -hex 32)|" .env.staging   # written straight into the file, never printed
+done
 mkdir -p secrets && openssl rand -base64 48 > secrets/staging_backup_passphrase && chmod 600 secrets/staging_backup_passphrase
 ```
 
@@ -86,7 +88,18 @@ The check exits 1 and the deployment is refused if any of these is true:
 - `HTTP_BIND` is not on loopback;
 - backup encryption is off, or the passphrase file is missing, short, or not chmod 600/400;
 - `SMS_PROVIDER=log` is set;
-- the admin IP allow-list is empty while a domain is set.
+- the admin IP allow-list is empty while a domain is set;
+- `ALERT_WEBHOOK_URL` is empty or not https;
+- with `API_DOMAIN` set (public edge):
+  - a hostname is not public (`localhost`, `.local`, `.test`, `example…`), or the two hostnames are the same;
+  - `API_PUBLIC_URL` is not exactly `https://<API_DOMAIN>`, or `CORS_ORIGINS` lacks `https://<ADMIN_DOMAIN>`;
+  - `ACME_EMAIL` is missing or an example address;
+  - `CADDY_EXTRA_GLOBAL_OPTIONS` selects a non-public CA (`local_certs`, `internal`, Let's Encrypt staging);
+  - the edge ports are not 80/443;
+  - an `ADMIN_ALLOWED_IPS` entry allows everyone (`0.0.0.0/0`), is broader than /16 (IPv6: /32), is a documentation example address (`203.0.113.x`, `198.51.100.x`, `192.0.2.x`; the template values), or overlaps Docker's `172.16.0.0/12`;
+- staging shares a secret or the database name with the production file given as the second argument.
+
+`SANDBOX_DRILL=1`, set in the shell (the env file cannot set it), turns the edge checks that only a real public host can meet into warnings. It exists only for local rehearsals; never use it on a real server. The checker has its own regression test: `sh infrastructure/deployment/tests/check-config.test.sh` (31 cases, also run in CI).
 
 If the Eskiz credentials are empty, the check prints a warning and sign-in answers `503 SMS_NOT_CONFIGURED`. It never pretends to send an SMS.
 
@@ -120,9 +133,9 @@ Do not reuse production administrator passwords.
 
 ## 6. Restrict the pilot to invited users
 
-Pilot mode must be switched on **before** the app builds are shared:
+Staging starts **invite-only**: with `DEPLOYMENT_ENVIRONMENT=staging`, `access.registrationMode` defaults to **allowlist** until an administrator explicitly changes it. A fresh public deployment therefore never accepts, or sends SMS to, numbers that were not invited. (Production keeps `open` as its default.)
 
-1. In the admin panel, open **Settings → General**, set `access.registrationMode` = **allowlist** and save. This requires `settings.manage`, which only Super Admin has by default.
+1. In the admin panel, check that **Settings → General** shows `access.registrationMode` = **allowlist**. Changing it requires `settings.manage`, which only Super Admin has by default, and the change is audited.
 2. Open **Settings → Pilot access** and add each pilot tester's phone number. Adding and removing numbers requires `users.manage`. Every change is written to the audit log as `access.invite` / `access.uninvite`, with the phone number masked.
 3. Uninvited numbers receive `403 PILOT_ACCESS_ONLY` **before** any SMS is sent, so no SMS cost is incurred. The app shows a localized explanation.
 4. Removing a number blocks new sign-ins. To end an existing session immediately, use **Users → Restrict** as well.
@@ -139,9 +152,11 @@ Run `monitor.sh` every 5 minutes from cron:
 
 `monitor.sh` checks:
 
-- every container is running and healthy (`starting` is accepted);
-- `/v1/health/ready` answers;
-- error-level log lines in the last 5 minutes stay at or below `ERROR_THRESHOLD` (default 20);
+- every container is running and healthy (`starting` is accepted), including `edge` when `API_DOMAIN` is set;
+- `/v1/health/ready` answers inside the stack;
+- `https://<API_DOMAIN>/v1/health/ready` answers through DNS, TLS (full certificate verification) and the edge;
+- the TLS certificate is valid for more than 14 more days;
+- error-level log lines in the last 5 minutes stay at or below `ERROR_THRESHOLD` (default 5);
 - a backup newer than 26 h exists;
 - whether maintenance mode is switched on, as a reminder.
 

@@ -25,7 +25,7 @@ Complete these steps in order. Items marked ⛔ block launch.
 - [ ] `./check-config.sh .env` prints `CONFIG OK`; for a staging host, `./check-config.sh .env.staging .env` also confirms that no secret is shared.
 - [ ] Before opening registration, decide between `access.registrationMode` = `open` and `allowlist`, and rehearse maintenance mode ([ROLLBACK_PLAN.md](ROLLBACK_PLAN.md)).
 - [ ] `cd infrastructure/deployment && cp .env.production.example .env`, then fill in **every** value:
-  - Unique secrets from `openssl rand -base64 48` for `JWT_ACCESS_SECRET`, `JWT_ADMIN_SECRET`, `OTP_PEPPER`, `SMS_CALLBACK_SECRET`, `POSTGRES_PASSWORD` and `REDIS_PASSWORD`. Startup refuses test or placeholder values.
+  - Unique secrets from `openssl rand -hex 32` (URL-safe; the database and Redis passwords are embedded in connection URLs) for `JWT_ACCESS_SECRET`, `JWT_ADMIN_SECRET`, `OTP_PEPPER`, `SMS_CALLBACK_SECRET`, `POSTGRES_PASSWORD` and `REDIS_PASSWORD`. Startup refuses test or placeholder values.
   - `API_PUBLIC_URL` must be the public HTTPS origin; Eskiz delivery callbacks use it.
   - `CORS_ORIGINS`: the admin origin.
   - `TRUST_PROXY`: the number of proxies in front of the API. With an edge proxy plus the admin nginx, that is `2`.
@@ -76,6 +76,6 @@ Complete these steps in order. Items marked ⛔ block launch.
 ## 5. Mobile release
 
 - [ ] Set `EXPO_PUBLIC_API_URL` in the `eas.json` production profile to your domain.
-- [ ] Bump `version`, `IOS_BUILD_NUMBER` and `ANDROID_VERSION_CODE`.
+- [ ] Bump `version` in `app.config.ts`. EAS increments the build numbers itself (`appVersionSource: remote`).
 - [ ] `eas build --platform all --profile production`, then `eas submit`.
 - [ ] Do the manual device test pass in REMAINING_RISKS.md before promoting the release from internal testing.

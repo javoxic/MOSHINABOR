@@ -43,6 +43,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Formatting
         run: pnpm exec prettier --check .
+      - name: Deployment config checker (refuses unsafe settings)
+        run: |
+          sh infrastructure/deployment/tests/check-config.test.sh
+          for f in infrastructure/deployment/*.sh; do sh -n "$f"; done
+          shellcheck -S warning infrastructure/deployment/*.sh infrastructure/deployment/tests/*.sh
       - name: Dependency audit (production)
         run: pnpm audit --prod --audit-level critical
       - name: Build shared packages

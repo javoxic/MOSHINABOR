@@ -29,7 +29,7 @@ Requirements: Linux host with Docker 24+ and Compose v2, a domain with DNS, a TL
 ```bash
 git clone <repo> moshina-bor && cd moshina-bor/infrastructure/deployment
 cp .env.production.example .env
-# Fill every value; generate secrets with: openssl rand -base64 48
+# Fill every value; generate secrets with: openssl rand -hex 32 (URL-safe)
 mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
 # ^ keep a copy of the passphrase in your password manager — encrypted backups need it to restore
 docker compose up -d --build
@@ -132,7 +132,7 @@ eas submit --platform ios --profile production      # uploads to App Store Conne
 Local build alternative (macOS + Xcode 16): `npx expo prebuild --platform ios && cd ios && pod install`,
 then archive in Xcode.
 
-Before each store release bump `version` in `app.config.ts` and `IOS_BUILD_NUMBER` / `ANDROID_VERSION_CODE`.
+Before each store release bump `version` in `app.config.ts`. Build numbers (`buildNumber` / `versionCode`) are managed remotely by EAS (`appVersionSource: remote`, `autoIncrement: true`), so every build gets a new one automatically.
 Verification available in CI without credentials: `npx expo export --platform android --platform ios`
 (produces the Hermes bundles that go into the binaries).
 

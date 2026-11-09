@@ -10,12 +10,13 @@
 set -eu
 cd "$(dirname "$0")"
 ENV_FILE="${1:?usage: deploy.sh <env-file> [version]}"
+case "$ENV_FILE" in /*|./*|../*) ;; *) ENV_FILE="./$ENV_FILE" ;; esac # relative paths are relative to this directory
 VERSION="${2:-$(git rev-parse --short HEAD 2>/dev/null || true)}"
 [ -n "$VERSION" ] || { echo "version required"; exit 1; }
 [ -f "$ENV_FILE" ] || { echo "missing $ENV_FILE"; exit 1; }
 
 # shellcheck disable=SC1090
-. "./$ENV_FILE"
+. "$ENV_FILE"
 : "${DEPLOYMENT_ENVIRONMENT:?DEPLOYMENT_ENVIRONMENT must be set in $ENV_FILE}"
 if [ "$DEPLOYMENT_ENVIRONMENT" = production ]; then PROJECT=moshina-bor; else PROJECT="moshina-bor-$DEPLOYMENT_ENVIRONMENT"; fi
 HISTORY=".deploy-history-${DEPLOYMENT_ENVIRONMENT}"

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   DEFAULT_SYSTEM_SETTINGS,
   REGISTRATION_MODES,
@@ -8,6 +8,8 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppException } from '../common/errors/app-exception';
+import { APP_ENV } from '../config/config.module';
+import type { Env } from '../config/env';
 
 type SettingValue = string | number | boolean;
 
@@ -17,13 +19,31 @@ export class SystemSettingsService {
   // Short TTL: maintenance mode and registration mode must take effect quickly on every API instance.
   private static readonly TTL_MS = 10_000;
 
-  constructor(private readonly prisma: PrismaService) {}
+  /**
+   * Defaults for settings that no administrator has set yet. Staging is a public, invite-only
+   * pilot: it starts in 'allowlist' mode so that a fresh deployment never accepts (and never sends
+   * SMS to) arbitrary phone numbers before an administrator has configured it. Opening it is an
+   * explicit, audited admin decision.
+   */
+  private readonly defaults: Record<string, SettingValue>;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(APP_ENV) env: Env,
+  ) {
+    this.defaults = {
+      ...DEFAULT_SYSTEM_SETTINGS,
+      ...(env.DEPLOYMENT_ENVIRONMENT === 'staging'
+        ? { 'access.registrationMode': 'allowlist' }
+        : {}),
+    };
+  }
 
   private async load(): Promise<Map<string, SettingValue>> {
     if (this.cache && Date.now() - this.cache.at < SystemSettingsService.TTL_MS)
       return this.cache.values;
     const rows = await this.prisma.systemSetting.findMany();
-    const values = new Map<string, SettingValue>(Object.entries(DEFAULT_SYSTEM_SETTINGS));
+    const values = new Map<string, SettingValue>(Object.entries(this.defaults));
     for (const row of rows) {
       if (row.key in DEFAULT_SYSTEM_SETTINGS) values.set(row.key, row.value as SettingValue);
     }
@@ -43,7 +63,7 @@ export class SystemSettingsService {
       const row = byKey.get(key);
       return {
         key,
-        value: (row?.value as SettingValue | undefined) ?? DEFAULT_SYSTEM_SETTINGS[key],
+        value: (row?.value as SettingValue | undefined) ?? this.defaults[key],
         updatedAt: row?.updatedAt.toISOString() ?? null,
       };
     });

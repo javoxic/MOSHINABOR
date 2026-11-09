@@ -10,9 +10,10 @@
 set -eu
 cd "$(dirname "$0")"
 ENV_FILE="${1:?usage: rollback.sh <env-file> <version> [--restore-db dump [files]]}"
+case "$ENV_FILE" in /*|./*|../*) ;; *) ENV_FILE="./$ENV_FILE" ;; esac # relative paths are relative to this directory
 VERSION="${2:?version to roll back to (see .deploy-history-*)}"
 # shellcheck disable=SC1090
-. "./$ENV_FILE"
+. "$ENV_FILE"
 : "${DEPLOYMENT_ENVIRONMENT:?DEPLOYMENT_ENVIRONMENT must be set}"
 if [ "$DEPLOYMENT_ENVIRONMENT" = production ]; then PROJECT=moshina-bor; else PROJECT="moshina-bor-$DEPLOYMENT_ENVIRONMENT"; fi
 HISTORY=".deploy-history-${DEPLOYMENT_ENVIRONMENT}"

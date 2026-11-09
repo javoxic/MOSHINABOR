@@ -59,6 +59,29 @@ Everything below is implemented and covered by automated tests. It has **not yet
 
 `20261109135740_pilot_access_allowlist` adds the table `access_allowlist`. The migration is **additive only**: the previous release keeps working on the new schema, so a code-only rollback is safe.
 
+## Release-engineering changes for the first public staging deployment
+
+- **Staging starts invite-only:** with `DEPLOYMENT_ENVIRONMENT=staging`, `access.registrationMode` defaults to `allowlist` until an administrator changes it.
+- **`check-config.sh` refuses more unsafe configurations:**
+  - non-public hostnames;
+  - the sandbox or staging certificate authorities;
+  - non-80/443 edge ports;
+  - an API URL or CORS origin that does not match the domains;
+  - missing ACME e-mail or alert webhook;
+  - admin IP entries that are open, too broad, documentation examples or inside Docker's range;
+  - database or Redis passwords that would break connection URLs (templates now recommend `openssl rand -hex 32`).
+
+  It has a 31-case regression test in CI with shellcheck. `SANDBOX_DRILL=1` (shell only) exists for local rehearsals.
+
+- **Secret in access logs fixed:** the admin nginx access log recorded the SMS delivery-callback secret from the query string. It now logs paths without query strings.
+- **Caddy no longer trusts forwarded headers from private networks.** The edge is the first hop, so clients cannot spoof the IP used for OTP rate limiting.
+- **Container logs are rotated** (20 MB × 5 per service).
+- **`monitor.sh`** also checks the edge container, the public HTTPS endpoint with full certificate verification, and certificate expiry (< 14 days).
+- **New `verify-public.sh`** for post-deployment verification from outside the server.
+- **All scripts accept absolute env-file paths.**
+- **EAS:** build numbers are managed remotely (`appVersionSource: remote`, `autoIncrement`); the unusable `development` profile was removed; the configuration is validated with `@expo/eas-json`.
+- **New documents:** [EXTERNAL_DEPENDENCIES.md](EXTERNAL_DEPENDENCIES.md), [DEPLOYMENT_RUNBOOK.md](DEPLOYMENT_RUNBOOK.md), [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md).
+
 ## Known limitations and open items
 
 - **Not verified with real services:**
