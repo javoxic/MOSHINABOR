@@ -102,7 +102,8 @@ services:
     networks: [internal]
 
   backup:
-    image: postgres:16-alpine
+    # Debian variant: ships GnuPG for archive encryption (same PostgreSQL major as the database).
+    image: postgres:16-bookworm
     restart: unless-stopped
     entrypoint: ['/bin/sh', '/scripts/backup.sh']
     environment:
@@ -112,7 +113,10 @@ services:
       PGDATABASE: ${POSTGRES_DB}
       BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      BACKUP_PASSPHRASE_FILE: /run/secrets/backup_passphrase
+      BACKUP_REQUIRE_ENCRYPTION: ${BACKUP_REQUIRE_ENCRYPTION:-true}
       TZ: Asia/Tashkent
+    secrets: [backup_passphrase]
     volumes:
       - ./backup.sh:/scripts/backup.sh:ro
       - ${BACKUP_DIR:-./backups}:/backups
@@ -120,6 +124,12 @@ services:
     depends_on:
       api: { condition: service_healthy }
     networks: [internal]
+
+secrets:
+  backup_passphrase:
+    # Create with: mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
+    # Store a copy in your password manager — encrypted backups cannot be restored without it.
+    file: ${BACKUP_PASSPHRASE_PATH:-./secrets/backup_passphrase}
 
 volumes:
   pgdata:

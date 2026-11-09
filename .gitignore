@@ -44,3 +44,4 @@ infrastructure/deployment/.env
 # Local build outputs
 mobile/dist/
 admin/dist/
+infrastructure/deployment/secrets/
