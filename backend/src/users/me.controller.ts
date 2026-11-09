@@ -31,7 +31,7 @@ export class MeController {
   }
 
   @Post('avatar')
-  @ApiOperation({ summary: 'Upload profile photo (JPEG/PNG/WebP/HEIC, max 8 MB)' })
+  @ApiOperation({ summary: 'Upload profile photo (JPEG/PNG/WebP, max 8 MB)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   @UseInterceptors(FileInterceptor('file', imageUploadOptions))

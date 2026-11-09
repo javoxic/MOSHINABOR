@@ -12,6 +12,7 @@ import { Card } from '@/components/Card';
 import { InlineNotice } from '@/components/States';
 import { AuthImage, ListRow, SectionHeader } from '@/components/Misc';
 import { Button } from '@/components/Button';
+import { toUploadableJpeg } from '@/utils/images';
 import { Api } from '@/api/endpoints';
 import { errorMessage } from '@/api/errors';
 import { useAuthStore } from '@/store/auth';
@@ -34,7 +35,7 @@ export default function ProfileScreen() {
       const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
       if (res.canceled || !res.assets[0]) return null;
       const a = res.assets[0];
-      return Api.uploadAvatar({ uri: a.uri, name: a.fileName ?? 'avatar.jpg', mimeType: a.mimeType ?? 'image/jpeg' });
+      return Api.uploadAvatar(await toUploadableJpeg(a));
     },
     onSuccess: async (u) => {
       if (u) await setUser(u);

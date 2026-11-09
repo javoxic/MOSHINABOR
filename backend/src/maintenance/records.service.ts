@@ -107,8 +107,17 @@ export class RecordsService {
   /** Creates a record inside an existing transaction (used by schedule completion too). */
   async createInTx(tx: Prisma.TransactionClient, userId: string, dto: CreateRecordDto): Promise<MaintenanceRecord> {
     assertNotFuture(dto.date, 'date');
+    // Serialize writes per vehicle so concurrent submissions (double taps, retries) cannot interleave.
+    await this.vehicles.lockOwned(userId, dto.vehicleId, tx);
     const vehicle = await this.vehicles.getOwned(userId, dto.vehicleId, tx);
     await this.types.getUsable(userId, dto.serviceTypeId, tx);
+    const duplicate = await tx.maintenanceRecord.findFirst({
+      where: { vehicleId: dto.vehicleId, serviceTypeId: dto.serviceTypeId, serviceDate: toDbDate(dto.date), mileage: dto.mileage },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw AppException.conflict('This service has already been recorded for this date and mileage');
+    }
     const schedule = await tx.maintenanceSchedule.findUnique({
       where: { vehicleId_serviceTypeId: { vehicleId: dto.vehicleId, serviceTypeId: dto.serviceTypeId } },
     });

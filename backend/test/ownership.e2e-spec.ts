@@ -175,3 +175,21 @@ describe('Input validation and uploads', () => {
     expect(await ctx.prisma.expense.count({ where: { vehicleId: vehicle.id } })).toBe(1);
   });
 });
+
+describe('HEIC uploads', () => {
+  let ctx: TestContext;
+  beforeAll(async () => {
+    ctx = await createTestApp();
+  });
+  afterAll(async () => {
+    await ctx.app.close();
+  });
+
+  it('rejects HEIC with an explicit, actionable error (server cannot decode HEVC)', async () => {
+    const user = await login(ctx);
+    const vehicle = await createVehicle(ctx, user);
+    const heicHeader = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypheic'), Buffer.alloc(64)]);
+    const r = await ctx.http().post(`/v1/vehicles/${vehicle.id}/images`).set(user.auth).attach('file', heicHeader, { filename: 'IMG_0001.HEIC', contentType: 'image/heic' }).expect(400);
+    expect(r.body).toMatchObject({ code: 'FILE_INVALID', message: 'HEIC images are not supported. Please upload JPEG, PNG or WebP.' });
+  });
+});

@@ -13,6 +13,7 @@ import { ErrorState, LoadingState } from '@/components/States';
 import { AuthImage, IconButton, ListRow, SectionHeader } from '@/components/Misc';
 import { ServiceIcon } from '@/components/domain';
 import { ServiceRecordFields } from '@/components/ServiceRecordFields';
+import { toUploadableJpeg } from '@/utils/images';
 import { Api, type CompleteBody } from '@/api/endpoints';
 import { qk } from '@/api/keys';
 import { errorMessage } from '@/api/errors';
@@ -51,7 +52,7 @@ export default function RecordDetailsScreen() {
       const res = source === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
       if (res.canceled || !res.assets[0]) return null;
       const a = res.assets[0];
-      return Api.addAttachment(id, { uri: a.uri, name: a.fileName ?? 'receipt.jpg', mimeType: a.mimeType ?? 'image/jpeg' });
+      return Api.addAttachment(id, await toUploadableJpeg(a));
     },
     onSuccess: () => invalidate(),
     onError,

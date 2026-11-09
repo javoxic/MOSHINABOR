@@ -32,8 +32,13 @@ export async function processImage(input: Buffer, maxDimension = 2048): Promise<
     throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'Image must be between 1 byte and 8 MB');
   }
   const type = sniffImageType(input);
+  if (type === 'heic') {
+    // The bundled libvips cannot decode HEVC-based HEIC. The mobile app converts photos to JPEG
+    // before upload; other clients must do the same.
+    throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'HEIC images are not supported. Please upload JPEG, PNG or WebP.');
+  }
   if (!type) {
-    throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'Only JPEG, PNG, WebP or HEIC images are allowed');
+    throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'Only JPEG, PNG or WebP images are allowed');
   }
   try {
     const { data, info } = await sharp(input, { limitInputPixels: 50_000_000 })
@@ -43,6 +48,6 @@ export async function processImage(input: Buffer, maxDimension = 2048): Promise<
       .toBuffer({ resolveWithObject: true });
     return { data, mimeType: 'image/jpeg', width: info.width, height: info.height };
   } catch {
-    throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'The image could not be processed. HEIC may not be supported — try JPEG.');
+    throw new AppException(ERROR_CODES.FILE_INVALID, HttpStatus.BAD_REQUEST, 'The image could not be processed. Please upload a valid JPEG, PNG or WebP image.');
   }
 }

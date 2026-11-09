@@ -76,6 +76,12 @@ export class VehiclesService {
     return v;
   }
 
+  /** Row-locks an owned vehicle until the surrounding transaction ends (404 if not owned). */
+  async lockOwned(userId: string, vehicleId: string, tx: Prisma.TransactionClient): Promise<void> {
+    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM vehicles WHERE id = ${vehicleId}::uuid AND user_id = ${userId}::uuid FOR UPDATE`;
+    if (rows.length === 0) throw AppException.notFound('Vehicle');
+  }
+
   async list(userId: string): Promise<VehicleView[]> {
     const [vehicles, primary] = await Promise.all([
       this.prisma.vehicle.findMany({ where: { userId }, include: { images: true }, orderBy: { createdAt: 'asc' } }),
@@ -92,12 +98,14 @@ export class VehiclesService {
   }
 
   async create(userId: string, dto: CreateVehicleDto): Promise<VehicleView> {
-    const count = await this.prisma.vehicle.count({ where: { userId } });
-    if (count >= MAX_VEHICLES_PER_USER) {
-      throw new AppException(ERROR_CODES.LIMIT_REACHED, HttpStatus.UNPROCESSABLE_ENTITY, `You can add up to ${MAX_VEHICLES_PER_USER} vehicles`);
-    }
     const now = new Date();
     const vehicle = await this.prisma.$transaction(async (tx) => {
+      // Lock the owner row so the limit check and insert are atomic across parallel requests.
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
+      const count = await tx.vehicle.count({ where: { userId } });
+      if (count >= MAX_VEHICLES_PER_USER) {
+        throw new AppException(ERROR_CODES.LIMIT_REACHED, HttpStatus.UNPROCESSABLE_ENTITY, `You can add up to ${MAX_VEHICLES_PER_USER} vehicles`);
+      }
       const v = await tx.vehicle.create({
         data: {
           userId,

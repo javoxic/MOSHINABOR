@@ -13,7 +13,8 @@ import { Button } from '@/components/Button';
 import { ErrorState, InlineNotice, LoadingState } from '@/components/States';
 import { AuthImage, IconButton, ListRow, SectionHeader } from '@/components/Misc';
 import { MileageSheet } from '@/components/domain';
-import { Api, type UploadFile } from '@/api/endpoints';
+import { toUploadableJpeg } from '@/utils/images';
+import { Api } from '@/api/endpoints';
 import { qk } from '@/api/keys';
 import { errorMessage } from '@/api/errors';
 import { useInvalidateData } from '@/hooks/useInvalidateData';
@@ -49,8 +50,7 @@ export default function VehicleDetailsScreen() {
       const res = source === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
       if (res.canceled || !res.assets[0]) return null;
       const a = res.assets[0];
-      const file: UploadFile = { uri: a.uri, name: a.fileName ?? 'vehicle.jpg', mimeType: a.mimeType ?? 'image/jpeg' };
-      return Api.addVehicleImage(id, file);
+      return Api.addVehicleImage(id, await toUploadableJpeg(a));
     },
     onSuccess: () => invalidate(),
     onError,

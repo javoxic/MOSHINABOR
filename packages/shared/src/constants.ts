@@ -158,7 +158,7 @@ export type SystemSettingKey = keyof typeof DEFAULT_SYSTEM_SETTINGS;
 
 export const UPLOAD_LIMITS = {
   maxImageBytes: 8 * 1024 * 1024,
-  allowedImageMime: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+  allowedImageMime: ['image/jpeg', 'image/png', 'image/webp'],
   maxImagesPerVehicle: 10,
   maxAttachmentsPerRecord: 10,
 };
