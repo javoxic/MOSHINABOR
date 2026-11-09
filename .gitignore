@@ -45,3 +45,7 @@ infrastructure/deployment/.env
 mobile/dist/
 admin/dist/
 infrastructure/deployment/secrets/
+.deploy-history-*
+monitor.log
+.env.staging
+backups-staging/

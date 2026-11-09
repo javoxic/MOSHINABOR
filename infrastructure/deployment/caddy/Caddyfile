@@ -1,0 +1,37 @@
+# MOSHINA BOR edge proxy: automatic HTTPS (Let's Encrypt) and admin isolation.
+#
+#   API_DOMAIN    public hostname used by the mobile app (only /v1, never /v1/admin)
+#   ADMIN_DOMAIN  admin dashboard hostname, reachable only from ADMIN_ALLOWED_IPS
+{
+	email {$ACME_EMAIL}
+	{$CADDY_EXTRA_GLOBAL_OPTIONS}
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+{$API_DOMAIN} {
+	import security_headers
+	# The admin API and API docs are never exposed on the public mobile hostname.
+	@internal path /v1/admin /v1/admin/* /docs /docs/*
+	respond @internal 404
+	@api path /v1/*
+	reverse_proxy @api admin:80
+	respond 404
+}
+
+{$ADMIN_DOMAIN} {
+	import security_headers
+	@outsider not remote_ip {$ADMIN_ALLOWED_IPS}
+	respond @outsider 403
+	reverse_proxy admin:80
+}

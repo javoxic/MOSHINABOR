@@ -1,6 +1,7 @@
 #!/bin/sh
 # Restore a database dump (and optionally uploaded files) into the running stack.
-# Usage: ./restore.sh backups/db-YYYYmmdd-HHMMSS.dump[.gpg] [backups/storage-YYYYmmdd-HHMMSS.tar.gz[.gpg]]
+# Usage: [ENV_FILE=.env.staging] ./restore.sh backups/db-YYYYmmdd-HHMMSS.dump[.gpg] [backups/storage-YYYYmmdd-HHMMSS.tar.gz[.gpg]]
+# ENV_FILE defaults to .env (production). The compose project is derived from DEPLOYMENT_ENVIRONMENT.
 # Encrypted (.gpg) archives are decrypted with the passphrase file at $BACKUP_PASSPHRASE_PATH
 # (default ./secrets/backup_passphrase).
 # WARNING: replaces the current database contents. Stop api/worker first:
@@ -10,7 +11,12 @@ umask 077
 DUMP="${1:?path to db-*.dump or db-*.dump.gpg}"
 FILES="${2:-}"
 cd "$(dirname "$0")"
-. ./.env
+ENV_FILE="${ENV_FILE:-.env}"
+# shellcheck disable=SC1090
+. "./$ENV_FILE"
+if [ "${DEPLOYMENT_ENVIRONMENT:-production}" = production ]; then PROJECT=moshina-bor; else PROJECT="moshina-bor-$DEPLOYMENT_ENVIRONMENT"; fi
+export APP_VERSION="${APP_VERSION:-$(tail -n 1 ".deploy-history-${DEPLOYMENT_ENVIRONMENT:-production}" 2>/dev/null | cut -d' ' -f2)}"
+dc() { docker compose --env-file "$ENV_FILE" -p "$PROJECT" "$@"; }
 PASS="${BACKUP_PASSPHRASE_PATH:-./secrets/backup_passphrase}"
 
 decrypted() { # prints a path to a plaintext copy of $1 (decrypting .gpg files into a temp dir)
@@ -26,11 +32,11 @@ decrypted() { # prints a path to a plaintext copy of $1 (decrypting .gpg files i
 }
 
 DB_PLAIN="$(decrypted "$DUMP")"
-docker compose exec -T postgres pg_restore --clean --if-exists --no-owner -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$DB_PLAIN"
+dc exec -T postgres pg_restore --clean --if-exists --no-owner -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$DB_PLAIN"
 if [ -n "$FILES" ]; then
   FILES_PLAIN="$(decrypted "$FILES")"
-  docker compose run --rm -T -v "$(realpath "$FILES_PLAIN"):/restore.tar.gz:ro" --entrypoint sh api -c 'rm -rf /app/storage/* && tar -xzf /restore.tar.gz -C /app/storage'
+  dc run --rm -T -v "$(realpath "$FILES_PLAIN"):/restore.tar.gz:ro" --entrypoint sh api -c 'rm -rf /app/storage/* && tar -xzf /restore.tar.gz -C /app/storage'
 fi
 case "$DUMP" in *.gpg) rm -f "$DB_PLAIN" && rmdir "$(dirname "$DB_PLAIN")" ;; esac
 case "$FILES" in *.gpg) rm -f "$FILES_PLAIN" && rmdir "$(dirname "$FILES_PLAIN")" ;; esac
-echo "Restore complete. Start the services again: docker compose up -d api worker"
+echo "Restore complete ($PROJECT). Start the services again (or let rollback.sh do it)."
