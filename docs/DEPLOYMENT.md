@@ -1,5 +1,7 @@
 # Deployment
 
+> For the staging environment and the controlled pilot, see [STAGING_DEPLOYMENT.md](STAGING_DEPLOYMENT.md). For production, the same scripts apply with `.env`: `./check-config.sh .env`, `./deploy.sh .env <version>` (encrypted pre-deployment backup plus a readiness gate), `./rollback.sh .env <version>` ([ROLLBACK_PLAN.md](ROLLBACK_PLAN.md)) and `./monitor.sh .env` from cron. The bundled Caddy edge (started by `deploy.sh` when `API_DOMAIN` is set) provides TLS, hides the admin API and `/docs` on the public API host, and IP-restricts the admin host.
+
 ## External services and credentials
 
 | Service                         | Needed for                             | What to obtain                                                                                                                                                               | Where to put it                                                            | Status in this repo                                                                                         |

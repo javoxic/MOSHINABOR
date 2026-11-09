@@ -63,6 +63,7 @@ log instead of being sent.
 - [Security](docs/SECURITY.md)
 - [Deployment, mobile builds & production checklist](docs/DEPLOYMENT.md)
 - [Testing report](docs/TESTING.md)
+- **Controlled pilot:** [staging deployment](docs/STAGING_DEPLOYMENT.md) · [pilot test plan](docs/PILOT_TEST_PLAN.md) · [release notes](docs/RELEASE_NOTES.md) · [rollback plan](docs/ROLLBACK_PLAN.md)
 - **Audit (2026-11-09):** [production audit](docs/PRODUCTION_AUDIT.md) · [security review](docs/SECURITY_REVIEW.md) · [remaining risks](docs/REMAINING_RISKS.md) · [launch checklist](docs/PRODUCTION_CHECKLIST.md)
 
 ## Common commands

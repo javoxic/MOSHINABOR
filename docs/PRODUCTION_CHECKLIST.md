@@ -21,6 +21,9 @@ Complete these steps in order. Items marked ⛔ block launch.
 
 - [ ] A Linux host with Docker 24+ and Compose v2. DNS for the admin/API hostname.
 - [ ] A TLS reverse proxy (Caddy, nginx or a load balancer) forwarding to `127.0.0.1:8080`. Redirect HTTP to HTTPS.
+- [ ] Or use the bundled Caddy edge: set `API_DOMAIN`, `ADMIN_DOMAIN`, `ADMIN_ALLOWED_IPS` and `ACME_EMAIL`, and deploy with `./deploy.sh .env <version>`, which enables the `edge` profile when `API_DOMAIN` is set.
+- [ ] `./check-config.sh .env` prints `CONFIG OK`; for a staging host, `./check-config.sh .env.staging .env` also confirms that no secret is shared.
+- [ ] Before opening registration, decide between `access.registrationMode` = `open` and `allowlist`, and rehearse maintenance mode ([ROLLBACK_PLAN.md](ROLLBACK_PLAN.md)).
 - [ ] `cd infrastructure/deployment && cp .env.production.example .env`, then fill in **every** value:
   - Unique secrets from `openssl rand -base64 48` for `JWT_ACCESS_SECRET`, `JWT_ADMIN_SECRET`, `OTP_PEPPER`, `SMS_CALLBACK_SECRET`, `POSTGRES_PASSWORD` and `REDIS_PASSWORD`. Startup refuses test or placeholder values.
   - `API_PUBLIC_URL` must be the public HTTPS origin; Eskiz delivery callbacks use it.

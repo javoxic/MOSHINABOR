@@ -19,6 +19,8 @@ VERSION="${2:-$(git rev-parse --short HEAD 2>/dev/null || true)}"
 : "${DEPLOYMENT_ENVIRONMENT:?DEPLOYMENT_ENVIRONMENT must be set in $ENV_FILE}"
 if [ "$DEPLOYMENT_ENVIRONMENT" = production ]; then PROJECT=moshina-bor; else PROJECT="moshina-bor-$DEPLOYMENT_ENVIRONMENT"; fi
 HISTORY=".deploy-history-${DEPLOYMENT_ENVIRONMENT}"
+# The bundled HTTPS edge (Caddy) runs whenever public hostnames are configured.
+if [ -n "${API_DOMAIN:-}" ]; then export COMPOSE_PROFILES="${COMPOSE_PROFILES:-edge}"; fi
 dc() { APP_VERSION="$VERSION" docker compose --env-file "$ENV_FILE" -p "$PROJECT" "$@"; }
 
 echo "==> Preflight ($PROJECT, version $VERSION)"
