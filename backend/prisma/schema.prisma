@@ -1,0 +1,599 @@
+// MOSHINA BOR — PostgreSQL schema
+// Money: NUMERIC(14,2) (UZS). Calendar dates: DATE. Instants: TIMESTAMPTZ(3).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Language {
+  uz
+  ru
+  en
+}
+
+enum UserStatus {
+  ACTIVE
+  RESTRICTED
+  DELETION_PENDING
+  DELETED
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  GAS_METHANE
+  GAS_PROPANE
+  HYBRID
+  ELECTRIC
+  PETROL_GAS
+}
+
+enum ExpenseCategory {
+  FUEL
+  MAINTENANCE
+  REPAIR
+  PARTS
+  OTHER
+}
+
+enum MileageSource {
+  MANUAL
+  SERVICE
+  EXPENSE
+  VEHICLE_CREATE
+  VEHICLE_EDIT
+}
+
+enum NotificationType {
+  MAINTENANCE_UPCOMING
+  MAINTENANCE_DUE
+  MAINTENANCE_OVERDUE
+  MILEAGE_UPDATE_REQUIRED
+  ANNOUNCEMENT
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  SKIPPED
+}
+
+enum PushPlatform {
+  ios
+  android
+}
+
+enum FilePurpose {
+  AVATAR
+  VEHICLE_IMAGE
+  RECORD_ATTACHMENT
+}
+
+enum SmsStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum AnnouncementStatus {
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+  FAILED
+}
+
+model User {
+  id                  String     @id @default(uuid()) @db.Uuid
+  phone               String     @unique @db.VarChar(20)
+  fullName            String?    @map("full_name") @db.VarChar(120)
+  avatarFileId        String?    @unique @map("avatar_file_id") @db.Uuid
+  status              UserStatus @default(ACTIVE)
+  restrictionReason   String?    @map("restriction_reason") @db.VarChar(500)
+  deletionRequestedAt DateTime?  @map("deletion_requested_at") @db.Timestamptz(3)
+  deletionScheduledAt DateTime?  @map("deletion_scheduled_at") @db.Timestamptz(3)
+  lastActiveAt        DateTime?  @map("last_active_at") @db.Timestamptz(3)
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  avatar        StoredFile?           @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  settings      UserSettings?
+  vehicles      Vehicle[]
+  serviceTypes  ServiceType[]
+  notifications Notification[]
+  pushDevices   PushDevice[]
+  refreshTokens RefreshToken[]
+  files         StoredFile[]          @relation("FileOwner")
+  schedules     MaintenanceSchedule[]
+  records       MaintenanceRecord[]
+  expenses      Expense[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([lastActiveAt])
+  @@map("users")
+}
+
+model UserSettings {
+  userId               String   @id @map("user_id") @db.Uuid
+  language             Language @default(uz)
+  pushEnabled          Boolean  @default(true) @map("push_enabled")
+  maintenanceReminders Boolean  @default(true) @map("maintenance_reminders")
+  mileageReminders     Boolean  @default(true) @map("mileage_reminders")
+  announcements        Boolean  @default(true)
+  primaryVehicleId     String?  @unique @map("primary_vehicle_id") @db.Uuid
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryVehicle Vehicle? @relation("PrimaryVehicle", fields: [primaryVehicleId], references: [id], onDelete: SetNull)
+
+  @@index([language])
+  @@map("user_settings")
+}
+
+model StoredFile {
+  id          String      @id @default(uuid()) @db.Uuid
+  ownerUserId String      @map("owner_user_id") @db.Uuid
+  purpose     FilePurpose
+  storageKey  String      @unique @map("storage_key") @db.VarChar(255)
+  mimeType    String      @map("mime_type") @db.VarChar(64)
+  sizeBytes   Int         @map("size_bytes")
+  width       Int?
+  height      Int?
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  owner        User                   @relation("FileOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  avatarOf     User?                  @relation("UserAvatar")
+  vehicleImage VehicleImage?
+  attachment   MaintenanceAttachment?
+
+  @@index([ownerUserId])
+  @@map("stored_files")
+}
+
+model Vehicle {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  brand              String    @db.VarChar(60)
+  model              String    @db.VarChar(60)
+  year               Int       @db.SmallInt
+  registrationNumber String    @map("registration_number") @db.VarChar(20)
+  vin                String?   @db.VarChar(17)
+  fuelType           FuelType  @map("fuel_type")
+  engineSize         Decimal?  @map("engine_size") @db.Decimal(4, 1)
+  currentMileage     Int       @map("current_mileage")
+  mileageUpdatedAt   DateTime? @map("mileage_updated_at") @db.Timestamptz(3)
+  notes              String?   @db.VarChar(1000)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryOf   UserSettings?         @relation("PrimaryVehicle")
+  images      VehicleImage[]
+  mileageLogs MileageLog[]
+  schedules   MaintenanceSchedule[]
+  records     MaintenanceRecord[]
+  expenses    Expense[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([registrationNumber])
+  @@map("vehicles")
+}
+
+model VehicleImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  vehicleId String   @map("vehicle_id") @db.Uuid
+  fileId    String   @unique @map("file_id") @db.Uuid
+  isCover   Boolean  @default(false) @map("is_cover")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  vehicle Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  file    StoredFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+  @@map("vehicle_images")
+}
+
+model MileageLog {
+  id         String        @id @default(uuid()) @db.Uuid
+  vehicleId  String        @map("vehicle_id") @db.Uuid
+  mileage    Int
+  source     MileageSource
+  recordedAt DateTime      @default(now()) @map("recorded_at") @db.Timestamptz(3)
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, recordedAt])
+  @@map("mileage_logs")
+}
+
+model ServiceType {
+  id                    String   @id @default(uuid()) @db.Uuid
+  code                  String   @db.VarChar(40)
+  ownerUserId           String?  @map("owner_user_id") @db.Uuid
+  nameUz                String   @map("name_uz") @db.VarChar(80)
+  nameRu                String   @map("name_ru") @db.VarChar(80)
+  nameEn                String   @map("name_en") @db.VarChar(80)
+  suggestedIntervalDays Int?     @map("suggested_interval_days")
+  suggestedIntervalKm   Int?     @map("suggested_interval_km")
+  icon                  String   @default("wrench") @db.VarChar(40)
+  isActive              Boolean  @default(true) @map("is_active")
+  sortOrder             Int      @default(100) @map("sort_order")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  owner     User?                 @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  schedules MaintenanceSchedule[]
+  records   MaintenanceRecord[]
+
+  // System types (owner NULL) have globally unique codes — enforced by a partial unique index in migration.
+  @@unique([ownerUserId, code])
+  @@index([isActive])
+  @@map("service_types")
+}
+
+model MaintenanceSchedule {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  vehicleId          String    @map("vehicle_id") @db.Uuid
+  serviceTypeId      String    @map("service_type_id") @db.Uuid
+  lastServiceDate    DateTime  @map("last_service_date") @db.Date
+  lastServiceMileage Int       @map("last_service_mileage")
+  intervalDays       Int?      @map("interval_days")
+  intervalKm         Int?      @map("interval_km")
+  nextDueDate        DateTime? @map("next_due_date") @db.Date
+  nextDueMileage     Int?      @map("next_due_mileage")
+  estimatedCost      Decimal?  @map("estimated_cost") @db.Decimal(14, 2)
+  notes              String?   @db.VarChar(1000)
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle             @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  serviceType ServiceType         @relation(fields: [serviceTypeId], references: [id], onDelete: Restrict)
+  records     MaintenanceRecord[]
+
+  @@unique([vehicleId, serviceTypeId])
+  @@index([userId])
+  @@index([isActive, nextDueDate])
+  @@map("maintenance_schedules")
+}
+
+model MaintenanceRecord {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  vehicleId       String   @map("vehicle_id") @db.Uuid
+  serviceTypeId   String   @map("service_type_id") @db.Uuid
+  scheduleId      String?  @map("schedule_id") @db.Uuid
+  serviceDate     DateTime @map("service_date") @db.Date
+  mileage         Int
+  partsUsed       String?  @map("parts_used") @db.VarChar(1000)
+  serviceProvider String?  @map("service_provider") @db.VarChar(160)
+  cost            Decimal? @db.Decimal(14, 2)
+  notes           String?  @db.VarChar(1000)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle                 @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  serviceType ServiceType             @relation(fields: [serviceTypeId], references: [id], onDelete: Restrict)
+  schedule    MaintenanceSchedule?    @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  attachments MaintenanceAttachment[]
+  expense     Expense?
+
+  @@index([userId, serviceDate])
+  @@index([vehicleId, serviceDate])
+  @@index([serviceTypeId])
+  @@index([createdAt])
+  @@map("maintenance_records")
+}
+
+model MaintenanceAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  recordId  String   @map("record_id") @db.Uuid
+  fileId    String   @unique @map("file_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  record MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  file   StoredFile        @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+  @@map("maintenance_attachments")
+}
+
+model Expense {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  vehicleId       String          @map("vehicle_id") @db.Uuid
+  category        ExpenseCategory
+  amount          Decimal         @db.Decimal(14, 2)
+  expenseDate     DateTime        @map("expense_date") @db.Date
+  mileage         Int?
+  liters          Decimal?        @db.Decimal(8, 2)
+  description     String?         @db.VarChar(500)
+  serviceRecordId String?         @unique @map("service_record_id") @db.Uuid
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  serviceRecord MaintenanceRecord? @relation(fields: [serviceRecordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expenseDate])
+  @@index([vehicleId, expenseDate])
+  @@index([category])
+  @@map("expenses")
+}
+
+model Notification {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  type           NotificationType
+  title          String           @db.VarChar(200)
+  body           String           @db.VarChar(1200)
+  data           Json?
+  dedupeKey      String?          @map("dedupe_key") @db.VarChar(200)
+  announcementId String?          @map("announcement_id") @db.Uuid
+  readAt         DateTime?        @map("read_at") @db.Timestamptz(3)
+  pushStatus     DeliveryStatus   @default(PENDING) @map("push_status")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  announcement Announcement?          @relation(fields: [announcementId], references: [id], onDelete: SetNull)
+  deliveries   NotificationDelivery[]
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([type, createdAt])
+  @@index([pushStatus])
+  @@map("notifications")
+}
+
+model NotificationDelivery {
+  id               String         @id @default(uuid()) @db.Uuid
+  notificationId   String         @map("notification_id") @db.Uuid
+  pushDeviceId     String?        @map("push_device_id") @db.Uuid
+  status           DeliveryStatus @default(PENDING)
+  ticketId         String?        @map("ticket_id") @db.VarChar(100)
+  error            String?        @db.VarChar(500)
+  sentAt           DateTime?      @map("sent_at") @db.Timestamptz(3)
+  receiptCheckedAt DateTime?      @map("receipt_checked_at") @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  pushDevice   PushDevice?  @relation(fields: [pushDeviceId], references: [id], onDelete: SetNull)
+
+  @@index([notificationId])
+  @@index([status, receiptCheckedAt])
+  @@index([ticketId])
+  @@map("notification_deliveries")
+}
+
+model PushDevice {
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  token      String       @unique @db.VarChar(255)
+  platform   PushPlatform
+  deviceName String?      @map("device_name") @db.VarChar(120)
+  appVersion String?      @map("app_version") @db.VarChar(40)
+  lastSeenAt DateTime     @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  disabledAt DateTime?    @map("disabled_at") @db.Timestamptz(3)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@index([userId, disabledAt])
+  @@map("push_devices")
+}
+
+model NotificationTemplate {
+  id        String           @id @default(uuid()) @db.Uuid
+  code      NotificationType @unique
+  titleUz   String           @map("title_uz") @db.VarChar(120)
+  titleRu   String           @map("title_ru") @db.VarChar(120)
+  titleEn   String           @map("title_en") @db.VarChar(120)
+  bodyUz    String           @map("body_uz") @db.VarChar(500)
+  bodyRu    String           @map("body_ru") @db.VarChar(500)
+  bodyEn    String           @map("body_en") @db.VarChar(500)
+  isActive  Boolean          @default(true) @map("is_active")
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("notification_templates")
+}
+
+model Announcement {
+  id             String             @id @default(uuid()) @db.Uuid
+  titleUz        String             @map("title_uz") @db.VarChar(120)
+  titleRu        String             @map("title_ru") @db.VarChar(120)
+  titleEn        String             @map("title_en") @db.VarChar(120)
+  bodyUz         String             @map("body_uz") @db.VarChar(1000)
+  bodyRu         String             @map("body_ru") @db.VarChar(1000)
+  bodyEn         String             @map("body_en") @db.VarChar(1000)
+  targetLanguage Language?          @map("target_language")
+  status         AnnouncementStatus @default(SCHEDULED)
+  scheduledAt    DateTime           @map("scheduled_at") @db.Timestamptz(3)
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(3)
+  recipientCount Int                @default(0) @map("recipient_count")
+  createdById    String?            @map("created_by_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  createdBy     AdminUser?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  notifications Notification[]
+
+  @@index([status, scheduledAt])
+  @@map("announcements")
+}
+
+model SmsVerification {
+  id                String    @id @default(uuid()) @db.Uuid
+  phone             String    @db.VarChar(20)
+  codeHash          String    @map("code_hash") @db.VarChar(128)
+  requestIp         String?   @map("request_ip") @db.VarChar(64)
+  attempts          Int       @default(0)
+  maxAttempts       Int       @default(5) @map("max_attempts")
+  expiresAt         DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt        DateTime? @map("consumed_at") @db.Timestamptz(3)
+  invalidatedAt     DateTime? @map("invalidated_at") @db.Timestamptz(3)
+  provider          String    @db.VarChar(32)
+  providerMessageId String?   @map("provider_message_id") @db.VarChar(100)
+  smsStatus         SmsStatus @default(PENDING) @map("sms_status")
+  smsError          String?   @map("sms_error") @db.VarChar(500)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([phone, createdAt])
+  @@index([requestIp, createdAt])
+  @@index([providerMessageId])
+  @@map("sms_verifications")
+}
+
+model RefreshToken {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  familyId      String    @map("family_id") @db.Uuid
+  tokenHash     String    @unique @map("token_hash") @db.VarChar(128)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedReason String?   @map("revoked_reason") @db.VarChar(40)
+  replacedById  String?   @map("replaced_by_id") @db.Uuid
+  userAgent     String?   @map("user_agent") @db.VarChar(255)
+  ip            String?   @db.VarChar(64)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt    DateTime? @map("last_used_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ---------------- Administration ----------------
+
+model AdminPermission {
+  code        String @id @db.VarChar(60)
+  description String @db.VarChar(240)
+
+  roles AdminRolePermission[]
+
+  @@map("admin_permissions")
+}
+
+model AdminRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String?  @unique @db.VarChar(40)
+  name        String   @unique @db.VarChar(60)
+  description String?  @db.VarChar(240)
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  permissions AdminRolePermission[]
+  admins      AdminUser[]
+
+  @@map("admin_roles")
+}
+
+model AdminRolePermission {
+  roleId         String @map("role_id") @db.Uuid
+  permissionCode String @map("permission_code") @db.VarChar(60)
+
+  role       AdminRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission AdminPermission @relation(fields: [permissionCode], references: [code], onDelete: Cascade)
+
+  @@id([roleId, permissionCode])
+  @@map("admin_role_permissions")
+}
+
+model AdminUser {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique @db.VarChar(254)
+  fullName          String    @map("full_name") @db.VarChar(120)
+  passwordHash      String    @map("password_hash") @db.VarChar(255)
+  roleId            String    @map("role_id") @db.Uuid
+  isActive          Boolean   @default(true) @map("is_active")
+  failedAttempts    Int       @default(0) @map("failed_attempts")
+  lockedUntil       DateTime? @map("locked_until") @db.Timestamptz(3)
+  lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz(3)
+  passwordChangedAt DateTime  @default(now()) @map("password_changed_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  role          AdminRole       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  sessions      AdminSession[]
+  auditLogs     AdminAuditLog[]
+  announcements Announcement[]
+
+  @@index([roleId])
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @map("admin_user_id") @db.Uuid
+  familyId    String    @map("family_id") @db.Uuid
+  tokenHash   String    @unique @map("token_hash") @db.VarChar(128)
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(3)
+  userAgent   String?   @map("user_agent") @db.VarChar(255)
+  ip          String?   @db.VarChar(64)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  admin AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, revokedAt])
+  @@index([familyId])
+  @@map("admin_sessions")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  adminUserId String?  @map("admin_user_id") @db.Uuid
+  action      String   @db.VarChar(80)
+  entityType  String?  @map("entity_type") @db.VarChar(60)
+  entityId    String?  @map("entity_id") @db.VarChar(64)
+  metadata    Json?
+  ip          String?  @db.VarChar(64)
+  userAgent   String?  @map("user_agent") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  admin AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}
+
+model SystemSetting {
+  key         String   @id @db.VarChar(80)
+  value       Json
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("system_settings")
+}
+
+model SmsProviderEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  provider  String   @db.VarChar(32)
+  success   Boolean
+  error     String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([provider, createdAt])
+  @@map("sms_provider_events")
+}

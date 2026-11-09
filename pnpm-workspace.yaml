@@ -1,0 +1,14 @@
+packages:
+  - backend
+  - admin
+  - mobile
+  - packages/*
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  - argon2
+  - sharp
+  - esbuild
+  - msgpackr-extract
+  - "@nestjs/core"

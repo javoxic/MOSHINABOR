@@ -1,0 +1,31 @@
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+!**/.env.example
+.DS_Store
+# Expo
+.expo/
+mobile/android/
+mobile/ios/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.keystore
+google-services.json
+GoogleService-Info.plist
+# Backend uploads
+backend/storage/
+# Playwright
+admin/test-results/
+admin/playwright-report/
+admin/blob-report/
+# Backups
+infrastructure/deployment/backups/
+*.tsbuildinfo
