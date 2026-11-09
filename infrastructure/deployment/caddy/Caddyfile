@@ -21,12 +21,14 @@
 
 {$API_DOMAIN} {
 	import security_headers
-	# The admin API and API docs are never exposed on the public mobile hostname.
-	@internal path /v1/admin /v1/admin/* /docs /docs/*
-	respond @internal 404
-	@api path /v1/*
-	reverse_proxy @api admin:80
-	respond 404
+	# 'route' keeps the written order (Caddy otherwise runs 'respond' before 'reverse_proxy').
+	route {
+		# The admin API and API docs are never exposed on the public mobile hostname.
+		@internal path /v1/admin /v1/admin/* /docs /docs/*
+		respond @internal 404
+		reverse_proxy /v1/* admin:80
+		respond 404
+	}
 }
 
 {$ADMIN_DOMAIN} {

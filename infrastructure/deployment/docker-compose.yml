@@ -135,12 +135,6 @@ services:
       api: { condition: service_healthy }
     networks: [internal]
 
-secrets:
-  backup_passphrase:
-    # Create with: mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
-    # Store a copy in your password manager — encrypted backups cannot be restored without it.
-    file: ${BACKUP_PASSPHRASE_PATH:-./secrets/backup_passphrase}
-
   # Optional HTTPS edge with admin isolation (enable with: --profile edge). Skip it if your own
   # load balancer terminates TLS; then apply the same rules there (see docs/STAGING_DEPLOYMENT.md).
   edge:
@@ -161,6 +155,12 @@ secrets:
     depends_on:
       admin: { condition: service_healthy }
     networks: [internal]
+
+secrets:
+  backup_passphrase:
+    # Create with: mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
+    # Store a copy in your password manager — encrypted backups cannot be restored without it.
+    file: ${BACKUP_PASSPHRASE_PATH:-./secrets/backup_passphrase}
 
 volumes:
   pgdata:

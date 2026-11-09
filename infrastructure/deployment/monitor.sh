@@ -24,7 +24,7 @@ add() { problems="${problems}- $1\n"; }
 for svc in postgres redis api worker admin backup; do
   state="$(dc ps --format '{{.Service}} {{.State}} {{.Health}}' 2>/dev/null | awk -v s="$svc" '$1==s {print $2" "$3}')"
   case "$state" in
-    "running healthy"|"running ") ;;
+    "running healthy"|"running "|"running starting") ;; # starting = within the healthcheck start period
     *) add "service $svc is '${state:-missing}'" ;;
   esac
 done

@@ -22,7 +22,7 @@ HISTORY=".deploy-history-${DEPLOYMENT_ENVIRONMENT}"
 dc() { APP_VERSION="$VERSION" docker compose --env-file "$ENV_FILE" -p "$PROJECT" "$@"; }
 
 echo "==> Preflight ($PROJECT, version $VERSION)"
-[ -s "${BACKUP_PASSPHRASE_PATH:-./secrets/backup_passphrase}" ] || { echo "backup passphrase file missing"; exit 1; }
+./check-config.sh "$ENV_FILE" || { echo "!! Fix the configuration before deploying."; exit 1; }
 dc config --quiet
 PREVIOUS="$(tail -n 1 "$HISTORY" 2>/dev/null | cut -d' ' -f2 || true)"
 
