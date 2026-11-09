@@ -10,7 +10,9 @@ export function apiBaseUrl(): string {
   const fromManifest = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
   const url = fromManifest || process.env.EXPO_PUBLIC_API_URL;
   if (!url) {
-    throw new Error('EXPO_PUBLIC_API_URL is not configured. Set it in mobile/.env (see .env.example).');
+    throw new Error(
+      'EXPO_PUBLIC_API_URL is not configured. Set it in mobile/.env (see .env.example).',
+    );
   }
   return url.replace(/\/+$/, '');
 }
