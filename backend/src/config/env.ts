@@ -61,6 +61,8 @@ export const envSchema = z
     EXPO_ACCESS_TOKEN: z.string().optional(),
 
     STORAGE_DIR: z.string().default('./storage'),
+    /** Per-IP limit for POST /v1/admin/auth/login (account lockout after 5 failures applies independently). */
+    RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE: z.coerce.number().int().min(1).max(1000).default(10),
     ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(90).default(30),
   })
   .superRefine((env, ctx) => {

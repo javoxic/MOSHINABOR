@@ -13,6 +13,8 @@ import { AdminLoginDto, ChangePasswordDto } from '../dto/admin.dto';
 import { AdminAuthService } from './admin-auth.service';
 
 export const ADMIN_REFRESH_COOKIE = 'mb_admin_rt';
+// Read at decoration time; the value is validated by the env schema at startup (default 10).
+const LOGIN_LIMIT = Number(process.env.RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE ?? 10) || 10;
 const CSRF_HEADER = 'x-requested-with';
 
 @ApiTags('Admin · Auth')
@@ -42,7 +44,7 @@ export class AdminAuthController {
 
   @Post('login')
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: LOGIN_LIMIT, ttl: 60_000 } })
   @ApiOperation({ summary: 'Administrator login (sets httpOnly refresh cookie)' })
   async login(@Body() dto: AdminLoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const ctx = { ip: clientIp(req), userAgent: userAgent(req) };
