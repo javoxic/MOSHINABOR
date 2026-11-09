@@ -19,15 +19,16 @@ const optionalText = (max: number) =>
     .max(max, { message: 'validation.tooLong' })
     .optional()
     .transform((v) => (v === '' ? undefined : v));
-const money = z.coerce
-  .number({ invalid_type_error: 'validation.number' })
-  .min(0, { message: 'validation.min' })
-  .max(100_000_000_000, { message: 'validation.max' });
-const mileage = z.coerce
-  .number({ invalid_type_error: 'validation.number' })
-  .int({ message: 'validation.integer' })
-  .min(0, { message: 'validation.min' })
-  .max(5_000_000, { message: 'validation.max' });
+/** Numeric field that accepts raw text from inputs; an empty string counts as missing (not 0). */
+const numeric = (inner: z.ZodNumber) =>
+  z
+    .union([z.string(), z.number()])
+    .transform((v) => (typeof v === 'string' ? (v.trim() === '' ? Number.NaN : Number(v.replace(/\s/g, '').replace(',', '.'))) : v))
+    .pipe(inner);
+const money = numeric(z.number({ invalid_type_error: 'validation.number' }).min(0, { message: 'validation.min' }).max(100_000_000_000, { message: 'validation.max' }));
+const mileage = numeric(
+  z.number({ invalid_type_error: 'validation.required' }).int({ message: 'validation.integer' }).min(0, { message: 'validation.min' }).max(5_000_000, { message: 'validation.max' }),
+);
 const optionalPositiveInt = (max: number) =>
   z.preprocess(
     (v) => (v === '' || v === null || v === undefined ? null : v),
@@ -60,11 +61,7 @@ const currentYear = new Date().getFullYear();
 export const vehicleSchema = z.object({
   brand: z.string().trim().min(1, { message: 'validation.required' }).max(60),
   model: z.string().trim().min(1, { message: 'validation.required' }).max(60),
-  year: z.coerce
-    .number({ invalid_type_error: 'validation.number' })
-    .int()
-    .min(1950, { message: 'validation.year' })
-    .max(currentYear + 1, { message: 'validation.year' }),
+  year: numeric(z.number({ invalid_type_error: 'validation.year' }).int({ message: 'validation.year' }).min(1950, { message: 'validation.year' }).max(currentYear + 1, { message: 'validation.year' })),
   registrationNumber: z
     .string()
     .trim()
@@ -132,7 +129,7 @@ export type ServiceRecordInput = z.infer<typeof serviceRecordSchema>;
 export const expenseSchema = z.object({
   vehicleId: z.string().uuid({ message: 'validation.required' }),
   category: z.enum(EXPENSE_CATEGORIES),
-  amount: money.refine((v) => v > 0, { message: 'validation.positive' }),
+  amount: numeric(z.number({ invalid_type_error: 'validation.required' }).positive({ message: 'validation.positive' }).max(100_000_000_000, { message: 'validation.max' })),
   date: isoDate,
   mileage: z.preprocess((v) => (v === '' || v == null ? null : v), mileage.nullable()),
   liters: z.preprocess(

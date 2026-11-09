@@ -55,3 +55,16 @@ describe('validation schemas', () => {
     expect(adminPasswordSchema.safeParse('Sufficiently1Strong').success).toBe(true);
   });
 });
+
+describe('numeric text input', () => {
+  it('treats empty strings as missing, not zero', () => {
+    const r = vehicleSchema.safeParse({ brand: 'A', model: 'B', year: '2020', registrationNumber: '01A123BC', fuelType: 'PETROL', engineSize: '', currentMileage: '' });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues.find((i) => i.path[0] === 'currentMileage')?.message).toBe('validation.required');
+  });
+  it('accepts spaced thousands', () => {
+    const r = expenseSchema.parse({ vehicleId: '3f9b2c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f', category: 'FUEL', amount: '150 000', date: '2026-01-01', mileage: '', liters: '' });
+    expect(r.amount).toBe(150000);
+    expect(r.mileage).toBeNull();
+  });
+});

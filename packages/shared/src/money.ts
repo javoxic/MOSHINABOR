@@ -13,13 +13,18 @@ export function formatUZS(amount: number | string, lang: Language = 'uz'): strin
   return `${grouped} ${SUFFIX[lang]}`;
 }
 
-export function formatNumber(n: number, lang: Language = 'uz'): string {
-  try {
-    return new Intl.NumberFormat(LOCALES[lang]).format(n);
-  } catch {
-    return String(n);
-  }
+/**
+ * Groups thousands with a non-breaking space (the convention in Uzbek and Russian, and unambiguous
+ * in English). Implemented without Intl so output is identical on every JS engine.
+ */
+export function formatNumber(n: number, _lang: Language = 'uz'): string {
+  if (!Number.isFinite(n)) return '0';
+  const [int, frac] = Math.abs(n).toString().split('.');
+  const grouped = (int ?? '0').replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+  return `${n < 0 ? '-' : ''}${grouped}${frac ? `.${frac}` : ''}`;
 }
+
+export const LOCALE_TAGS = LOCALES;
 
 /** Parses a decimal money string safely into a number of so'm with 2 decimals precision. */
 export function parseMoney(value: string | number): number {

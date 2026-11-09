@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171B22"/>
+      <stop offset="1" stop-color="#0B0D10"/>
+    </linearGradient>
+    <linearGradient id="arc" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#1F5FE0"/>
+      <stop offset="1" stop-color="#5AA2FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(512 560)">
+    <path d="M -300 0 A 300 300 0 1 1 300 0" fill="none" stroke="#232A35" stroke-width="56" stroke-linecap="round"/>
+    <path d="M -300 0 A 300 300 0 0 1 212 -212" fill="none" stroke="url(#arc)" stroke-width="56" stroke-linecap="round"/>
+    <g stroke="#3A4452" stroke-width="14" stroke-linecap="round">
+      <line x1="-230" y1="0" x2="-200" y2="0"/>
+      <line x1="0" y1="-230" x2="0" y2="-200"/>
+      <line x1="230" y1="0" x2="200" y2="0"/>
+      <line x1="-163" y1="-163" x2="-141" y2="-141"/>
+      <line x1="163" y1="-163" x2="141" y2="-141"/>
+    </g>
+    <line x1="0" y1="0" x2="150" y2="-150" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
+    <circle r="44" fill="#FFFFFF"/>
+    <circle r="18" fill="#2F7BFF"/>
+    <rect x="-150" y="96" width="300" height="70" rx="35" fill="#2F7BFF"/>
+    <text x="0" y="146" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="52" fill="#FFFFFF" letter-spacing="6">BOR</text>
+  </g>
+</svg>
