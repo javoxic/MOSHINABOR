@@ -1,7 +1,7 @@
 # Production readiness audit
 
 - **Date:** 2026-11-09
-- **Branch:** `audit/production-readiness`, based on `claude/jolly-mayer-wxbmkx` @ `3d1c974` (that branch is unchanged)
+- **Branch:** `audit/production-readiness`, based on `claude/jolly-mayer-wxbmkx` @ `12ea470` (that branch is unchanged)
 - **Scope:** the whole repository: backend, mobile, admin, shared packages, database, infrastructure, CI, docs and git history.
 - **Method:** I read the code and wrote tests that probe for defects. Every defect below was reproduced by a failing test or a command before it was fixed. Where possible, I re-verified the fix the same way.
 
@@ -74,7 +74,7 @@ Each fix has a regression test. The status column uses these terms:
 
 - **Committed secrets:** none. History contains no `.env`, keys, certificates, `google-services.json` or provider credentials.
 - **Test fixtures:** `backend/test/env-setup.ts` and `admin/playwright.config.ts` contain test-only secrets. They are used solely by tests and are now refused in production by L2.
-- **`dump.rdb` in history:** it remains in the history of commits `cd6cc56`…`3d1c974` on both branches. Its content is non-sensitive test data (see M1), so **no credential rotation is required**. Optionally, purge it from history with [`git filter-repo`](https://github.com/newren/git-filter-repo):
+- **`dump.rdb` in history:** it remains in the history of commits `cd6cc56`…`12ea470` on both branches. Its content is non-sensitive test data (see M1), so **no credential rotation is required**. Optionally, purge it from history with [`git filter-repo`](https://github.com/newren/git-filter-repo):
 
   ```bash
   git clone --mirror git@github.com:javoxic/MOSHINABOR.git && cd MOSHINABOR.git
