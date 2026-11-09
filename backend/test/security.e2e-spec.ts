@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { createTestApp, login, type TestContext } from './helpers';
+import { createTestApp, login, randomIp, type TestContext } from './helpers';
 
 interface Layer {
   route?: { path: string; methods: Record<string, boolean> };
@@ -106,5 +106,39 @@ describe('Security: route protection and token handling', () => {
     const res = await ctx.http().get('/v1/vehicles/not-a-uuid').set((await login(ctx)).auth).expect(400);
     expect(JSON.stringify(res.body)).not.toMatch(/stack|prisma|at \w+ \(/i);
     expect(res.body).toMatchObject({ statusCode: 400, code: 'VALIDATION_FAILED' });
+  });
+});
+
+describe('Security: every admin operation requires a permission', () => {
+  let ctx: TestContext;
+  beforeAll(async () => {
+    ctx = await createTestApp();
+  });
+  afterAll(async () => {
+    await ctx.app.close();
+  });
+
+  it('an admin holding only dashboard.view is refused on every other admin endpoint', async () => {
+    const { hashAdminPassword } = await import('../src/admin/auth/admin-auth.service');
+    const role = await ctx.prisma.adminRole.create({ data: { name: `Minimal ${Date.now()}`, permissions: { create: [{ permissionCode: 'dashboard.view' }] } } });
+    const admin = await ctx.prisma.adminUser.create({
+      data: { email: `minimal-${Date.now()}@moshinabor.test`, fullName: 'Minimal', roleId: role.id, passwordHash: await hashAdminPassword('Minimal-Passw0rd-123') },
+    });
+    const loginRes = await ctx.http().post('/v1/admin/auth/login').set('X-Forwarded-For', randomIp()).send({ email: admin.email, password: 'Minimal-Passw0rd-123' }).expect(200);
+    const auth = { Authorization: `Bearer ${loginRes.body.accessToken}` };
+
+    const allowed = new Set(['get /v1/admin/dashboard/stats', 'get /v1/admin/auth/me', 'post /v1/admin/auth/password']);
+    const adminRoutes = routes(ctx).filter((r) => r.path.startsWith('/v1/admin/') && !r.path.startsWith('/v1/admin/auth/login') && !r.path.startsWith('/v1/admin/auth/refresh') && !r.path.startsWith('/v1/admin/auth/logout'));
+    expect(adminRoutes.length).toBeGreaterThan(30);
+    const wrong: string[] = [];
+    for (const r of adminRoutes) {
+      const key = `${r.method} ${r.path}`;
+      if (allowed.has(key)) continue;
+      const path = r.path.replace(/:(\w+)/g, (_m, name: string) => (name === 'code' || name === 'key' ? 'MAINTENANCE_DUE' : '00000000-0000-4000-8000-000000000000'));
+      const res = await (ctx.http() as unknown as Record<string, (p: string) => { set: (h: object) => Promise<{ status: number }> }>)[r.method]!(path).set(auth);
+      if (res.status !== 403) wrong.push(`${key} → ${res.status}`);
+    }
+    expect(wrong).toEqual([]);
+    await ctx.http().get('/v1/admin/dashboard/stats').set(auth).expect(200);
   });
 });

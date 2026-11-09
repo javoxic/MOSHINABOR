@@ -82,6 +82,15 @@ describe('EskizSmsProvider', () => {
     await expect(p.send({ to: '+998901234567', text: 't', reference: 'r' })).rejects.toMatchObject({ retryable: true });
   });
 
+  it('treats provider timeouts as retryable failures (never as success)', async () => {
+    const fetchMock = jest.fn().mockImplementation((_url: string, init: RequestInit) => {
+      expect(init.signal).toBeDefined(); // every call carries a timeout signal
+      return Promise.reject(Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' }));
+    });
+    const p = new EskizSmsProvider(env, fakeRedis(), fetchMock as unknown as typeof fetch);
+    await expect(p.send({ to: '+998901234567', text: 't', reference: 'r' })).rejects.toMatchObject({ retryable: true, providerCode: 'NETWORK' });
+  });
+
   it('maps delivery report statuses', () => {
     expect(mapEskizStatus('DELIVRD')).toBe('DELIVERED');
     expect(mapEskizStatus('UNDELIV')).toBe('FAILED');
