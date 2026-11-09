@@ -29,3 +29,18 @@ admin/blob-report/
 # Backups
 infrastructure/deployment/backups/
 *.tsbuildinfo
+# Uploaded files written by tests and local runs
+backend/storage-test/
+backend/storage-e2e/
+**/storage/
+# Database/cache snapshots and dumps — never commit
+*.rdb
+*.aof
+appendonlydir/
+*.dump
+*.sql.gz
+*.bak
+infrastructure/deployment/.env
+# Local build outputs
+mobile/dist/
+admin/dist/
