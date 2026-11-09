@@ -28,6 +28,8 @@ Requirements: Linux host with Docker 24+ and Compose v2, a domain with DNS, a TL
 git clone <repo> moshina-bor && cd moshina-bor/infrastructure/deployment
 cp .env.production.example .env
 # Fill every value; generate secrets with: openssl rand -base64 48
+mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
+# ^ keep a copy of the passphrase in your password manager — encrypted backups need it to restore
 docker compose up -d --build
 docker compose ps                 # all services healthy
 docker compose exec -e ADMIN_EMAIL=you@company.uz -e ADMIN_NAME="Your Name" \
@@ -62,12 +64,13 @@ Migrations are forward-only; take a backup (`docker compose exec backup sh /scri
 
 ### Backups and restore
 
-Automatic daily backups land in `BACKUP_DIR` (database dump + uploaded files, 14-day retention).
+Automatic daily backups land in `BACKUP_DIR` as `db-*.dump.gpg` and `storage-*.tar.gz.gpg` (AES-256,
+mode 0600, 14-day retention). `restore.sh` decrypts them with `secrets/backup_passphrase`.
 Copy them off-host (e.g. `rclone`/`aws s3 sync` to versioned, encrypted object storage via cron).
 
 ```bash
 docker compose stop api worker
-./restore.sh backups/db-YYYYmmdd-HHMMSS.dump backups/storage-YYYYmmdd-HHMMSS.tar.gz
+./restore.sh backups/db-YYYYmmdd-HHMMSS.dump.gpg backups/storage-YYYYmmdd-HHMMSS.tar.gz.gpg
 docker compose up -d api worker
 ```
 
@@ -132,6 +135,8 @@ Verification available in CI without credentials: `npx expo export --platform an
 (produces the Hermes bundles that go into the binaries).
 
 ## Production configuration checklist
+
+The step-by-step launch checklist is [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md).
 
 - [ ] DNS + TLS for the admin/API hostname; HTTP redirected to HTTPS.
 - [ ] `.env` filled: unique `JWT_ACCESS_SECRET`, `JWT_ADMIN_SECRET`, `OTP_PEPPER`, `SMS_CALLBACK_SECRET`,

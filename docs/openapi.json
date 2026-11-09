@@ -422,7 +422,7 @@
             "bearer": []
           }
         ],
-        "summary": "Upload profile photo (JPEG/PNG/WebP/HEIC, max 8 MB)",
+        "summary": "Upload profile photo (JPEG/PNG/WebP, max 8 MB)",
         "tags": ["Profile"]
       },
       "delete": {

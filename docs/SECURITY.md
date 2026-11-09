@@ -1,5 +1,8 @@
 # Security
 
+> The independent audit of 2026-11-09 is in [SECURITY_REVIEW.md](SECURITY_REVIEW.md),
+> [PRODUCTION_AUDIT.md](PRODUCTION_AUDIT.md) and [REMAINING_RISKS.md](REMAINING_RISKS.md).
+
 ## Controls implemented
 
 ### Authentication
@@ -7,7 +10,7 @@
 - [x] SMS OTP: 6 digits from `crypto.randomInt`, stored as `HMAC-SHA256(OTP_PEPPER, phone:code)`, 5-minute
       expiry, max 5 attempts counted atomically (`UPDATE … WHERE attempts < max`), single use, previous codes
       invalidated on resend, constant-time comparison.
-- [x] Abuse protection: 60 s resend cooldown, 5/hour and 10/day per phone, 20/hour per IP, Redis lock per
+- [x] Abuse protection: 60 s resend cooldown, 5/hour and 10/day per phone, 60/hour per IP (carrier-NAT aware), Redis lock per
       phone against races, endpoint throttling (Redis-backed, shared by all API instances).
 - [x] No enumeration: identical OTP request responses for new and existing numbers.
 - [x] OTP never returned by the API nor logged (pino redaction of `*.code`, SMS text never logged; the
@@ -60,6 +63,7 @@
 ### Privacy
 
 - [x] Account deletion request with 30-day grace period, then hard delete of all user data and files.
+- [x] Backups encrypted with GnuPG AES-256 (fail-closed without a passphrase); mobile purges cached data and images on sign-out.
 - [x] Push disabled immediately on deletion request; data minimization in admin views.
 
 ## Accepted residual risks (dependency audit)

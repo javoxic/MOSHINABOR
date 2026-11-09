@@ -64,7 +64,8 @@ Creating new migrations during development: edit `schema.prisma`, then `npx pris
 
 ## Backups
 
-The `backup` Compose service runs `pg_dump --format=custom` (verified with `pg_restore --list`) plus a
-tarball of uploaded files every `BACKUP_INTERVAL_SECONDS` (default daily), keeping
+The `backup` Compose service (`postgres:16-bookworm`) runs `pg_dump --format=custom` (verified with
+`pg_restore --list`) plus a tarball of uploaded files, **encrypted with GnuPG AES-256** using the
+`backup_passphrase` Compose secret (refuses to run unencrypted when `BACKUP_REQUIRE_ENCRYPTION=true`), every `BACKUP_INTERVAL_SECONDS` (default daily), keeping
 `BACKUP_RETENTION_DAYS` (default 14). Restore: `infrastructure/deployment/restore.sh`. Copy backups
 off-host (e.g. object storage with versioning) — see DEPLOYMENT.md.

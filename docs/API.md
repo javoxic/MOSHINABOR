@@ -25,10 +25,11 @@ MILEAGE_DECREASE, FILE_INVALID, LIMIT_REACHED, ADMIN_LOCKED, INVALID_CREDENTIALS
   instants: ISO 8601.
 - **Idempotency:** authenticated `POST` requests accept `Idempotency-Key: <8–64 chars>`; a retry
   with the same key returns the original response (`Idempotent-Replay: true`) for 24 h.
-- **Uploads:** `multipart/form-data` field `file`; JPEG/PNG/WebP/HEIC up to 8 MB; re-encoded to JPEG,
+- **Uploads:** `multipart/form-data` field `file`; JPEG/PNG/WebP up to 8 MB (HEIC is rejected with `FILE_INVALID` — the mobile app converts photos to JPEG before upload); re-encoded to JPEG,
   metadata stripped. Files are served only to their owner via `GET /v1/files/{id}`.
-- **Rate limits:** 120 req/min/IP globally; OTP request 5/min, verify 10/min, refresh 30/min, admin
-  login `RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE` (10); plus OTP per-phone/per-IP hourly/daily limits.
+- **Rate limits:** `RATE_LIMIT_PER_MINUTE` (120) per authenticated user, or per IP for anonymous
+  requests (carrier NAT aware); OTP request 30/min/IP, verify 60/min/IP, refresh 600/min/IP, admin login
+  `RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE` (10); plus OTP limits per phone (5/h, 10/day) and per IP (60/h).
 
 ## Main flows
 
@@ -79,7 +80,7 @@ POST /v1/schedules/{id}/complete  {"date":"2026-06-01","mileage":50200,"cost":42
 | `GET`    | `/v1/me`                  | Current user profile and settings                                             | Bearer |
 | `PATCH`  | `/v1/me`                  | Update profile (full name)                                                    | Bearer |
 | `PUT`    | `/v1/me/settings`         | Update language and notification preferences                                  | Bearer |
-| `POST`   | `/v1/me/avatar`           | Upload profile photo (JPEG/PNG/WebP/HEIC, max 8 MB)                           | Bearer |
+| `POST`   | `/v1/me/avatar`           | Upload profile photo (JPEG/PNG/WebP, max 8 MB)                                | Bearer |
 | `DELETE` | `/v1/me/avatar`           | Remove profile photo                                                          | Bearer |
 | `POST`   | `/v1/me/deletion-request` | Request account deletion (data is permanently deleted after the grace period) | Bearer |
 | `DELETE` | `/v1/me/deletion-request` | Cancel a pending account deletion request                                     | Bearer |
