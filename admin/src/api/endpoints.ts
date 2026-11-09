@@ -150,6 +150,25 @@ export const AdminApi = {
         }
       >('/admin/settings/health')
       .then((r) => r.data),
+  allowlist: (q: Query) =>
+    http
+      .get<Paginated<{ id: string; phone: string; note: string | null; createdAt: string }>>(
+        '/admin/access/allowlist',
+        {
+          params: clean(q),
+        },
+      )
+      .then((r) => r.data),
+  invite: (phone: string, note: string) =>
+    http.post('/admin/access/allowlist', { phone, note: note || undefined }).then((r) => r.data),
+  uninvite: (id: string) => http.delete(`/admin/access/allowlist/${id}`),
+  appConfig: () =>
+    http
+      .get<{
+        deploymentEnvironment: 'production' | 'staging' | 'development';
+        maintenanceMode: boolean;
+      }>('/app-config')
+      .then((r) => r.data),
   changePassword: (currentPassword: string, newPassword: string) =>
     http.post('/admin/auth/password', { currentPassword, newPassword }),
 };

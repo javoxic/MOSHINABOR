@@ -68,6 +68,7 @@ export class HealthService {
       status: degraded ? ('degraded' as const) : ('ok' as const),
       version: VERSION,
       environment: this.env.NODE_ENV,
+      deploymentEnvironment: this.env.DEPLOYMENT_ENVIRONMENT,
       uptimeSeconds: Math.round(process.uptime()),
       database,
       redis,

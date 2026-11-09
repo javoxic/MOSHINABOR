@@ -25,6 +25,8 @@ import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { JobsModule } from './jobs/jobs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AccessModule } from './access/access.module';
+import { MaintenanceGuard } from './access/maintenance.guard';
 import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 
 @Module({})
@@ -98,6 +100,7 @@ export class AppModule {
         DashboardModule,
         HealthModule,
         AdminModule,
+        AccessModule,
       );
     }
     if (withJobs) imports.push(JobsModule);
@@ -108,6 +111,7 @@ export class AppModule {
       providers: withHttp
         ? [
             { provide: APP_GUARD, useClass: UserThrottlerGuard },
+            { provide: APP_GUARD, useClass: MaintenanceGuard },
             { provide: APP_GUARD, useClass: JwtAuthGuard },
             { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
           ]

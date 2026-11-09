@@ -77,6 +77,8 @@ export const envSchema = z
     STORAGE_DIR: z.string().default('./storage'),
     /** Per-IP limit for POST /v1/admin/auth/login (account lockout after 5 failures applies independently). */
     RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE: z.coerce.number().int().min(1).max(1000).default(10),
+    /** Label of this deployment (shown in admin and health). Required in production builds of staging. */
+    DEPLOYMENT_ENVIRONMENT: z.enum(['production', 'staging', 'development']).optional(),
     ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(90).default(30),
   })
   .superRefine((env, ctx) => {
@@ -130,7 +132,10 @@ export const envSchema = z
     }
   });
 
-export type Env = Omit<z.infer<typeof envSchema>, 'SWAGGER_ENABLED'> & { SWAGGER_ENABLED: boolean };
+export type Env = Omit<z.infer<typeof envSchema>, 'SWAGGER_ENABLED' | 'DEPLOYMENT_ENVIRONMENT'> & {
+  SWAGGER_ENABLED: boolean;
+  DEPLOYMENT_ENVIRONMENT: 'production' | 'staging' | 'development';
+};
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   // Empty values (e.g. "FOO=" in .env files or "${FOO:-}" in compose) mean "not set".
@@ -147,5 +152,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   return {
     ...parsed.data,
     SWAGGER_ENABLED: parsed.data.SWAGGER_ENABLED ?? parsed.data.NODE_ENV !== 'production',
+    DEPLOYMENT_ENVIRONMENT:
+      parsed.data.DEPLOYMENT_ENVIRONMENT ??
+      (parsed.data.NODE_ENV === 'production' ? 'production' : 'development'),
   };
 }

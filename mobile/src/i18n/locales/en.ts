@@ -66,6 +66,8 @@ const en = {
     NOT_FOUND: 'Not found. It may have been deleted.',
     REFRESH_TOKEN_INVALID: 'Your session has expired. Please sign in again.',
     REFRESH_TOKEN_REUSED: 'For your security, please sign in again.',
+    MAINTENANCE_MODE: 'MOSHINA BOR is temporarily down for maintenance. Please try again later.',
+    PILOT_ACCESS_ONLY: 'MOSHINA BOR is in a limited pilot. This number has not been invited yet.',
     UNAUTHORIZED: 'Please sign in again.',
     VALIDATION_FAILED: 'Please check the highlighted fields.',
     retryAfter: 'Please try again in {{seconds}} s.',

@@ -4,11 +4,15 @@ import type { ExpoConfig, ConfigContext } from 'expo/config';
  * Build-time configuration. Values come from environment variables (see mobile/.env.example)
  * so that no environment-specific URL or identifier is hard-coded.
  */
+// APP_VARIANT=pilot builds a separately installable app pointing at staging.
+const PILOT = process.env.APP_VARIANT === 'pilot';
+const ID_SUFFIX = PILOT ? '.pilot' : '';
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'MOSHINA BOR',
+  name: PILOT ? 'MOSHINA BOR Pilot' : 'MOSHINA BOR',
   slug: 'moshina-bor',
-  scheme: 'moshinabor',
+  scheme: PILOT ? 'moshinabor-pilot' : 'moshinabor',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -21,7 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     backgroundColor: '#0B0D10',
   },
   ios: {
-    bundleIdentifier: process.env.IOS_BUNDLE_IDENTIFIER ?? 'uz.moshinabor.app',
+    bundleIdentifier: `${process.env.IOS_BUNDLE_IDENTIFIER ?? 'uz.moshinabor.app'}${ID_SUFFIX}`,
     buildNumber: process.env.IOS_BUILD_NUMBER ?? '1',
     supportsTablet: false,
     infoPlist: {
@@ -33,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: process.env.ANDROID_PACKAGE ?? 'uz.moshinabor.app',
+    package: `${process.env.ANDROID_PACKAGE ?? 'uz.moshinabor.app'}${ID_SUFFIX}`,
     versionCode: Number(process.env.ANDROID_VERSION_CODE ?? 1),
     adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#0B0D10' },
     permissions: ['CAMERA', 'POST_NOTIFICATIONS'],

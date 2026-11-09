@@ -4,20 +4,33 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "EXPO_PUBLIC_API_URL": "https://api-staging.moshinabor.uz" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://staging.moshinabor.uz", "APP_VARIANT": "pilot" }
     },
-    "preview": {
+    "pilot": {
       "distribution": "internal",
+      "channel": "pilot",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://api-staging.moshinabor.uz" }
+      "ios": { "simulator": false },
+      "env": { "EXPO_PUBLIC_API_URL": "https://staging.moshinabor.uz", "APP_VARIANT": "pilot" }
+    },
+    "pilot-testflight": {
+      "distribution": "store",
+      "channel": "pilot",
+      "android": { "buildType": "app-bundle" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://staging.moshinabor.uz", "APP_VARIANT": "pilot" }
     },
     "production": {
       "autoIncrement": false,
+      "channel": "production",
       "android": { "buildType": "app-bundle" },
       "env": { "EXPO_PUBLIC_API_URL": "https://api.moshinabor.uz" }
     }
   },
   "submit": {
+    "pilot-testflight": {
+      "android": { "track": "internal" },
+      "ios": {}
+    },
     "production": {
       "android": { "track": "internal" },
       "ios": {}

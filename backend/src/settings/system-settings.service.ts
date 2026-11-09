@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   DEFAULT_SYSTEM_SETTINGS,
+  REGISTRATION_MODES,
   type ReminderThresholds,
   type SystemSettingKey,
 } from '@moshina/shared';
@@ -13,7 +14,8 @@ type SettingValue = string | number | boolean;
 @Injectable()
 export class SystemSettingsService {
   private cache: { at: number; values: Map<string, SettingValue> } | null = null;
-  private static readonly TTL_MS = 30_000;
+  // Short TTL: maintenance mode and registration mode must take effect quickly on every API instance.
+  private static readonly TTL_MS = 10_000;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -83,6 +85,13 @@ export class SystemSettingsService {
       throw AppException.validation(`${key} must be a string (max 200)`);
     if (key === 'app.defaultLanguage' && !['uz', 'ru', 'en'].includes(value))
       throw AppException.validation('Invalid language');
+    if (
+      key === 'access.registrationMode' &&
+      !(REGISTRATION_MODES as readonly string[]).includes(value)
+    )
+      throw AppException.validation(
+        `registrationMode must be one of ${REGISTRATION_MODES.join(', ')}`,
+      );
     return value.trim();
   }
 

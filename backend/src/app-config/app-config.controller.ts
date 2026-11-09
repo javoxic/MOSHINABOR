@@ -21,17 +21,25 @@ export class AppConfigController {
     supportEmail: string | null;
     defaultLanguage: string;
     accountDeletionGraceDays: number;
+    maintenanceMode: boolean;
+    maintenanceMessage: string | null;
+    deploymentEnvironment: string;
   }> {
-    const [phone, email, lang] = await Promise.all([
+    const [phone, email, lang, maintenance, maintenanceMessage] = await Promise.all([
       this.settings.get('app.supportPhone'),
       this.settings.get('app.supportEmail'),
       this.settings.get('app.defaultLanguage'),
+      this.settings.get('app.maintenanceMode'),
+      this.settings.get('app.maintenanceMessage'),
     ]);
     return {
       supportPhone: phone || null,
       supportEmail: email || null,
       defaultLanguage: lang,
       accountDeletionGraceDays: this.env.ACCOUNT_DELETION_GRACE_DAYS,
+      maintenanceMode: maintenance,
+      maintenanceMessage: maintenanceMessage || null,
+      deploymentEnvironment: this.env.DEPLOYMENT_ENVIRONMENT,
     };
   }
 }

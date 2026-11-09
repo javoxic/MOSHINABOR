@@ -97,3 +97,22 @@ describe('localization', () => {
     await i18n.changeLanguage('en');
   });
 });
+
+describe('pilot safety messages', () => {
+  it('shows the admin maintenance text, or a translated default, and the pilot-only message', async () => {
+    const t = i18n.t.bind(i18n);
+    await i18n.changeLanguage('uz');
+    expect(
+      errorMessage(
+        t,
+        new ApiError(503, 'MAINTENANCE_MODE', 'x', { customMessage: 'Soat 14:00 gacha' }),
+      ),
+    ).toBe('Soat 14:00 gacha');
+    expect(
+      errorMessage(t, new ApiError(503, 'MAINTENANCE_MODE', 'x', { customMessage: null })),
+    ).toContain('texnik ishlar');
+    await i18n.changeLanguage('ru');
+    expect(errorMessage(t, new ApiError(403, 'PILOT_ACCESS_ONLY', 'x'))).toContain('пилотном');
+    await i18n.changeLanguage('en');
+  });
+});

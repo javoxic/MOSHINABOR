@@ -126,3 +126,21 @@
     padding: 20px 16px 40px;
   }
 }
+
+.envBanner {
+  margin: -8px 0 20px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.maintBanner {
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 600;
+}

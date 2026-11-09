@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { AdminApi } from '@/api/endpoints';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import type { AdminPermission } from '@moshina/shared';
 import { useAdminAuth } from '@/store/auth';
@@ -87,9 +89,36 @@ export function Layout() {
         </div>
       </aside>
       <main className={s.main}>
+        <EnvironmentBanner />
         <Outlet />
       </main>
       <ToastHost />
     </div>
+  );
+}
+
+/** Makes it impossible to mistake staging for production, and shows when maintenance mode is on. */
+function EnvironmentBanner() {
+  const q = useQuery({
+    queryKey: ['app-config'],
+    queryFn: AdminApi.appConfig,
+    refetchInterval: 30_000,
+  });
+  if (!q.data) return null;
+  const env = q.data.deploymentEnvironment;
+  return (
+    <>
+      {env !== 'production' ? (
+        <div role="status" className={s.envBanner} data-env={env}>
+          {env.toUpperCase()} ENVIRONMENT — test data only. Never enter real customer data here.
+        </div>
+      ) : null}
+      {q.data.maintenanceMode ? (
+        <div role="alert" className={s.maintBanner}>
+          Maintenance mode is ON — mobile users are currently blocked. Turn it off in Settings →
+          System settings.
+        </div>
+      ) : null}
+    </>
   );
 }

@@ -68,6 +68,9 @@ const ru: Dictionary = {
     NOT_FOUND: 'Не найдено. Возможно, запись удалена.',
     REFRESH_TOKEN_INVALID: 'Сессия истекла. Войдите снова.',
     REFRESH_TOKEN_REUSED: 'В целях безопасности войдите снова.',
+    MAINTENANCE_MODE: 'MOSHINA BOR временно недоступен из-за технических работ. Попробуйте позже.',
+    PILOT_ACCESS_ONLY:
+      'MOSHINA BOR работает в ограниченном пилотном режиме. Этот номер ещё не приглашён.',
     UNAUTHORIZED: 'Войдите снова.',
     VALIDATION_FAILED: 'Проверьте выделенные поля.',
     retryAfter: 'Попробуйте через {{seconds}} с.',

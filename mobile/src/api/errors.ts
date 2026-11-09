@@ -67,6 +67,8 @@ const KNOWN = new Set([
   'REFRESH_TOKEN_INVALID',
   'REFRESH_TOKEN_REUSED',
   'UNAUTHORIZED',
+  'MAINTENANCE_MODE',
+  'PILOT_ACCESS_ONLY',
 ]);
 
 /** Human-readable, translated message for any error. */
@@ -82,6 +84,10 @@ export function errorMessage(t: TFunction, err: unknown): string {
   }
   if ((e.code === 'OTP_RESEND_COOLDOWN' || e.code === 'RATE_LIMITED') && e.retryAfterSeconds) {
     return t('errors.retryAfter', { seconds: e.retryAfterSeconds });
+  }
+  if (e.code === 'MAINTENANCE_MODE') {
+    const custom = (e.details as { customMessage?: string | null } | undefined)?.customMessage;
+    return custom || t('errors.MAINTENANCE_MODE');
   }
   if (KNOWN.has(e.code)) return t(`errors.${e.code}`);
   if (e.code === 'VALIDATION_FAILED') return t('errors.VALIDATION_FAILED');

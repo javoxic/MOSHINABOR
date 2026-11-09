@@ -6,6 +6,7 @@ import type { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS } from '../redis/redis.module';
 import { SmsService } from '../sms/sms.service';
+import { AccessService } from '../access/access.service';
 import { AppException } from '../common/errors/app-exception';
 import { generateNumericCode, hmacSha256, safeEqualHex } from '../common/utils/crypto';
 
@@ -23,6 +24,7 @@ export class OtpService {
     @Inject(REDIS) private readonly redis: Redis,
     private readonly prisma: PrismaService,
     private readonly sms: SmsService,
+    private readonly access: AccessService,
   ) {}
 
   normalize(raw: string): string {
@@ -63,6 +65,8 @@ export class OtpService {
     now = new Date(),
   ): Promise<OtpRequestResult> {
     const phone = this.normalize(rawPhone);
+    // Pilot gate before any SMS is sent (no SMS cost for uninvited numbers).
+    await this.access.assertMaySignIn(phone);
 
     // Serialize concurrent requests for the same phone so limits cannot be raced.
     const lockKey = `otp:lock:${phone}`;

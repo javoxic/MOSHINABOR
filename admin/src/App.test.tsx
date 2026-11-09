@@ -69,6 +69,10 @@ describe('login', () => {
 describe('role-based navigation', () => {
   beforeEach(() => {
     useAdminAuth.setState({ status: 'authenticated', accessToken: 't', admin: analyst });
+    vi.spyOn(AdminApi, 'appConfig').mockResolvedValue({
+      deploymentEnvironment: 'staging',
+      maintenanceMode: true,
+    });
     vi.spyOn(AdminApi, 'dashboard').mockResolvedValue({
       totals: {
         users: 12,
@@ -95,6 +99,12 @@ describe('role-based navigation', () => {
     expect(nav).not.toHaveTextContent('Administrators');
     expect(nav).not.toHaveTextContent('Audit log');
     expect(nav).not.toHaveTextContent('Settings');
+  });
+
+  it('shows the staging and maintenance banners so environments cannot be confused', async () => {
+    renderAt('/');
+    expect(await screen.findByText(/STAGING ENVIRONMENT/)).toBeInTheDocument();
+    expect(screen.getByText(/Maintenance mode is ON/)).toBeInTheDocument();
   });
 
   it('blocks direct navigation to forbidden pages', async () => {

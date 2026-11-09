@@ -282,6 +282,12 @@ export interface SystemSettingsShape {
   'app.defaultLanguage': string;
   'app.supportPhone': string;
   'app.supportEmail': string;
+  /** Emergency switch: the mobile API answers 503 MAINTENANCE_MODE; admin and health keep working. */
+  'app.maintenanceMode': boolean;
+  /** Optional text shown to users during maintenance (any language; max 200 chars). */
+  'app.maintenanceMessage': string;
+  /** 'open' = anyone can register; 'allowlist' = only invited phone numbers (pilot). */
+  'access.registrationMode': string;
 }
 
 export const DEFAULT_SYSTEM_SETTINGS: SystemSettingsShape = {
@@ -295,7 +301,13 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettingsShape = {
   'app.defaultLanguage': 'uz',
   'app.supportPhone': '',
   'app.supportEmail': '',
+  'app.maintenanceMode': false,
+  'app.maintenanceMessage': '',
+  'access.registrationMode': 'open',
 };
+
+export const REGISTRATION_MODES = ['open', 'allowlist'] as const;
+export type RegistrationMode = (typeof REGISTRATION_MODES)[number];
 export type SystemSettingKey = keyof typeof DEFAULT_SYSTEM_SETTINGS;
 
 export const UPLOAD_LIMITS = {
@@ -329,5 +341,7 @@ export const ERROR_CODES = {
   ADMIN_LOCKED: 'ADMIN_LOCKED',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  MAINTENANCE_MODE: 'MAINTENANCE_MODE',
+  PILOT_ACCESS_ONLY: 'PILOT_ACCESS_ONLY',
 } as const;
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

@@ -69,6 +69,10 @@ const uz: Dictionary = {
     NOT_FOUND: 'Topilmadi. Ehtimol, oʻchirilgan.',
     REFRESH_TOKEN_INVALID: 'Sessiya muddati tugadi. Qaytadan kiring.',
     REFRESH_TOKEN_REUSED: 'Xavfsizlik uchun qaytadan kiring.',
+    MAINTENANCE_MODE:
+      'MOSHINA BOR vaqtincha texnik ishlar sababli ishlamayapti. Keyinroq urinib koʻring.',
+    PILOT_ACCESS_ONLY:
+      'MOSHINA BOR hozircha cheklangan sinov rejimida. Bu raqam hali taklif qilinmagan.',
     UNAUTHORIZED: 'Qaytadan kiring.',
     VALIDATION_FAILED: 'Belgilangan maydonlarni tekshiring.',
     retryAfter: '{{seconds}} soniyadan soʻng urinib koʻring.',
