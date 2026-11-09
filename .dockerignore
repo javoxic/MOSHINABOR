@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.expo
+**/coverage
+**/storage
+**/storage-test
+**/storage-e2e
+**/.env
+**/.env.*
+!**/.env.example
+admin/test-results
+admin/playwright-report
+mobile/android
+mobile/ios
+.git
+infrastructure/deployment/backups

@@ -1,0 +1,4028 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/files/{id}": {
+      "get": {
+        "operationId": "FilesController_download_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary image content"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download a file you own (avatar, vehicle image or receipt)",
+        "tags": [
+          "Files"
+        ]
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "unreadOnly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Notification history (with unread count)",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_readAll_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark all notifications as read",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationsController_read_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a notification as read",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/notifications/{id}": {
+      "delete": {
+        "operationId": "NotificationsController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a notification",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/push-devices": {
+      "post": {
+        "operationId": "PushDevicesController_register_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPushDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register or refresh this device’s Expo push token",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/push-devices/unregister": {
+      "post": {
+        "operationId": "PushDevicesController_unregister_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnregisterPushDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stop push notifications on this device",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/v1/auth/otp/request": {
+      "post": {
+        "description": "Normalizes the phone to E.164 and sends a 6-digit code through the configured SMS provider. The response never contains the code and is identical for new and existing accounts.",
+        "operationId": "AuthController_request_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "429": {
+            "description": "Resend cooldown or per-phone/per-IP limit reached (details.retryAfterSeconds)"
+          }
+        },
+        "summary": "Send an SMS verification code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/otp/verify": {
+      "post": {
+        "operationId": "AuthController_verify_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Verify the SMS code and obtain access/refresh tokens (creates the account on first sign-in)",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Rotate the refresh token. Reusing an old refresh token revokes the whole session.",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke the current session and unregister the push token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke all sessions of the current user",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "MeController_get_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Current user profile and settings",
+        "tags": [
+          "Profile"
+        ]
+      },
+      "patch": {
+        "operationId": "MeController_update_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update profile (full name)",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/me/settings": {
+      "put": {
+        "operationId": "MeController_settings_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update language and notification preferences",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/me/avatar": {
+      "post": {
+        "operationId": "MeController_avatar_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload profile photo (JPEG/PNG/WebP/HEIC, max 8 MB)",
+        "tags": [
+          "Profile"
+        ]
+      },
+      "delete": {
+        "operationId": "MeController_removeAvatar_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove profile photo",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/me/deletion-request": {
+      "post": {
+        "operationId": "MeController_requestDeletion_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request account deletion (data is permanently deleted after the grace period)",
+        "tags": [
+          "Profile"
+        ]
+      },
+      "delete": {
+        "operationId": "MeController_cancelDeletion_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a pending account deletion request",
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/v1/vehicles": {
+      "get": {
+        "operationId": "VehiclesController_list_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my vehicles (primary first)",
+        "tags": [
+          "Vehicles"
+        ]
+      },
+      "post": {
+        "operationId": "VehiclesController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVehicleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a vehicle",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}": {
+      "get": {
+        "operationId": "VehiclesController_get_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Vehicle details",
+        "tags": [
+          "Vehicles"
+        ]
+      },
+      "patch": {
+        "operationId": "VehiclesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVehicleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a vehicle",
+        "tags": [
+          "Vehicles"
+        ]
+      },
+      "delete": {
+        "operationId": "VehiclesController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a vehicle with its schedules, history, expenses and images",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/primary": {
+      "post": {
+        "operationId": "VehiclesController_setPrimary_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set as primary vehicle",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/mileage": {
+      "post": {
+        "operationId": "VehiclesController_mileage_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMileageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a new odometer reading",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/mileage-logs": {
+      "get": {
+        "operationId": "VehiclesController_mileageLogs_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Odometer reading history (latest 100)",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/images": {
+      "post": {
+        "operationId": "VehiclesController_addImage_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a vehicle image (max 10 per vehicle)",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/images/{imageId}/cover": {
+      "post": {
+        "operationId": "VehiclesController_cover_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Use an image as the vehicle cover",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/vehicles/{id}/images/{imageId}": {
+      "delete": {
+        "operationId": "VehiclesController_removeImage_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a vehicle image",
+        "tags": [
+          "Vehicles"
+        ]
+      }
+    },
+    "/v1/service-types": {
+      "get": {
+        "operationId": "ServiceTypesController_list_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Maintenance categories (built-in + my custom). Intervals are suggestions, not manufacturer specs.",
+        "tags": [
+          "Maintenance"
+        ]
+      },
+      "post": {
+        "operationId": "ServiceTypesController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a custom service category",
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/v1/service-types/{id}": {
+      "put": {
+        "operationId": "ServiceTypesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit my custom service category",
+        "tags": [
+          "Maintenance"
+        ]
+      },
+      "delete": {
+        "operationId": "ServiceTypesController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unused custom service category",
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/v1/schedules": {
+      "get": {
+        "operationId": "SchedulesController_list_v1",
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OK",
+                "DUE_SOON",
+                "DUE",
+                "OVERDUE",
+                "UNKNOWN"
+              ]
+            }
+          },
+          {
+            "name": "attentionOnly",
+            "required": false,
+            "in": "query",
+            "description": "Only overdue/due/due-soon",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Maintenance schedules with computed status (most urgent first)",
+        "tags": [
+          "Maintenance"
+        ]
+      },
+      "post": {
+        "operationId": "SchedulesController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a maintenance schedule",
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/v1/schedules/{id}": {
+      "get": {
+        "operationId": "SchedulesController_get_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Schedule details",
+        "tags": [
+          "Maintenance"
+        ]
+      },
+      "patch": {
+        "operationId": "SchedulesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a schedule (intervals, baseline, estimate, notes, active)",
+        "tags": [
+          "Maintenance"
+        ]
+      },
+      "delete": {
+        "operationId": "SchedulesController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a schedule (service history is kept)",
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/v1/schedules/{id}/complete": {
+      "post": {
+        "operationId": "SchedulesController_complete_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark maintenance as completed (creates history record + expense, advances schedule)",
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/v1/records": {
+      "get": {
+        "operationId": "RecordsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "vehicleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceTypeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-12-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search in parts, provider and notes",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Service history with filters, search and pagination",
+        "tags": [
+          "Service history"
+        ]
+      },
+      "post": {
+        "operationId": "RecordsController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a service record (updates the related schedule when newer)",
+        "tags": [
+          "Service history"
+        ]
+      }
+    },
+    "/v1/records/{id}": {
+      "get": {
+        "operationId": "RecordsController_get_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Service record details",
+        "tags": [
+          "Service history"
+        ]
+      },
+      "patch": {
+        "operationId": "RecordsController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRecordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a service record",
+        "tags": [
+          "Service history"
+        ]
+      },
+      "delete": {
+        "operationId": "RecordsController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a service record (and its linked expense and attachments)",
+        "tags": [
+          "Service history"
+        ]
+      }
+    },
+    "/v1/records/{id}/attachments": {
+      "post": {
+        "operationId": "RecordsController_attach_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Attach a receipt/photo (image, max 8 MB)",
+        "tags": [
+          "Service history"
+        ]
+      }
+    },
+    "/v1/records/{id}/attachments/{attachmentId}": {
+      "delete": {
+        "operationId": "RecordsController_detach_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an attachment",
+        "tags": [
+          "Service history"
+        ]
+      }
+    },
+    "/v1/expenses": {
+      "get": {
+        "operationId": "ExpensesController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "vehicleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "FUEL",
+                "MAINTENANCE",
+                "REPAIR",
+                "PARTS",
+                "OTHER"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List expenses with filters (includes total amount of the filtered set)",
+        "tags": [
+          "Expenses"
+        ]
+      },
+      "post": {
+        "operationId": "ExpensesController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add an expense",
+        "tags": [
+          "Expenses"
+        ]
+      }
+    },
+    "/v1/expenses/stats": {
+      "get": {
+        "operationId": "ExpensesController_stats_v1",
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Defaults to January 1st of the current year (Tashkent)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Defaults to today (Tashkent)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Expense statistics by category, month and vehicle",
+        "tags": [
+          "Expenses"
+        ]
+      }
+    },
+    "/v1/expenses/{id}": {
+      "get": {
+        "operationId": "ExpensesController_get_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Expense details",
+        "tags": [
+          "Expenses"
+        ]
+      },
+      "patch": {
+        "operationId": "ExpensesController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit an expense (not for expenses created from service records)",
+        "tags": [
+          "Expenses"
+        ]
+      },
+      "delete": {
+        "operationId": "ExpensesController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an expense",
+        "tags": [
+          "Expenses"
+        ]
+      }
+    },
+    "/v1/dashboard": {
+      "get": {
+        "operationId": "DashboardController_get_v1",
+        "parameters": [
+          {
+            "name": "vehicleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Home screen data for the selected (or primary) vehicle",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Readiness probe (database + Redis)",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/app-config": {
+      "get": {
+        "operationId": "AppConfigController_get_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public client configuration (support contacts, default language)",
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/v1/admin/auth/login": {
+      "post": {
+        "operationId": "AdminAuthController_login_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Administrator login (sets httpOnly refresh cookie)",
+        "tags": [
+          "Admin · Auth"
+        ]
+      }
+    },
+    "/v1/admin/auth/refresh": {
+      "post": {
+        "operationId": "AdminAuthController_refresh_v1",
+        "parameters": [
+          {
+            "name": "X-Requested-With",
+            "in": "header",
+            "description": "Must be \"moshina-admin\"",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "mb_admin_rt": []
+          }
+        ],
+        "summary": "Rotate the admin session using the refresh cookie",
+        "tags": [
+          "Admin · Auth"
+        ]
+      }
+    },
+    "/v1/admin/auth/logout": {
+      "post": {
+        "operationId": "AdminAuthController_logout_v1",
+        "parameters": [
+          {
+            "name": "X-Requested-With",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "End the admin session",
+        "tags": [
+          "Admin · Auth"
+        ]
+      }
+    },
+    "/v1/admin/auth/me": {
+      "get": {
+        "operationId": "AdminAuthController_me_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Current administrator profile and permissions",
+        "tags": [
+          "Admin · Auth"
+        ]
+      }
+    },
+    "/v1/admin/auth/password": {
+      "post": {
+        "operationId": "AdminAuthController_changePassword_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change own password (signs out all sessions)",
+        "tags": [
+          "Admin · Auth"
+        ]
+      }
+    },
+    "/v1/admin/dashboard/stats": {
+      "get": {
+        "operationId": "AdminDashboardController_stats_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Platform statistics computed from live data",
+        "tags": [
+          "Admin · Dashboard"
+        ]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "AdminUsersController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search by name or phone digits",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "RESTRICTED",
+                "DELETION_PENDING",
+                "DELETED"
+              ]
+            }
+          },
+          {
+            "name": "language",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "uz",
+                "ru",
+                "en"
+              ]
+            }
+          },
+          {
+            "name": "registeredFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "registeredTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List app users (phones masked without users.view_pii)",
+        "tags": [
+          "Admin · Users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}": {
+      "get": {
+        "operationId": "AdminUsersController_detail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "User details and activity",
+        "tags": [
+          "Admin · Users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/restrict": {
+      "post": {
+        "operationId": "AdminUsersController_restrict_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestrictUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restrict an account (signs the user out everywhere)",
+        "tags": [
+          "Admin · Users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/unrestrict": {
+      "post": {
+        "operationId": "AdminUsersController_unrestrict_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lift an account restriction",
+        "tags": [
+          "Admin · Users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/revoke-sessions": {
+      "post": {
+        "operationId": "AdminUsersController_revoke_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign the user out of all devices",
+        "tags": [
+          "Admin · Users"
+        ]
+      }
+    },
+    "/v1/admin/vehicles": {
+      "get": {
+        "operationId": "AdminVehiclesController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Brand, model, registration number or VIN",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fuelType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PETROL",
+                "DIESEL",
+                "GAS_METHANE",
+                "GAS_PROPANE",
+                "HYBRID",
+                "ELECTRIC",
+                "PETROL_GAS"
+              ]
+            }
+          },
+          {
+            "name": "ownerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "yearFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "yearTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List vehicles with owner information",
+        "tags": [
+          "Admin · Vehicles"
+        ]
+      }
+    },
+    "/v1/admin/vehicles/{id}": {
+      "get": {
+        "operationId": "AdminVehiclesController_detail_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Vehicle details (schedules, record count, expense total)",
+        "tags": [
+          "Admin · Vehicles"
+        ]
+      }
+    },
+    "/v1/admin/maintenance/service-types": {
+      "get": {
+        "operationId": "AdminMaintenanceController_list_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "System maintenance categories with usage counts",
+        "tags": [
+          "Admin · Maintenance"
+        ]
+      },
+      "post": {
+        "operationId": "AdminMaintenanceController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a system maintenance category",
+        "tags": [
+          "Admin · Maintenance"
+        ]
+      }
+    },
+    "/v1/admin/maintenance/service-types/{id}": {
+      "put": {
+        "operationId": "AdminMaintenanceController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminServiceTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a system category (names, suggested intervals, active)",
+        "tags": [
+          "Admin · Maintenance"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminMaintenanceController_remove_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unused system category (deactivate it instead if it is in use)",
+        "tags": [
+          "Admin · Maintenance"
+        ]
+      }
+    },
+    "/v1/admin/maintenance/stats": {
+      "get": {
+        "operationId": "AdminMaintenanceController_stats_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Maintenance statistics",
+        "tags": [
+          "Admin · Maintenance"
+        ]
+      }
+    },
+    "/v1/admin/notifications": {
+      "get": {
+        "operationId": "AdminNotificationsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "MAINTENANCE_UPCOMING",
+                "MAINTENANCE_DUE",
+                "MAINTENANCE_OVERDUE",
+                "MILEAGE_UPDATE_REQUIRED",
+                "ANNOUNCEMENT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "SENT",
+                "DELIVERED",
+                "FAILED",
+                "SKIPPED"
+              ]
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Notification history with delivery status",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/templates": {
+      "get": {
+        "operationId": "AdminNotificationsController_listTemplates_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Notification templates",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/templates/{code}": {
+      "put": {
+        "operationId": "AdminNotificationsController_updateTemplate_v1",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a notification template",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/announcements": {
+      "get": {
+        "operationId": "AdminNotificationsController_listAnnouncements_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "System announcements (scheduled and sent)",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      },
+      "post": {
+        "operationId": "AdminNotificationsController_createAnnouncement_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a system announcement (send now or schedule)",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/announcements/{id}/cancel": {
+      "post": {
+        "operationId": "AdminNotificationsController_cancel_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a scheduled announcement",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/scheduled": {
+      "get": {
+        "operationId": "AdminNotificationsController_scheduled_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upcoming scheduled work: announcements and reminder engine schedule",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/notifications/reminders/run": {
+      "post": {
+        "operationId": "AdminNotificationsController_runReminders_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Run the reminder engine now (deduplicated; never sends duplicates)",
+        "tags": [
+          "Admin · Notifications"
+        ]
+      }
+    },
+    "/v1/admin/admins": {
+      "get": {
+        "operationId": "AdminAdminsController_list_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List administrators",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      },
+      "post": {
+        "operationId": "AdminAdminsController_create_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an administrator",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/admins/{id}": {
+      "patch": {
+        "operationId": "AdminAdminsController_update_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an administrator (name, role, enable/disable)",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/admins/{id}/password": {
+      "post": {
+        "operationId": "AdminAdminsController_resetPassword_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetAdminPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set a new password for an administrator (revokes their sessions)",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/roles": {
+      "get": {
+        "operationId": "AdminAdminsController_roles_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Roles and their permissions",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      },
+      "post": {
+        "operationId": "AdminAdminsController_createRole_v1",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a custom role",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/permissions": {
+      "get": {
+        "operationId": "AdminAdminsController_permissions_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "All available permissions",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/roles/{id}": {
+      "put": {
+        "operationId": "AdminAdminsController_updateRole_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a role’s permissions (the Super Admin role is locked)",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminAdminsController_deleteRole_v1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unused custom role",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AdminAdminsController_auditLogs_v1",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "adminId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Administrator audit log",
+        "tags": [
+          "Admin · Administrators"
+        ]
+      }
+    },
+    "/v1/admin/settings": {
+      "get": {
+        "operationId": "AdminSettingsController_list_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "System settings (reminder thresholds, defaults, support contacts)",
+        "tags": [
+          "Admin · Settings"
+        ]
+      }
+    },
+    "/v1/admin/settings/{key}": {
+      "put": {
+        "operationId": "AdminSettingsController_update_v1",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a system setting",
+        "tags": [
+          "Admin · Settings"
+        ]
+      }
+    },
+    "/v1/admin/settings/health": {
+      "get": {
+        "operationId": "AdminSettingsController_healthStatus_v1",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "System health: database, Redis, SMS provider, push, queues, storage",
+        "tags": [
+          "Admin · Settings"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "MOSHINA BOR API",
+    "description": "",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterPushDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ]
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "appVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "UnregisterPushDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "OtpRequestDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "+998901234567",
+            "description": "Phone in any common format; normalized to E.164"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ],
+            "description": "Language of the SMS text"
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "OtpVerifyDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "+998901234567"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ],
+            "description": "Preferred language stored for new accounts"
+          }
+        },
+        "required": [
+          "phone",
+          "code"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LogoutDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
+          "pushToken": {
+            "type": "string",
+            "description": "Expo push token of this device to unregister"
+          }
+        }
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Aziz Karimov"
+          }
+        }
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ]
+          },
+          "pushEnabled": {
+            "type": "boolean"
+          },
+          "maintenanceReminders": {
+            "type": "boolean"
+          },
+          "mileageReminders": {
+            "type": "boolean"
+          },
+          "announcements": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateVehicleDto": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "type": "string",
+            "example": "Chevrolet"
+          },
+          "model": {
+            "type": "string",
+            "example": "Cobalt"
+          },
+          "year": {
+            "type": "number",
+            "example": 2021
+          },
+          "registrationNumber": {
+            "type": "string",
+            "example": "01 A 123 BC"
+          },
+          "vin": {
+            "type": "object",
+            "example": "XWB4A11BDLA123456",
+            "nullable": true
+          },
+          "fuelType": {
+            "type": "string",
+            "enum": [
+              "PETROL",
+              "DIESEL",
+              "GAS_METHANE",
+              "GAS_PROPANE",
+              "HYBRID",
+              "ELECTRIC",
+              "PETROL_GAS"
+            ]
+          },
+          "engineSize": {
+            "type": "object",
+            "example": 1.5,
+            "nullable": true,
+            "description": "Engine displacement in litres"
+          },
+          "currentMileage": {
+            "type": "number",
+            "example": 45000
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "brand",
+          "model",
+          "year",
+          "registrationNumber",
+          "fuelType",
+          "currentMileage"
+        ]
+      },
+      "UpdateVehicleDto": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "type": "string",
+            "example": "Chevrolet"
+          },
+          "model": {
+            "type": "string",
+            "example": "Cobalt"
+          },
+          "year": {
+            "type": "number",
+            "example": 2021
+          },
+          "registrationNumber": {
+            "type": "string",
+            "example": "01 A 123 BC"
+          },
+          "vin": {
+            "type": "object",
+            "example": "XWB4A11BDLA123456",
+            "nullable": true
+          },
+          "fuelType": {
+            "type": "string",
+            "enum": [
+              "PETROL",
+              "DIESEL",
+              "GAS_METHANE",
+              "GAS_PROPANE",
+              "HYBRID",
+              "ELECTRIC",
+              "PETROL_GAS"
+            ]
+          },
+          "engineSize": {
+            "type": "object",
+            "example": 1.5,
+            "nullable": true,
+            "description": "Engine displacement in litres"
+          },
+          "currentMileage": {
+            "type": "number",
+            "example": 45000
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "correctMileage": {
+            "type": "boolean",
+            "description": "Allow lowering the odometer value to correct a typing mistake"
+          }
+        }
+      },
+      "UpdateMileageDto": {
+        "type": "object",
+        "properties": {
+          "mileage": {
+            "type": "number",
+            "example": 46250
+          }
+        },
+        "required": [
+          "mileage"
+        ]
+      },
+      "CreateCustomServiceTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Wheel alignment"
+          },
+          "suggestedIntervalDays": {
+            "type": "object",
+            "nullable": true
+          },
+          "suggestedIntervalKm": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateCustomServiceTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Wheel alignment"
+          },
+          "suggestedIntervalDays": {
+            "type": "object",
+            "nullable": true
+          },
+          "suggestedIntervalKm": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateScheduleDto": {
+        "type": "object",
+        "properties": {
+          "vehicleId": {
+            "type": "string"
+          },
+          "serviceTypeId": {
+            "type": "string"
+          },
+          "lastServiceDate": {
+            "type": "string",
+            "example": "2026-03-01"
+          },
+          "lastServiceMileage": {
+            "type": "number",
+            "example": 42000
+          },
+          "intervalDays": {
+            "type": "object",
+            "nullable": true,
+            "example": 180
+          },
+          "intervalKm": {
+            "type": "object",
+            "nullable": true,
+            "example": 8000
+          },
+          "estimatedCost": {
+            "type": "object",
+            "nullable": true,
+            "example": 350000,
+            "description": "Estimated cost in so'm"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "vehicleId",
+          "serviceTypeId",
+          "lastServiceDate",
+          "lastServiceMileage"
+        ]
+      },
+      "UpdateScheduleDto": {
+        "type": "object",
+        "properties": {
+          "lastServiceDate": {
+            "type": "string",
+            "example": "2026-03-01"
+          },
+          "lastServiceMileage": {
+            "type": "number",
+            "example": 42000
+          },
+          "intervalDays": {
+            "type": "object",
+            "nullable": true,
+            "example": 180
+          },
+          "intervalKm": {
+            "type": "object",
+            "nullable": true,
+            "example": 8000
+          },
+          "estimatedCost": {
+            "type": "object",
+            "nullable": true,
+            "example": 350000,
+            "description": "Estimated cost in so'm"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CompleteScheduleDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-06-01"
+          },
+          "mileage": {
+            "type": "number",
+            "example": 50200
+          },
+          "cost": {
+            "type": "object",
+            "nullable": true
+          },
+          "serviceProvider": {
+            "type": "object",
+            "nullable": true
+          },
+          "partsUsed": {
+            "type": "object",
+            "nullable": true
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "date",
+          "mileage"
+        ]
+      },
+      "CreateRecordDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-06-01"
+          },
+          "mileage": {
+            "type": "number",
+            "example": 50200
+          },
+          "cost": {
+            "type": "object",
+            "nullable": true
+          },
+          "serviceProvider": {
+            "type": "object",
+            "nullable": true
+          },
+          "partsUsed": {
+            "type": "object",
+            "nullable": true
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "vehicleId": {
+            "type": "string"
+          },
+          "serviceTypeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "mileage",
+          "vehicleId",
+          "serviceTypeId"
+        ]
+      },
+      "UpdateRecordDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-06-01"
+          },
+          "mileage": {
+            "type": "number",
+            "example": 50200
+          },
+          "cost": {
+            "type": "object",
+            "nullable": true
+          },
+          "serviceProvider": {
+            "type": "object",
+            "nullable": true
+          },
+          "partsUsed": {
+            "type": "object",
+            "nullable": true
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "serviceTypeId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "vehicleId": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "FUEL",
+              "MAINTENANCE",
+              "REPAIR",
+              "PARTS",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "example": 250000,
+            "description": "Amount in so'm"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-06-01"
+          },
+          "mileage": {
+            "type": "object",
+            "nullable": true
+          },
+          "liters": {
+            "type": "object",
+            "nullable": true,
+            "description": "Fuel volume (litres or m³ for methane)"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "vehicleId",
+          "category",
+          "amount",
+          "date"
+        ]
+      },
+      "UpdateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "FUEL",
+              "MAINTENANCE",
+              "REPAIR",
+              "PARTS",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "example": 250000,
+            "description": "Amount in so'm"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-06-01"
+          },
+          "mileage": {
+            "type": "object",
+            "nullable": true
+          },
+          "liters": {
+            "type": "object",
+            "nullable": true,
+            "description": "Fuel volume (litres or m³ for methane)"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "RestrictUserDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "AdminServiceTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "WHEEL_ALIGNMENT"
+          },
+          "nameUz": {
+            "type": "string"
+          },
+          "nameRu": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "suggestedIntervalDays": {
+            "type": "object",
+            "nullable": true
+          },
+          "suggestedIntervalKm": {
+            "type": "object",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "nameUz",
+          "nameRu",
+          "nameEn"
+        ]
+      },
+      "LocalizedDto": {
+        "type": "object",
+        "properties": {
+          "uz": {
+            "type": "string"
+          },
+          "ru": {
+            "type": "string"
+          },
+          "en": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uz",
+          "ru",
+          "en"
+        ]
+      },
+      "UpdateTemplateDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/LocalizedDto"
+          },
+          "body": {
+            "$ref": "#/components/schemas/LocalizedDto"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "body",
+          "isActive"
+        ]
+      },
+      "CreateAnnouncementDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/LocalizedDto"
+          },
+          "body": {
+            "$ref": "#/components/schemas/LocalizedDto"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "description": "ISO date-time; omitted = send now"
+          },
+          "targetLanguage": {
+            "type": "string",
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ]
+      },
+      "CreateAdminDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "fullName",
+          "roleId",
+          "password"
+        ]
+      },
+      "UpdateAdminDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ResetAdminPasswordDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "RoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "dashboard.view",
+                "users.view",
+                "users.view_pii",
+                "users.manage",
+                "vehicles.view",
+                "maintenance.view",
+                "maintenance.manage",
+                "notifications.view",
+                "notifications.manage",
+                "admins.view",
+                "admins.manage",
+                "audit.view",
+                "settings.view",
+                "settings.manage"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ]
+      },
+      "UpdateSettingDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+    }
+  }
+}

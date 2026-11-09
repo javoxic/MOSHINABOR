@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+
+jobs:
+  checks:
+    name: Typecheck, lint, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: moshina
+          POSTGRES_PASSWORD: moshina_dev
+          POSTGRES_DB: moshina_bor_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U moshina" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build shared packages
+        run: pnpm build:packages
+      - name: Shared package tests
+        run: pnpm --filter @moshina/shared --filter @moshina/validation run test
+      - name: Prisma client
+        run: pnpm --filter @moshina/backend exec prisma generate
+
+      - name: Backend typecheck & lint
+        working-directory: backend
+        run: |
+          npx tsc -p tsconfig.test.json --noEmit
+          npx eslint src test
+      - name: Backend tests (unit + e2e against PostgreSQL/Redis)
+        working-directory: backend
+        env:
+          TEST_DATABASE_URL: postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_test?schema=public
+          TEST_REDIS_URL: redis://localhost:6379/15
+        run: npx jest --runInBand
+
+      - name: Mobile typecheck, lint, tests
+        working-directory: mobile
+        run: |
+          npx tsc --noEmit
+          npx eslint app src
+          npx jest
+      - name: Mobile bundle (Android + iOS)
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://api.example.invalid
+        run: npx expo export --platform android --platform ios --output-dir dist
+
+      - name: Admin typecheck, lint, unit tests
+        working-directory: admin
+        run: |
+          npx tsc -b
+          npx eslint src e2e
+          npx vitest run
+      - name: Backend build (for admin E2E)
+        working-directory: backend
+        run: npx nest build
+      - name: Create E2E database
+        run: PGPASSWORD=moshina_dev psql -h localhost -U moshina -d moshina_bor_test -c 'CREATE DATABASE moshina_bor_e2e'
+      - name: Install Playwright browser
+        working-directory: admin
+        run: npx playwright install --with-deps chromium
+      - name: Admin E2E (Playwright, real backend)
+        working-directory: admin
+        env:
+          E2E_DATABASE_URL: postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_e2e?schema=public
+          E2E_REDIS_URL: redis://localhost:6379/14
+        run: pnpm test:e2e
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: admin/test-results
+          retention-days: 7
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/docker/backend.Dockerfile
+          push: false
+          tags: moshina-bor/api:${{ github.sha }}
+      - name: Build admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infrastructure/docker/admin.Dockerfile
+          push: false
+          tags: moshina-bor/admin:${{ github.sha }}

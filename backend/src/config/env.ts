@@ -13,6 +13,11 @@ const csv = z
       .filter(Boolean),
   );
 
+const otpTemplate = z
+  .string()
+  .max(300)
+  .refine((v) => v.includes('{code}'), { message: 'OTP SMS template must contain the {code} placeholder' });
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -45,9 +50,9 @@ export const envSchema = z
     SMS_PROVIDER: z.enum(['eskiz', 'twilio', 'log']).default('eskiz'),
     /** Optional provider used for non-Uzbek (+998) numbers. Empty = international numbers are rejected. */
     SMS_INTERNATIONAL_PROVIDER: z.enum(['twilio', 'none']).default('none'),
-    SMS_OTP_TEMPLATE_UZ: z.string().default('MOSHINA BOR: tasdiqlash kodi {code}. Kodni hech kimga bermang.'),
-    SMS_OTP_TEMPLATE_RU: z.string().default('MOSHINA BOR: код подтверждения {code}. Никому не сообщайте код.'),
-    SMS_OTP_TEMPLATE_EN: z.string().default('MOSHINA BOR: your verification code is {code}. Do not share it.'),
+    SMS_OTP_TEMPLATE_UZ: otpTemplate.default('MOSHINA BOR: tasdiqlash kodi {code}. Kodni hech kimga bermang.'),
+    SMS_OTP_TEMPLATE_RU: otpTemplate.default('MOSHINA BOR: код подтверждения {code}. Никому не сообщайте код.'),
+    SMS_OTP_TEMPLATE_EN: otpTemplate.default('MOSHINA BOR: your verification code is {code}. Do not share it.'),
     SMS_CALLBACK_SECRET: z.string().optional(),
     ESKIZ_BASE_URL: z.string().url().default('https://notify.eskiz.uz/api'),
     ESKIZ_EMAIL: z.string().optional(),
@@ -86,7 +91,9 @@ export const envSchema = z
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = envSchema.safeParse(source);
+  // Empty values (e.g. "FOO=" in .env files or "${FOO:-}" in compose) mean "not set".
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v.trim() !== ''));
+  const parsed = envSchema.safeParse(cleaned);
   if (!parsed.success) {
     const details = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid environment configuration:\n${details}`);

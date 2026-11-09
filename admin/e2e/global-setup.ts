@@ -23,7 +23,7 @@ export default async function globalSetup(): Promise<void> {
   const prisma = new PrismaClient({ datasources: { db: { url } } });
   try {
     const tables = await prisma.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename <> '_prisma_migrations'`;
-    if (tables.length) await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables.map((t) => `"public"."${t.tablename}"`).join(', ')} CASCADE`);
+    if (tables.length) await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables.map((t: { tablename: string }) => `"public"."${t.tablename}"`).join(', ')} CASCADE`);
     await seed(prisma);
 
     const hash = await hashAdminPassword(PASSWORD);

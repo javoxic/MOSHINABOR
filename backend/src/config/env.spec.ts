@@ -16,6 +16,18 @@ describe('environment validation', () => {
     expect(env.SMS_PROVIDER).toBe('eskiz');
   });
 
+  it('treats empty values as unset so defaults apply', () => {
+    const env = loadEnv({ ...base, SMS_OTP_TEMPLATE_UZ: '', ESKIZ_FROM: '  ', SMS_PROVIDER: '' });
+    expect(env.SMS_OTP_TEMPLATE_UZ).toContain('{code}');
+    expect(env.ESKIZ_FROM).toBe('4546');
+    expect(env.SMS_PROVIDER).toBe('eskiz');
+  });
+
+  it('requires the {code} placeholder in custom OTP templates', () => {
+    expect(() => loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Ваш код' })).toThrow(/\{code\}/);
+    expect(loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Код: {code}' }).SMS_OTP_TEMPLATE_RU).toBe('Код: {code}');
+  });
+
   it('rejects short secrets', () => {
     expect(() => loadEnv({ ...base, JWT_ACCESS_SECRET: 'short' })).toThrow(/JWT_ACCESS_SECRET/);
   });
