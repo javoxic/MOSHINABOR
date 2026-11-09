@@ -35,7 +35,7 @@ export class AdminUsersService {
       this.prisma.user.findMany({
         where,
         include: { settings: { select: { language: true } }, _count: { select: { vehicles: true } } },
-        orderBy: { [sort.field]: { sort: sort.dir, nulls: 'last' } },
+        orderBy: sort.field === 'createdAt' ? { createdAt: sort.dir } : { [sort.field]: { sort: sort.dir, nulls: 'last' } },
         ...paginate(q),
       }),
       this.prisma.user.count({ where }),

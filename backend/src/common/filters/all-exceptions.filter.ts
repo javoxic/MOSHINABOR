@@ -34,7 +34,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const body = this.toBody(exception);
     body.requestId = typeof req.id === 'string' ? req.id : undefined;
 
-    if (body.statusCode >= 500) {
+    // Handled AppExceptions are logged where they originate; log only unexpected failures here.
+    if (body.statusCode >= 500 && !(exception instanceof AppException)) {
       this.logger.error(
         { err: exception instanceof Error ? { name: exception.name, message: exception.message, stack: exception.stack } : exception, path: req.url },
         'Unhandled error',

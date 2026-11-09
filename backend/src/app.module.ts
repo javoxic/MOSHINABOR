@@ -4,11 +4,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { LoggerModule } from 'nestjs-pino';
-import Redis from 'ioredis';
 import type { Env } from './config/env';
-import { APP_ENV, AppConfigModule } from './config/config.module';
+import { AppConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { RedisModule } from './redis/redis.module';
+import { RedisFactory, RedisModule } from './redis/redis.module';
 import { SettingsModule } from './settings/settings.module';
 import { SmsModule } from './sms/sms.module';
 import { TokenModule } from './auth/token.module';
@@ -64,14 +63,14 @@ export class AppModule {
       RedisModule,
       SettingsModule,
       BullModule.forRootAsync({
-        inject: [APP_ENV],
-        useFactory: (e: Env) => ({ connection: new Redis(e.REDIS_URL, { maxRetriesPerRequest: null }) }),
+        inject: [RedisFactory],
+        useFactory: (f: RedisFactory) => ({ connection: f.create({ maxRetriesPerRequest: null }) }),
       }),
       ThrottlerModule.forRootAsync({
-        inject: [APP_ENV],
-        useFactory: (e: Env) => ({
+        inject: [RedisFactory],
+        useFactory: (f: RedisFactory) => ({
           throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }],
-          storage: new ThrottlerStorageRedisService(new Redis(e.REDIS_URL)),
+          storage: new ThrottlerStorageRedisService(f.create()),
         }),
       }),
       TokenModule,

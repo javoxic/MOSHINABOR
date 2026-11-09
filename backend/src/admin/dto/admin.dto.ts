@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsDefined,
   IsEmail,
   IsIn,
   IsOptional,
@@ -116,6 +117,7 @@ export class AuditQueryDto extends PaginationQueryDto {
 
 export class UpdateSettingDto {
   @ApiProperty({ oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }] })
+  @IsDefined()
   value: string | number | boolean;
 }
 

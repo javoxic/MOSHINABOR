@@ -1,28 +1,34 @@
-import { Global, Inject, Injectable, Module, OnModuleDestroy } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Global, Inject, Injectable, Module, OnApplicationShutdown } from '@nestjs/common';
+import Redis, { type RedisOptions } from 'ioredis';
 import { APP_ENV } from '../config/config.module';
 import type { Env } from '../config/env';
 
 export const REDIS = Symbol('REDIS');
 
+/** Creates Redis connections that are closed when the application shuts down. */
 @Injectable()
-class RedisLifecycle implements OnModuleDestroy {
-  constructor(@Inject(REDIS) private readonly redis: Redis) {}
-  async onModuleDestroy(): Promise<void> {
-    await this.redis.quit().catch(() => undefined);
+export class RedisFactory implements OnApplicationShutdown {
+  private readonly connections: Redis[] = [];
+
+  constructor(@Inject(APP_ENV) private readonly env: Env) {}
+
+  create(options: RedisOptions = {}): Redis {
+    const conn = new Redis(this.env.REDIS_URL, { enableReadyCheck: true, ...options });
+    this.connections.push(conn);
+    return conn;
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    await Promise.all(this.connections.map((c) => c.quit().catch(() => c.disconnect())));
   }
 }
 
 @Global()
 @Module({
   providers: [
-    {
-      provide: REDIS,
-      inject: [APP_ENV],
-      useFactory: (env: Env) => new Redis(env.REDIS_URL, { maxRetriesPerRequest: 3, enableReadyCheck: true, lazyConnect: false }),
-    },
-    RedisLifecycle,
+    RedisFactory,
+    { provide: REDIS, inject: [RedisFactory], useFactory: (f: RedisFactory) => f.create({ maxRetriesPerRequest: 3 }) },
   ],
-  exports: [REDIS],
+  exports: [REDIS, RedisFactory],
 })
 export class RedisModule {}

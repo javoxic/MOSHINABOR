@@ -4,7 +4,7 @@
     "rootDir": ".",
     "noEmit": true,
     "incremental": false,
-    "types": ["jest", "node"]
+    "types": ["jest", "node", "multer"]
   },
   "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
