@@ -1,3 +1,4 @@
+import { loadEnv } from '../src/config/env';
 import { createTestApp, login, randomIp, randomPhone, type TestContext } from './helpers';
 
 describe('Authentication (SMS OTP)', () => {
@@ -114,7 +115,7 @@ describe('Authentication (SMS OTP)', () => {
   it('enforces the per-IP hourly limit', async () => {
     const ip = randomIp();
     await ctx.prisma.smsVerification.createMany({
-      data: Array.from({ length: 20 }, () => ({
+      data: Array.from({ length: loadEnv().OTP_MAX_PER_IP_PER_HOUR }, () => ({
         phone: randomPhone(),
         codeHash: 'x'.repeat(64),
         requestIp: ip,

@@ -21,8 +21,14 @@ export class AdminUsersController {
   @Get()
   @RequirePermissions('users.view')
   @ApiOperation({ summary: 'List app users (phones masked without users.view_pii)' })
-  list(@CurrentAdmin() admin: AuthAdmin, @Query() q: AdminUserQueryDto) {
-    return this.users.list(q, admin.permissions.has('users.view_pii'));
+  async list(@CurrentAdmin() admin: AuthAdmin, @Query() q: AdminUserQueryDto, @Req() req: Request) {
+    const pii = admin.permissions.has('users.view_pii');
+    const result = await this.users.list(q, pii);
+    // Searching by phone number is a lookup of personal data: record it.
+    if (pii && (q.q?.replace(/\D/g, '').length ?? 0) >= 3) {
+      await this.audit.log({ adminId: admin.id, action: 'users.search_pii', metadata: { results: result.total }, req });
+    }
+    return result;
   }
 
   @Get(':id')

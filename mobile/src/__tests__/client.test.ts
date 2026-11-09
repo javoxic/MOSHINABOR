@@ -3,6 +3,8 @@ import MockAdapter from './mock-adapter';
 import { api, refreshAccessToken } from '@/api/client';
 import { useAuthStore } from '@/store/auth';
 
+jest.mock('expo-image', () => ({ Image: { clearMemoryCache: jest.fn(async () => true), clearDiskCache: jest.fn(async () => true) } }));
+
 describe('API client session handling', () => {
   const mock = new MockAdapter();
   beforeAll(() => {

@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import type { AuthTokens } from '@moshina/api-types';
 import { useAuthStore } from '@/store/auth';
+import { purgeLocalUserData } from '@/session-cleanup';
 import { useAppStore } from '@/store/app';
 import { apiBaseUrl } from './config';
 import { toApiError } from './errors';
@@ -22,7 +23,10 @@ async function doRefresh(): Promise<string | null> {
   } catch (err) {
     const e = toApiError(err);
     // Only sign out when the server rejected the session; keep it on network errors.
-    if (e.status === 401 || e.status === 403) await clear();
+    if (e.status === 401 || e.status === 403) {
+      await purgeLocalUserData().catch((err: unknown) => console.warn('Local data purge failed', err));
+      await clear();
+    }
     return null;
   }
 }

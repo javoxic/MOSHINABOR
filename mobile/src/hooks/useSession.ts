@@ -1,11 +1,10 @@
 import { useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Api } from '@/api/endpoints';
-import { queryClient, persister } from '@/api/queryClient';
 import { useAuthStore } from '@/store/auth';
-import { PUSH_TOKEN_KEY } from './usePushRegistration';
+import { PUSH_TOKEN_KEY, purgeLocalUserData } from '@/session-cleanup';
 
-/** Signs out: revokes the session on the server when reachable, then always clears local credentials and cache. */
+/** Signs out: revokes the session on the server when reachable, then always clears local credentials and data. */
 export function useSignOut(): () => Promise<void> {
   return useCallback(async () => {
     const { refreshToken, clear } = useAuthStore.getState();
@@ -15,9 +14,7 @@ export function useSignOut(): () => Promise<void> {
     } catch (e) {
       console.warn('Remote logout failed; clearing local session anyway', e);
     }
-    await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
-    queryClient.clear();
-    await persister.removeClient();
+    await purgeLocalUserData();
     await clear();
   }, []);
 }

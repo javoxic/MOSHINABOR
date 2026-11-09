@@ -14,14 +14,10 @@ import { qk } from '@/api/keys';
 import { errorMessage } from '@/api/errors';
 import { useSelectedVehicle } from '@/hooks/useSelectedVehicle';
 import { spacing } from '@/theme';
-import { serviceTypeName, todayLocal } from '@/utils/format';
+import { daysAgoLocal as daysAgo, serviceTypeName, todayLocal } from '@/utils/format';
 
 type Period = 'all' | '30' | '365';
 
-function daysAgo(n: number): string {
-  const d = new Date(Date.now() - n * 86_400_000);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 export default function HistoryScreen() {
   const { t, i18n } = useTranslation();

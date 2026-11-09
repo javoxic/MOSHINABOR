@@ -10,7 +10,8 @@ import { Api } from '@/api/endpoints';
 import { queryClient } from '@/api/queryClient';
 import { useAuthStore } from '@/store/auth';
 
-export const PUSH_TOKEN_KEY = 'mb.pushToken';
+import { PUSH_TOKEN_KEY } from '@/session-cleanup';
+export { PUSH_TOKEN_KEY };
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),

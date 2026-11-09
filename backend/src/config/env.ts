@@ -25,7 +25,10 @@ export const envSchema = z
     PROCESS_ROLE: z.enum(['all', 'api', 'worker']).default('all'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
     TRUST_PROXY: z.coerce.number().int().min(0).default(1),
-    SWAGGER_ENABLED: bool.prefault('true'),
+    /** Defaults to enabled outside production and disabled in production (see loadEnv). */
+    SWAGGER_ENABLED: bool.optional(),
+    /** Requests per minute per authenticated user (or per IP for anonymous requests). */
+    RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(10).max(100_000).default(120),
     API_PUBLIC_URL: z.string().url().default('http://localhost:3000'),
     CORS_ORIGINS: csv.prefault('http://localhost:5173'),
 
@@ -45,7 +48,9 @@ export const envSchema = z
     OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().min(15).max(600).default(60),
     OTP_MAX_PER_PHONE_PER_HOUR: z.coerce.number().int().min(1).default(5),
     OTP_MAX_PER_PHONE_PER_DAY: z.coerce.number().int().min(1).default(10),
-    OTP_MAX_PER_IP_PER_HOUR: z.coerce.number().int().min(1).default(20),
+    // Mobile carriers in Uzbekistan use carrier-grade NAT: many subscribers share one IP.
+    // Per-phone limits are the primary SMS-abuse control; the per-IP limit is a coarse backstop.
+    OTP_MAX_PER_IP_PER_HOUR: z.coerce.number().int().min(1).default(60),
 
     SMS_PROVIDER: z.enum(['eskiz', 'twilio', 'log']).default('eskiz'),
     /** Optional provider used for non-Uzbek (+998) numbers. Empty = international numbers are rejected. */
@@ -82,13 +87,23 @@ export const envSchema = z
         ctx.addIssue({ code: 'custom', path: ['CORS_ORIGINS'], message: 'Wildcard CORS is not allowed in production' });
       }
       const secrets = [env.JWT_ACCESS_SECRET, env.JWT_ADMIN_SECRET, env.OTP_PEPPER];
+      for (const [name, value] of [
+        ['JWT_ACCESS_SECRET', env.JWT_ACCESS_SECRET],
+        ['JWT_ADMIN_SECRET', env.JWT_ADMIN_SECRET],
+        ['OTP_PEPPER', env.OTP_PEPPER],
+        ['SMS_CALLBACK_SECRET', env.SMS_CALLBACK_SECRET ?? ''],
+      ] as const) {
+        if (/^(test|e2e|dev|example|changeme|change_me)[-_]/i.test(value) || /CHANGE_?ME/i.test(value)) {
+          ctx.addIssue({ code: 'custom', path: [name], message: 'Looks like a test/placeholder value; generate a real secret for production' });
+        }
+      }
       if (new Set(secrets).size !== secrets.length) {
         ctx.addIssue({ code: 'custom', path: ['JWT_ACCESS_SECRET'], message: 'JWT_ACCESS_SECRET, JWT_ADMIN_SECRET and OTP_PEPPER must differ' });
       }
     }
   });
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = Omit<z.infer<typeof envSchema>, 'SWAGGER_ENABLED'> & { SWAGGER_ENABLED: boolean };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   // Empty values (e.g. "FOO=" in .env files or "${FOO:-}" in compose) mean "not set".
@@ -98,5 +113,5 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     const details = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid environment configuration:\n${details}`);
   }
-  return parsed.data;
+  return { ...parsed.data, SWAGGER_ENABLED: parsed.data.SWAGGER_ENABLED ?? parsed.data.NODE_ENV !== 'production' };
 }

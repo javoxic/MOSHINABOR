@@ -106,6 +106,7 @@ describe('Admin API', () => {
       const { auth, admin } = await adminLogin('SUPPORT');
       const search = await ctx.http().get(`/v1/admin/users?q=${user.phone.slice(-7)}`).set(auth).expect(200);
       expect(search.body.items[0].phone).toBe(user.phone);
+      expect(await ctx.prisma.adminAuditLog.count({ where: { adminUserId: admin.id, action: 'users.search_pii' } })).toBe(1);
       const detail = await ctx.http().get(`/v1/admin/users/${user.id}`).set(auth).expect(200);
       expect(detail.body.phone).toBe(user.phone);
       expect(detail.body.activeSessions).toBe(1);

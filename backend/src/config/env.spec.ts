@@ -28,6 +28,18 @@ describe('environment validation', () => {
     expect(loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Код: {code}' }).SMS_OTP_TEMPLATE_RU).toBe('Код: {code}');
   });
 
+  it('disables Swagger by default only in production', () => {
+    expect(loadEnv(base).SWAGGER_ENABLED).toBe(true);
+    expect(loadEnv({ ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30) }).SWAGGER_ENABLED).toBe(false);
+    expect(loadEnv({ ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30), SWAGGER_ENABLED: 'true' }).SWAGGER_ENABLED).toBe(true);
+  });
+
+  it('refuses test/placeholder secrets in production', () => {
+    const prod = { ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30) };
+    expect(() => loadEnv({ ...prod, JWT_ACCESS_SECRET: 'test-access-secret-0123456789abcdefghijklmnop' })).toThrow(/test\/placeholder/);
+    expect(() => loadEnv({ ...prod, OTP_PEPPER: 'CHANGE_ME_CHANGE_ME_CHANGE_ME_CHANGE_ME' })).toThrow(/test\/placeholder/);
+  });
+
   it('rejects short secrets', () => {
     expect(() => loadEnv({ ...base, JWT_ACCESS_SECRET: 'short' })).toThrow(/JWT_ACCESS_SECRET/);
   });
