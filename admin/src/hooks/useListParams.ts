@@ -4,7 +4,10 @@ import { useSearchParams } from 'react-router-dom';
 /** Keeps filters and pagination in the URL so lists are shareable and survive reloads. */
 export function useListParams<K extends string>(keys: readonly K[]) {
   const [params, setParams] = useSearchParams();
-  const values = useMemo(() => Object.fromEntries(keys.map((k) => [k, params.get(k) ?? ''])) as Record<K, string>, [params, keys]);
+  const values = useMemo(
+    () => Object.fromEntries(keys.map((k) => [k, params.get(k) ?? ''])) as Record<K, string>,
+    [params, keys],
+  );
   const page = Number(params.get('page') ?? '1') || 1;
   const set = useCallback(
     (patch: Partial<Record<K | 'page', string>>) => {

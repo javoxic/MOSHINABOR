@@ -20,16 +20,43 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 64, paddingTop: 6, paddingBottom: 8 },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          height: 64,
+          paddingTop: 6,
+          paddingBottom: 8,
+        },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t('tabs.home'), tabBarIcon: icon('speedometer-outline', 'speedometer') }} />
-      <Tabs.Screen name="vehicles" options={{ title: t('tabs.vehicles'), tabBarIcon: icon('car-sport-outline', 'car-sport') }} />
-      <Tabs.Screen name="maintenance" options={{ title: t('tabs.maintenance'), tabBarIcon: icon('construct-outline', 'construct') }} />
-      <Tabs.Screen name="expenses" options={{ title: t('tabs.expenses'), tabBarIcon: icon('wallet-outline', 'wallet') }} />
-      <Tabs.Screen name="profile" options={{ title: t('tabs.profile'), tabBarIcon: icon('person-circle-outline', 'person-circle') }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: t('tabs.home'), tabBarIcon: icon('speedometer-outline', 'speedometer') }}
+      />
+      <Tabs.Screen
+        name="vehicles"
+        options={{ title: t('tabs.vehicles'), tabBarIcon: icon('car-sport-outline', 'car-sport') }}
+      />
+      <Tabs.Screen
+        name="maintenance"
+        options={{
+          title: t('tabs.maintenance'),
+          tabBarIcon: icon('construct-outline', 'construct'),
+        }}
+      />
+      <Tabs.Screen
+        name="expenses"
+        options={{ title: t('tabs.expenses'), tabBarIcon: icon('wallet-outline', 'wallet') }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: t('tabs.profile'),
+          tabBarIcon: icon('person-circle-outline', 'person-circle'),
+        }}
+      />
     </Tabs>
   );
 }

@@ -18,7 +18,11 @@ export default function CompleteScheduleScreen() {
   const invalidate = useInvalidateData();
   const idem = useIdempotencyKey();
   const schedule = useQuery({ queryKey: qk.schedule(id), queryFn: () => Api.schedule(id) });
-  const vehicle = useQuery({ queryKey: qk.vehicle(schedule.data?.vehicleId ?? ''), queryFn: () => Api.vehicle(schedule.data!.vehicleId), enabled: !!schedule.data });
+  const vehicle = useQuery({
+    queryKey: qk.vehicle(schedule.data?.vehicleId ?? ''),
+    queryFn: () => Api.vehicle(schedule.data!.vehicleId),
+    enabled: !!schedule.data,
+  });
   const complete = useMutation({
     mutationFn: (body: CompleteBody) => Api.completeSchedule(id, body, idem.key()),
     onSuccess: async () => {
@@ -29,7 +33,13 @@ export default function CompleteScheduleScreen() {
     },
   });
   return (
-    <Screen back title={t('maintenance.completeTitle')} subtitle={schedule.data ? serviceTypeName(schedule.data.serviceType, i18n.language) : undefined}>
+    <Screen
+      back
+      title={t('maintenance.completeTitle')}
+      subtitle={
+        schedule.data ? serviceTypeName(schedule.data.serviceType, i18n.language) : undefined
+      }
+    >
       {schedule.isError ? (
         <ErrorState message={errorMessage(t, schedule.error)} onRetry={() => schedule.refetch()} />
       ) : !schedule.data || !vehicle.data ? (

@@ -32,7 +32,10 @@ export class AuditService {
       });
     } catch (err) {
       // Audit failures must be visible to operators.
-      this.logger.error({ action: params.action, error: (err as Error).message }, 'Failed to write audit log');
+      this.logger.error(
+        { action: params.action, error: (err as Error).message },
+        'Failed to write audit log',
+      );
       throw err;
     }
   }

@@ -38,7 +38,10 @@ export class AppModule {
       LoggerModule.forRoot({
         pinoHttp: {
           level: env.LOG_LEVEL,
-          transport: env.NODE_ENV === 'development' ? { target: 'pino-pretty', options: { singleLine: true } } : undefined,
+          transport:
+            env.NODE_ENV === 'development'
+              ? { target: 'pino-pretty', options: { singleLine: true } }
+              : undefined,
           // Never log credentials, cookies, tokens or verification codes.
           redact: {
             paths: [
@@ -54,7 +57,11 @@ export class AppModule {
             censor: '[REDACTED]',
           },
           serializers: {
-            req: (req: { id: string; method: string; url: string }) => ({ id: req.id, method: req.method, url: req.url.replace(/secret=[^&]+/, 'secret=[REDACTED]') }),
+            req: (req: { id: string; method: string; url: string }) => ({
+              id: req.id,
+              method: req.method,
+              url: req.url.replace(/secret=[^&]+/, 'secret=[REDACTED]'),
+            }),
           },
           autoLogging: { ignore: (req) => (req.url ?? '').startsWith('/v1/health') },
           customProps: () => ({ service: 'moshina-bor-api' }),

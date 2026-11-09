@@ -22,12 +22,18 @@ export default function PhoneScreen() {
   const language = useAppStore((s) => s.language);
   const { isOffline } = useNetworkStatus();
   const [serverError, setServerError] = useState<string | null>(null);
-  const { control, handleSubmit, formState } = useForm<OtpRequestInput>({ resolver: zodResolver(otpRequestSchema), defaultValues: { phone: '' } });
+  const { control, handleSubmit, formState } = useForm<OtpRequestInput>({
+    resolver: zodResolver(otpRequestSchema),
+    defaultValues: { phone: '' },
+  });
 
   const request = useMutation({
     mutationFn: (phone: string) => Api.requestOtp(phone, language),
     onSuccess: (res) => {
-      router.push({ pathname: '/(auth)/verify', params: { phone: res.phone, resendAfter: String(res.resendAfterSeconds) } });
+      router.push({
+        pathname: '/(auth)/verify',
+        params: { phone: res.phone, resendAfter: String(res.resendAfterSeconds) },
+      });
     },
     onError: (err) => setServerError(errorMessage(t, err)),
   });
@@ -40,7 +46,15 @@ export default function PhoneScreen() {
   return (
     <Screen
       back
-      footer={<Button title={t('auth.sendCode')} onPress={submit} loading={request.isPending} disabled={isOffline} testID="send-code" />}
+      footer={
+        <Button
+          title={t('auth.sendCode')}
+          onPress={submit}
+          loading={request.isPending}
+          disabled={isOffline}
+          testID="send-code"
+        />
+      }
     >
       <Text variant="title" style={{ marginTop: spacing.lg }}>
         {t('auth.phoneTitle')}
@@ -64,7 +78,11 @@ export default function PhoneScreen() {
             onChangeText={field.onChange}
             onBlur={field.onBlur}
             onSubmitEditing={submit}
-            error={formState.errors.phone ? t(formState.errors.phone.message ?? 'validation.phone') : undefined}
+            error={
+              formState.errors.phone
+                ? t(formState.errors.phone.message ?? 'validation.phone')
+                : undefined
+            }
             hint="+998"
             testID="phone-input"
           />

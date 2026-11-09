@@ -1,5 +1,9 @@
 import type { MaintenanceSchedule, ServiceType, Vehicle } from '@prisma/client';
-import { computeScheduleStatus, type ReminderThresholds, type ScheduleStatus } from '@moshina/shared';
+import {
+  computeScheduleStatus,
+  type ReminderThresholds,
+  type ScheduleStatus,
+} from '@moshina/shared';
 import { dateOnly, todayTashkent } from '../common/utils/dates';
 import { decimalToString } from '../common/utils/decimal';
 import { serviceTypeView, type ServiceTypeView } from '../service-types/service-types.service';
@@ -33,7 +37,11 @@ export interface ScheduleView {
   updatedAt: string;
 }
 
-export function toScheduleView(s: ScheduleWithRelations, thresholds: ReminderThresholds, now = new Date()): ScheduleView {
+export function toScheduleView(
+  s: ScheduleWithRelations,
+  thresholds: ReminderThresholds,
+  now = new Date(),
+): ScheduleView {
   const r = computeScheduleStatus(
     {
       nextDueDate: dateOnly(s.nextDueDate),

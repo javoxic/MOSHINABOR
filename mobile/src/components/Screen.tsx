@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -22,7 +30,19 @@ export interface ScreenProps {
   padded?: boolean;
 }
 
-export function Screen({ title, subtitle, back, right, children, scroll = true, refreshing, onRefresh, footer, dataUpdatedAt, padded = true }: ScreenProps) {
+export function Screen({
+  title,
+  subtitle,
+  back,
+  right,
+  children,
+  scroll = true,
+  refreshing,
+  onRefresh,
+  footer,
+  dataUpdatedAt,
+  padded = true,
+}: ScreenProps) {
   const { t } = useTranslation();
   const header =
     title || back || right ? (
@@ -58,7 +78,16 @@ export function Screen({ title, subtitle, back, right, children, scroll = true, 
     <ScrollView
       contentContainerStyle={[padded && styles.content, { flexGrow: 1 }]}
       keyboardShouldPersistTaps="handled"
-      refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} /> : undefined}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={!!refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.accent}
+            colors={[colors.accent]}
+          />
+        ) : undefined
+      }
     >
       {children}
     </ScrollView>
@@ -70,7 +99,10 @@ export function Screen({ title, subtitle, back, right, children, scroll = true, 
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       {header}
       <OfflineBanner dataUpdatedAt={dataUpdatedAt} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         {body}
         {footer ? <View style={styles.footer}>{footer}</View> : null}
       </KeyboardAvoidingView>
@@ -80,8 +112,26 @@ export function Screen({ title, subtitle, back, right, children, scroll = true, 
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.md, gap: spacing.sm },
-  backBtn: { width: MIN_TOUCH, height: MIN_TOUCH, marginLeft: -spacing.sm, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  backBtn: {
+    width: MIN_TOUCH,
+    height: MIN_TOUCH,
+    marginLeft: -spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },
-  footer: { padding: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.bg },
+  footer: {
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.bg,
+  },
 });

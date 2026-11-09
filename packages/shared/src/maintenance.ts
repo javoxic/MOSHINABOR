@@ -60,7 +60,13 @@ export interface StatusResult {
   mileageStale: boolean;
 }
 
-const SEVERITY: Record<ScheduleStatus, number> = { UNKNOWN: 0, OK: 1, DUE_SOON: 2, DUE: 3, OVERDUE: 4 };
+const SEVERITY: Record<ScheduleStatus, number> = {
+  UNKNOWN: 0,
+  OK: 1,
+  DUE_SOON: 2,
+  DUE: 3,
+  OVERDUE: 4,
+};
 
 export function worstStatus(a: ScheduleStatus, b: ScheduleStatus): ScheduleStatus {
   return SEVERITY[a] >= SEVERITY[b] ? a : b;
@@ -92,7 +98,8 @@ export function computeScheduleStatus(
   options: { ignoreStaleMileage?: boolean } = {},
 ): StatusResult {
   const mileageStale =
-    input.mileageUpdatedAt == null || daysBetweenInstants(input.mileageUpdatedAt, now) > thresholds.mileageStaleDays;
+    input.mileageUpdatedAt == null ||
+    daysBetweenInstants(input.mileageUpdatedAt, now) > thresholds.mileageStaleDays;
 
   let dateStatus: ScheduleStatus = 'UNKNOWN';
   let daysRemaining: number | null = null;
@@ -117,13 +124,23 @@ export function computeScheduleStatus(
     else if (SEVERITY[mileageStatus] > SEVERITY[dateStatus]) triggeredBy = 'MILEAGE';
     else {
       // Same severity: pick the dimension that is proportionally further along.
-      const dateRatio = daysRemaining != null ? daysRemaining / Math.max(1, thresholds.dueSoonDays) : Infinity;
-      const kmRatio = kmRemaining != null ? kmRemaining / Math.max(1, thresholds.dueSoonKm) : Infinity;
+      const dateRatio =
+        daysRemaining != null ? daysRemaining / Math.max(1, thresholds.dueSoonDays) : Infinity;
+      const kmRatio =
+        kmRemaining != null ? kmRemaining / Math.max(1, thresholds.dueSoonKm) : Infinity;
       triggeredBy = kmRatio < dateRatio ? 'MILEAGE' : 'DATE';
     }
   }
 
-  return { status, dateStatus, mileageStatus, daysRemaining, kmRemaining, triggeredBy, mileageStale };
+  return {
+    status,
+    dateStatus,
+    mileageStatus,
+    daysRemaining,
+    kmRemaining,
+    triggeredBy,
+    mileageStale,
+  };
 }
 
 /**

@@ -15,13 +15,24 @@ import { TemplatesService } from './templates.service';
   imports: [BullModule.registerQueue({ name: PUSH_QUEUE })],
   controllers: [NotificationsController, PushDevicesController],
   providers: [
-    { provide: EXPO_CLIENT, inject: [APP_ENV], useFactory: (env: Env) => new Expo({ accessToken: env.EXPO_ACCESS_TOKEN || undefined }) },
+    {
+      provide: EXPO_CLIENT,
+      inject: [APP_ENV],
+      useFactory: (env: Env) => new Expo({ accessToken: env.EXPO_ACCESS_TOKEN || undefined }),
+    },
     NotificationsService,
     PushService,
     TemplatesService,
     ReminderEngineService,
     AnnouncementsService,
   ],
-  exports: [NotificationsService, PushService, TemplatesService, ReminderEngineService, AnnouncementsService, BullModule],
+  exports: [
+    NotificationsService,
+    PushService,
+    TemplatesService,
+    ReminderEngineService,
+    AnnouncementsService,
+    BullModule,
+  ],
 })
 export class NotificationsModule {}

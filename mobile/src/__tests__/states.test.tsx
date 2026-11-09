@@ -10,9 +10,23 @@ jest.mock('@/api/endpoints', () => ({ Api: { vehicles: jest.fn(), dashboard: jes
 const mockedApi = Api as jest.Mocked<typeof Api>;
 
 const vehicle = {
-  id: 'v1', brand: 'Chevrolet', model: 'Cobalt', year: 2021, registrationNumber: '01 A 123 BC', vin: null, fuelType: 'PETROL', engineSize: null,
-  currentMileage: 45000, mileageUpdatedAt: '2026-01-01T00:00:00Z', mileageStale: true, notes: null, isPrimary: true, coverImageUrl: null, images: [],
-  createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
+  id: 'v1',
+  brand: 'Chevrolet',
+  model: 'Cobalt',
+  year: 2021,
+  registrationNumber: '01 A 123 BC',
+  vin: null,
+  fuelType: 'PETROL',
+  engineSize: null,
+  currentMileage: 45000,
+  mileageUpdatedAt: '2026-01-01T00:00:00Z',
+  mileageStale: true,
+  notes: null,
+  isPrimary: true,
+  coverImageUrl: null,
+  images: [],
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
 } as Vehicle;
 
 const dashboard: MobileDashboard = {
@@ -49,9 +63,13 @@ describe('Dashboard states', () => {
 
   it('shows an error state with retry', async () => {
     mockedApi.vehicles.mockResolvedValue([vehicle]);
-    mockedApi.dashboard.mockRejectedValueOnce(new ApiError(0, 'NETWORK', 'net')).mockResolvedValueOnce(dashboard);
+    mockedApi.dashboard
+      .mockRejectedValueOnce(new ApiError(0, 'NETWORK', 'net'))
+      .mockResolvedValueOnce(dashboard);
     renderWithProviders(<DashboardScreen />);
-    expect(await screen.findByText('No connection to the server. Check your internet connection.')).toBeTruthy();
+    expect(
+      await screen.findByText('No connection to the server. Check your internet connection.'),
+    ).toBeTruthy();
     fireEvent.press(screen.getByText('Try again'));
     await waitFor(() => expect(screen.getByText('Chevrolet Cobalt')).toBeTruthy());
   });
@@ -61,13 +79,21 @@ describe('localization', () => {
   it('translates errors in all languages including Russian plurals', async () => {
     const t = i18n.t.bind(i18n);
     await i18n.changeLanguage('ru');
-    expect(errorMessage(t, new ApiError(400, 'OTP_INVALID', '', { attemptsRemaining: 3 }))).toBe('Неверный код. Осталось 3 попытки.');
-    expect(errorMessage(t, new ApiError(400, 'OTP_INVALID', '', { attemptsRemaining: 1 }))).toBe('Неверный код. Осталась 1 попытка.');
+    expect(errorMessage(t, new ApiError(400, 'OTP_INVALID', '', { attemptsRemaining: 3 }))).toBe(
+      'Неверный код. Осталось 3 попытки.',
+    );
+    expect(errorMessage(t, new ApiError(400, 'OTP_INVALID', '', { attemptsRemaining: 1 }))).toBe(
+      'Неверный код. Осталась 1 попытка.',
+    );
     expect(i18n.t('maintenance.daysLeft', { count: 5 })).toBe('Осталось 5 дней');
     expect(i18n.t('maintenance.daysLeft', { count: 22 })).toBe('Осталось 22 дня');
     await i18n.changeLanguage('uz');
-    expect(errorMessage(t, new ApiError(0, 'NETWORK', ''))).toBe('Server bilan aloqa yoʻq. Internetni tekshiring.');
-    expect(errorMessage(t, new ApiError(503, 'WHATEVER', ''))).toBe('Server vaqtincha ishlamayapti. Keyinroq urinib koʻring.');
+    expect(errorMessage(t, new ApiError(0, 'NETWORK', ''))).toBe(
+      'Server bilan aloqa yoʻq. Internetni tekshiring.',
+    );
+    expect(errorMessage(t, new ApiError(503, 'WHATEVER', ''))).toBe(
+      'Server vaqtincha ishlamayapti. Keyinroq urinib koʻring.',
+    );
     await i18n.changeLanguage('en');
   });
 });

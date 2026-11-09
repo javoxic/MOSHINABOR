@@ -31,22 +31,22 @@ consumes the compiled CommonJS build.
 
 Controllers are thin; all business logic lives in services.
 
-| Module | Responsibility |
-|---|---|
-| `config` | Zod-validated environment; production refuses unsafe settings |
-| `auth` | OTP request/verify, token issuing/rotation, logout |
-| `sms` | Provider adapters (Eskiz, Twilio, dev logger) behind `SmsProvider`; delivery webhooks |
-| `users` | Profile, settings, avatar, account deletion (grace period + purge job) |
-| `files` | Image validation (magic bytes), re-encoding with sharp (EXIF/GPS stripped), private storage |
-| `vehicles` | Vehicles, images, odometer readings (`applyMileage`) |
-| `service-types` | System + custom categories |
-| `maintenance` | Schedules, completion transaction, service history, baseline resync |
-| `expenses` | Expenses and statistics (SQL aggregation in the Tashkent calendar) |
-| `dashboard` | Mobile home screen aggregate |
-| `notifications` | In-app notifications, templates, Expo push + receipts, reminder engine, announcements |
-| `jobs` | Cron schedule (worker role) with Redis locks |
-| `admin` | Admin auth, RBAC guard, audit log, management endpoints |
-| `health` | Liveness/readiness, full system health, public app config |
+| Module          | Responsibility                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `config`        | Zod-validated environment; production refuses unsafe settings                               |
+| `auth`          | OTP request/verify, token issuing/rotation, logout                                          |
+| `sms`           | Provider adapters (Eskiz, Twilio, dev logger) behind `SmsProvider`; delivery webhooks       |
+| `users`         | Profile, settings, avatar, account deletion (grace period + purge job)                      |
+| `files`         | Image validation (magic bytes), re-encoding with sharp (EXIF/GPS stripped), private storage |
+| `vehicles`      | Vehicles, images, odometer readings (`applyMileage`)                                        |
+| `service-types` | System + custom categories                                                                  |
+| `maintenance`   | Schedules, completion transaction, service history, baseline resync                         |
+| `expenses`      | Expenses and statistics (SQL aggregation in the Tashkent calendar)                          |
+| `dashboard`     | Mobile home screen aggregate                                                                |
+| `notifications` | In-app notifications, templates, Expo push + receipts, reminder engine, announcements       |
+| `jobs`          | Cron schedule (worker role) with Redis locks                                                |
+| `admin`         | Admin auth, RBAC guard, audit log, management endpoints                                     |
+| `health`        | Liveness/readiness, full system health, public app config                                   |
 
 **Process roles** (`PROCESS_ROLE`): `api` serves HTTP; `worker` runs cron jobs and the BullMQ push
 queue; `all` does both (development). Every cron job takes a Redis lock, so multiple workers are safe.
@@ -61,11 +61,11 @@ service → centralized exception filter (`{statusCode, code, message, details, 
 `nextDueDate = lastServiceDate + intervalDays`, `nextDueMileage = lastServiceMileage + intervalKm`.
 Status is the **worse** of the date and mileage classifications:
 
-| Status | Date | Mileage |
-|---|---|---|
-| `DUE_SOON` | ≤ `dueSoonDays` (14) left | ≤ `dueSoonKm` (1000) left |
-| `DUE` | due date reached | due mileage reached |
-| `OVERDUE` | ≥ `overdueGraceDays` (7) past | ≥ `overdueGraceKm` (500) past |
+| Status     | Date                          | Mileage                       |
+| ---------- | ----------------------------- | ----------------------------- |
+| `DUE_SOON` | ≤ `dueSoonDays` (14) left     | ≤ `dueSoonKm` (1000) left     |
+| `DUE`      | due date reached              | due mileage reached           |
+| `OVERDUE`  | ≥ `overdueGraceDays` (7) past | ≥ `overdueGraceKm` (500) past |
 
 Thresholds are admin-configurable system settings. Odometer data older than `mileageStaleDays` (30)
 is flagged `mileageStale`; the UI warns, and the reminder engine ignores the mileage dimension for

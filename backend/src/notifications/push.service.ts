@@ -8,7 +8,11 @@ export interface ExpoClient {
   chunkPushNotifications(messages: ExpoPushMessage[]): ExpoPushMessage[][];
   sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]>;
   chunkPushNotificationReceiptIds(ids: string[]): string[][];
-  getPushNotificationReceiptsAsync(ids: string[]): Promise<Record<string, { status: 'ok' | 'error'; message?: string; details?: { error?: string } }>>;
+  getPushNotificationReceiptsAsync(
+    ids: string[],
+  ): Promise<
+    Record<string, { status: 'ok' | 'error'; message?: string; details?: { error?: string } }>
+  >;
 }
 
 @Injectable()
@@ -28,17 +32,25 @@ export class PushService {
   async sendForNotification(notificationId: string): Promise<void> {
     const n = await this.prisma.notification.findUnique({
       where: { id: notificationId },
-      include: { user: { include: { settings: true, pushDevices: { where: { disabledAt: null } } } } },
+      include: {
+        user: { include: { settings: true, pushDevices: { where: { disabledAt: null } } } },
+      },
     });
     if (!n || n.pushStatus !== 'PENDING') return;
     const user = n.user;
     if (user.status !== 'ACTIVE' || user.settings?.pushEnabled === false) {
-      await this.prisma.notification.update({ where: { id: n.id }, data: { pushStatus: 'SKIPPED' } });
+      await this.prisma.notification.update({
+        where: { id: n.id },
+        data: { pushStatus: 'SKIPPED' },
+      });
       return;
     }
     const devices = user.pushDevices.filter((d) => Expo.isExpoPushToken(d.token));
     if (devices.length === 0) {
-      await this.prisma.notification.update({ where: { id: n.id }, data: { pushStatus: 'SKIPPED' } });
+      await this.prisma.notification.update({
+        where: { id: n.id },
+        data: { pushStatus: 'SKIPPED' },
+      });
       return;
     }
 
@@ -49,7 +61,11 @@ export class PushService {
       sound: 'default',
       priority: 'high',
       channelId: 'reminders',
-      data: { notificationId: n.id, type: n.type, ...((n.data as Record<string, string> | null) ?? {}) },
+      data: {
+        notificationId: n.id,
+        type: n.type,
+        ...((n.data as Record<string, string> | null) ?? {}),
+      },
     }));
 
     const tickets: ExpoPushTicket[] = [];
@@ -67,25 +83,47 @@ export class PushService {
       if (ticket.status === 'ok') {
         anySent = true;
         await this.prisma.notificationDelivery.create({
-          data: { notificationId: n.id, pushDeviceId: device.id, status: 'SENT', ticketId: ticket.id, sentAt: now },
+          data: {
+            notificationId: n.id,
+            pushDeviceId: device.id,
+            status: 'SENT',
+            ticketId: ticket.id,
+            sentAt: now,
+          },
         });
       } else {
         const code = ticket.details?.error ?? 'Error';
         await this.prisma.notificationDelivery.create({
-          data: { notificationId: n.id, pushDeviceId: device.id, status: 'FAILED', error: `${code}: ${ticket.message}`.slice(0, 500) },
+          data: {
+            notificationId: n.id,
+            pushDeviceId: device.id,
+            status: 'FAILED',
+            error: `${code}: ${ticket.message}`.slice(0, 500),
+          },
         });
         if (code === 'DeviceNotRegistered') {
-          await this.prisma.pushDevice.update({ where: { id: device.id }, data: { disabledAt: now } });
+          await this.prisma.pushDevice.update({
+            where: { id: device.id },
+            data: { disabledAt: now },
+          });
         }
       }
     }
-    await this.prisma.notification.update({ where: { id: n.id }, data: { pushStatus: anySent ? 'SENT' : 'FAILED' } });
+    await this.prisma.notification.update({
+      where: { id: n.id },
+      data: { pushStatus: anySent ? 'SENT' : 'FAILED' },
+    });
   }
 
   /** Fetches Expo push receipts (available ~15 min after sending) to confirm hand-off to APNs/FCM. */
   async checkReceipts(now = new Date()): Promise<{ checked: number }> {
     const pending = await this.prisma.notificationDelivery.findMany({
-      where: { status: 'SENT', ticketId: { not: null }, receiptCheckedAt: null, sentAt: { lte: new Date(now.getTime() - 15 * 60_000) } },
+      where: {
+        status: 'SENT',
+        ticketId: { not: null },
+        receiptCheckedAt: null,
+        sentAt: { lte: new Date(now.getTime() - 15 * 60_000) },
+      },
       take: 1000,
       include: { notification: { select: { id: true } } },
     });
@@ -100,20 +138,33 @@ export class PushService {
         if (!receipt) {
           // Receipts expire after 24h; give up after a day.
           if (delivery.sentAt && now.getTime() - delivery.sentAt.getTime() > 86_400_000) {
-            await this.prisma.notificationDelivery.update({ where: { id: delivery.id }, data: { receiptCheckedAt: now } });
+            await this.prisma.notificationDelivery.update({
+              where: { id: delivery.id },
+              data: { receiptCheckedAt: now },
+            });
           }
           continue;
         }
         if (receipt.status === 'ok') {
-          await this.prisma.notificationDelivery.update({ where: { id: delivery.id }, data: { status: 'DELIVERED', receiptCheckedAt: now } });
+          await this.prisma.notificationDelivery.update({
+            where: { id: delivery.id },
+            data: { status: 'DELIVERED', receiptCheckedAt: now },
+          });
         } else {
           const code = receipt.details?.error ?? 'Error';
           await this.prisma.notificationDelivery.update({
             where: { id: delivery.id },
-            data: { status: 'FAILED', error: `${code}: ${receipt.message ?? ''}`.slice(0, 500), receiptCheckedAt: now },
+            data: {
+              status: 'FAILED',
+              error: `${code}: ${receipt.message ?? ''}`.slice(0, 500),
+              receiptCheckedAt: now,
+            },
           });
           if (code === 'DeviceNotRegistered' && delivery.pushDeviceId) {
-            await this.prisma.pushDevice.update({ where: { id: delivery.pushDeviceId }, data: { disabledAt: now } });
+            await this.prisma.pushDevice.update({
+              where: { id: delivery.pushDeviceId },
+              data: { disabledAt: now },
+            });
           }
         }
       }

@@ -7,7 +7,10 @@ import { loadEnv } from './config/env';
 /** Background worker: push delivery queue + scheduled jobs (reminders, receipts, announcements, purge). */
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
-  const app = await NestFactory.createApplicationContext(AppModule.register(env, { withHttp: false, withJobs: true }), { bufferLogs: true });
+  const app = await NestFactory.createApplicationContext(
+    AppModule.register(env, { withHttp: false, withJobs: true }),
+    { bufferLogs: true },
+  );
   app.useLogger(app.get(Logger));
   app.enableShutdownHooks();
   app.get(Logger).log('MOSHINA BOR worker started');

@@ -39,9 +39,16 @@ export class VehiclesService {
     private readonly settings: SystemSettingsService,
   ) {}
 
-  async toView(v: VehicleWithImages, primaryVehicleId: string | null, now = new Date()): Promise<VehicleView> {
+  async toView(
+    v: VehicleWithImages,
+    primaryVehicleId: string | null,
+    now = new Date(),
+  ): Promise<VehicleView> {
     const staleDays = await this.settings.get('reminders.mileageStaleDays');
-    const images = [...v.images].sort((a, b) => Number(b.isCover) - Number(a.isCover) || a.createdAt.getTime() - b.createdAt.getTime());
+    const images = [...v.images].sort(
+      (a, b) =>
+        Number(b.isCover) - Number(a.isCover) || a.createdAt.getTime() - b.createdAt.getTime(),
+    );
     const cover = images[0];
     return {
       id: v.id,
@@ -58,19 +65,31 @@ export class VehiclesService {
       notes: v.notes,
       isPrimary: v.id === primaryVehicleId,
       coverImageUrl: cover ? this.files.url(cover.fileId) : null,
-      images: images.map((i) => ({ id: i.id, url: this.files.url(i.fileId) as string, isCover: i.isCover, createdAt: i.createdAt.toISOString() })),
+      images: images.map((i) => ({
+        id: i.id,
+        url: this.files.url(i.fileId) as string,
+        isCover: i.isCover,
+        createdAt: i.createdAt.toISOString(),
+      })),
       createdAt: v.createdAt.toISOString(),
       updatedAt: v.updatedAt.toISOString(),
     };
   }
 
   private async primaryId(userId: string): Promise<string | null> {
-    const s = await this.prisma.userSettings.findUnique({ where: { userId }, select: { primaryVehicleId: true } });
+    const s = await this.prisma.userSettings.findUnique({
+      where: { userId },
+      select: { primaryVehicleId: true },
+    });
     return s?.primaryVehicleId ?? null;
   }
 
   /** Loads a vehicle only if it belongs to the user. Responds 404 for foreign vehicles (no existence leak). */
-  async getOwned(userId: string, vehicleId: string, tx: Prisma.TransactionClient = this.prisma): Promise<Vehicle> {
+  async getOwned(
+    userId: string,
+    vehicleId: string,
+    tx: Prisma.TransactionClient = this.prisma,
+  ): Promise<Vehicle> {
     const v = await tx.vehicle.findFirst({ where: { id: vehicleId, userId } });
     if (!v) throw AppException.notFound('Vehicle');
     return v;
@@ -78,13 +97,19 @@ export class VehiclesService {
 
   /** Row-locks an owned vehicle until the surrounding transaction ends (404 if not owned). */
   async lockOwned(userId: string, vehicleId: string, tx: Prisma.TransactionClient): Promise<void> {
-    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM vehicles WHERE id = ${vehicleId}::uuid AND user_id = ${userId}::uuid FOR UPDATE`;
+    const rows = await tx.$queryRaw<
+      { id: string }[]
+    >`SELECT id FROM vehicles WHERE id = ${vehicleId}::uuid AND user_id = ${userId}::uuid FOR UPDATE`;
     if (rows.length === 0) throw AppException.notFound('Vehicle');
   }
 
   async list(userId: string): Promise<VehicleView[]> {
     const [vehicles, primary] = await Promise.all([
-      this.prisma.vehicle.findMany({ where: { userId }, include: { images: true }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.vehicle.findMany({
+        where: { userId },
+        include: { images: true },
+        orderBy: { createdAt: 'asc' },
+      }),
       this.primaryId(userId),
     ]);
     const views = await Promise.all(vehicles.map((v) => this.toView(v, primary)));
@@ -92,7 +117,10 @@ export class VehiclesService {
   }
 
   async get(userId: string, vehicleId: string): Promise<VehicleView> {
-    const v = await this.prisma.vehicle.findFirst({ where: { id: vehicleId, userId }, include: { images: true } });
+    const v = await this.prisma.vehicle.findFirst({
+      where: { id: vehicleId, userId },
+      include: { images: true },
+    });
     if (!v) throw AppException.notFound('Vehicle');
     return this.toView(v, await this.primaryId(userId));
   }
@@ -104,7 +132,11 @@ export class VehiclesService {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId}::uuid FOR UPDATE`;
       const count = await tx.vehicle.count({ where: { userId } });
       if (count >= MAX_VEHICLES_PER_USER) {
-        throw new AppException(ERROR_CODES.LIMIT_REACHED, HttpStatus.UNPROCESSABLE_ENTITY, `You can add up to ${MAX_VEHICLES_PER_USER} vehicles`);
+        throw new AppException(
+          ERROR_CODES.LIMIT_REACHED,
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          `You can add up to ${MAX_VEHICLES_PER_USER} vehicles`,
+        );
       }
       const v = await tx.vehicle.create({
         data: {
@@ -119,10 +151,16 @@ export class VehiclesService {
           currentMileage: dto.currentMileage,
           mileageUpdatedAt: now,
           notes: dto.notes ?? null,
-          mileageLogs: { create: { mileage: dto.currentMileage, source: 'VEHICLE_CREATE', recordedAt: now } },
+          mileageLogs: {
+            create: { mileage: dto.currentMileage, source: 'VEHICLE_CREATE', recordedAt: now },
+          },
         },
       });
-      const settings = await tx.userSettings.upsert({ where: { userId }, create: { userId }, update: {} });
+      const settings = await tx.userSettings.upsert({
+        where: { userId },
+        create: { userId },
+        update: {},
+      });
       if (!settings.primaryVehicleId) {
         await tx.userSettings.update({ where: { userId }, data: { primaryVehicleId: v.id } });
       }
@@ -152,7 +190,9 @@ export class VehiclesService {
             { currentMileage: existing.currentMileage },
           );
         }
-        await this.applyMileage(tx, existing, currentMileage, 'VEHICLE_EDIT', new Date(), { allowDecrease: Boolean(correctMileage) });
+        await this.applyMileage(tx, existing, currentMileage, 'VEHICLE_EDIT', new Date(), {
+          allowDecrease: Boolean(correctMileage),
+        });
       }
     });
     return this.get(userId, vehicleId);
@@ -168,11 +208,16 @@ export class VehiclesService {
     });
     await this.prisma.$transaction(async (tx) => {
       await tx.vehicle.delete({ where: { id: vehicleId } });
-      if (files.length) await tx.storedFile.deleteMany({ where: { id: { in: files.map((f) => f.id) } } });
+      if (files.length)
+        await tx.storedFile.deleteMany({ where: { id: { in: files.map((f) => f.id) } } });
       const settings = await tx.userSettings.findUnique({ where: { userId } });
       if (settings && !settings.primaryVehicleId) {
-        const next = await tx.vehicle.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
-        if (next) await tx.userSettings.update({ where: { userId }, data: { primaryVehicleId: next.id } });
+        const next = await tx.vehicle.findFirst({
+          where: { userId },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (next)
+          await tx.userSettings.update({ where: { userId }, data: { primaryVehicleId: next.id } });
       }
     });
     await this.files.removeBlobs(files.map((f) => f.storageKey));
@@ -198,7 +243,9 @@ export class VehiclesService {
         { currentMileage: vehicle.currentMileage },
       );
     }
-    await this.prisma.$transaction((tx) => this.applyMileage(tx, vehicle, mileage, 'MANUAL', new Date()));
+    await this.prisma.$transaction((tx) =>
+      this.applyMileage(tx, vehicle, mileage, 'MANUAL', new Date()),
+    );
     return this.get(userId, vehicleId);
   }
 
@@ -215,24 +262,51 @@ export class VehiclesService {
     opts: { allowDecrease?: boolean } = {},
   ): Promise<void> {
     if (mileage < vehicle.currentMileage && !opts.allowDecrease) return;
-    await tx.vehicle.update({ where: { id: vehicle.id }, data: { currentMileage: mileage, mileageUpdatedAt: at } });
-    await tx.mileageLog.create({ data: { vehicleId: vehicle.id, mileage, source, recordedAt: at } });
+    await tx.vehicle.update({
+      where: { id: vehicle.id },
+      data: { currentMileage: mileage, mileageUpdatedAt: at },
+    });
+    await tx.mileageLog.create({
+      data: { vehicleId: vehicle.id, mileage, source, recordedAt: at },
+    });
   }
 
-  async mileageLogs(userId: string, vehicleId: string): Promise<{ id: string; mileage: number; source: MileageSource; recordedAt: string }[]> {
+  async mileageLogs(
+    userId: string,
+    vehicleId: string,
+  ): Promise<{ id: string; mileage: number; source: MileageSource; recordedAt: string }[]> {
     await this.getOwned(userId, vehicleId);
-    const logs = await this.prisma.mileageLog.findMany({ where: { vehicleId }, orderBy: { recordedAt: 'desc' }, take: 100 });
-    return logs.map((l) => ({ id: l.id, mileage: l.mileage, source: l.source, recordedAt: l.recordedAt.toISOString() }));
+    const logs = await this.prisma.mileageLog.findMany({
+      where: { vehicleId },
+      orderBy: { recordedAt: 'desc' },
+      take: 100,
+    });
+    return logs.map((l) => ({
+      id: l.id,
+      mileage: l.mileage,
+      source: l.source,
+      recordedAt: l.recordedAt.toISOString(),
+    }));
   }
 
-  async addImage(userId: string, vehicleId: string, upload: Express.Multer.File | undefined): Promise<VehicleView> {
+  async addImage(
+    userId: string,
+    vehicleId: string,
+    upload: Express.Multer.File | undefined,
+  ): Promise<VehicleView> {
     await this.getOwned(userId, vehicleId);
     const count = await this.prisma.vehicleImage.count({ where: { vehicleId } });
     if (count >= UPLOAD_LIMITS.maxImagesPerVehicle) {
-      throw new AppException(ERROR_CODES.LIMIT_REACHED, HttpStatus.UNPROCESSABLE_ENTITY, `Up to ${UPLOAD_LIMITS.maxImagesPerVehicle} images per vehicle`);
+      throw new AppException(
+        ERROR_CODES.LIMIT_REACHED,
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        `Up to ${UPLOAD_LIMITS.maxImagesPerVehicle} images per vehicle`,
+      );
     }
     const file = await this.files.storeImage(userId, 'VEHICLE_IMAGE', upload);
-    await this.prisma.vehicleImage.create({ data: { vehicleId, fileId: file.id, isCover: count === 0 } });
+    await this.prisma.vehicleImage.create({
+      data: { vehicleId, fileId: file.id, isCover: count === 0 },
+    });
     return this.get(userId, vehicleId);
   }
 
@@ -253,8 +327,12 @@ export class VehiclesService {
     if (!image) throw AppException.notFound('Image');
     await this.files.deleteFile(image.fileId); // cascades to vehicle_images
     if (image.isCover) {
-      const next = await this.prisma.vehicleImage.findFirst({ where: { vehicleId }, orderBy: { createdAt: 'asc' } });
-      if (next) await this.prisma.vehicleImage.update({ where: { id: next.id }, data: { isCover: true } });
+      const next = await this.prisma.vehicleImage.findFirst({
+        where: { vehicleId },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (next)
+        await this.prisma.vehicleImage.update({ where: { id: next.id }, data: { isCover: true } });
     }
     return this.get(userId, vehicleId);
   }

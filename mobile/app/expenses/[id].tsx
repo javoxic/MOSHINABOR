@@ -58,13 +58,27 @@ export default function ExpenseDetailsScreen() {
           <ListRow title={t('expenses.amount')} value={money(e.amount, i18n.language)} />
           <ListRow title={t('expenses.date')} value={formatDate(e.date, i18n.language)} />
         </Card>
-        <Button title={t('history.details')} variant="secondary" onPress={() => router.replace({ pathname: '/history/[id]', params: { id: e.serviceRecordId! } })} style={{ marginTop: spacing.lg }} />
+        <Button
+          title={t('history.details')}
+          variant="secondary"
+          onPress={() =>
+            router.replace({ pathname: '/history/[id]', params: { id: e.serviceRecordId! } })
+          }
+          style={{ marginTop: spacing.lg }}
+        />
       </Screen>
     );
   }
   return (
     <Screen back title={t('expenses.edit')}>
-      <ExpenseForm vehicles={list} defaultVehicleId={e.vehicleId} initial={e} onSubmit={(b) => update.mutate(b)} submitting={update.isPending} serverError={update.error} />
+      <ExpenseForm
+        vehicles={list}
+        defaultVehicleId={e.vehicleId}
+        initial={e}
+        onSubmit={(b) => update.mutate(b)}
+        submitting={update.isPending}
+        serverError={update.error}
+      />
       <Button
         title={t('common.delete')}
         variant="danger"

@@ -16,12 +16,22 @@ export class AppConfigController {
 
   @Get()
   @ApiOperation({ summary: 'Public client configuration (support contacts, default language)' })
-  async get(): Promise<{ supportPhone: string | null; supportEmail: string | null; defaultLanguage: string; accountDeletionGraceDays: number }> {
+  async get(): Promise<{
+    supportPhone: string | null;
+    supportEmail: string | null;
+    defaultLanguage: string;
+    accountDeletionGraceDays: number;
+  }> {
     const [phone, email, lang] = await Promise.all([
       this.settings.get('app.supportPhone'),
       this.settings.get('app.supportEmail'),
       this.settings.get('app.defaultLanguage'),
     ]);
-    return { supportPhone: phone || null, supportEmail: email || null, defaultLanguage: lang, accountDeletionGraceDays: this.env.ACCOUNT_DELETION_GRACE_DAYS };
+    return {
+      supportPhone: phone || null,
+      supportEmail: email || null,
+      defaultLanguage: lang,
+      accountDeletionGraceDays: this.env.ACCOUNT_DELETION_GRACE_DAYS,
+    };
   }
 }

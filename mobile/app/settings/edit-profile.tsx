@@ -18,7 +18,10 @@ export default function EditProfileScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
-  const { control, handleSubmit, formState } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema), defaultValues: { fullName: user?.fullName ?? '' } });
+  const { control, handleSubmit, formState } = useForm<ProfileInput>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { fullName: user?.fullName ?? '' },
+  });
   const save = useMutation({
     mutationFn: (name: string) => Api.updateProfile(name),
     onSuccess: async (u) => {
@@ -32,12 +35,31 @@ export default function EditProfileScreen() {
         control={control}
         name="fullName"
         render={({ field }) => (
-          <TextField label={t('auth.fullName')} value={field.value} onChangeText={field.onChange} autoCapitalize="words" error={formState.errors.fullName ? t(formState.errors.fullName.message ?? 'validation.required') : undefined} />
+          <TextField
+            label={t('auth.fullName')}
+            value={field.value}
+            onChangeText={field.onChange}
+            autoCapitalize="words"
+            error={
+              formState.errors.fullName
+                ? t(formState.errors.fullName.message ?? 'validation.required')
+                : undefined
+            }
+          />
         )}
       />
-      <TextField label={t('profile.phone')} value={user ? formatPhoneDisplay(user.phone) : ''} editable={false} />
+      <TextField
+        label={t('profile.phone')}
+        value={user ? formatPhoneDisplay(user.phone) : ''}
+        editable={false}
+      />
       {save.isError ? <InlineNotice tone="danger" text={errorMessage(t, save.error)} /> : null}
-      <Button title={t('common.save')} onPress={handleSubmit((v) => save.mutate(v.fullName))} loading={save.isPending} style={{ marginTop: spacing.lg }} />
+      <Button
+        title={t('common.save')}
+        onPress={handleSubmit((v) => save.mutate(v.fullName))}
+        loading={save.isPending}
+        style={{ marginTop: spacing.lg }}
+      />
     </Screen>
   );
 }

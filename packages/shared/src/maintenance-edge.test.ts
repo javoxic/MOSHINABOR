@@ -32,7 +32,12 @@ describe('Asia/Tashkent day boundary (UTC+5, no DST)', () => {
   });
 
   it('a schedule becomes DUE exactly at Tashkent midnight of the due date', () => {
-    const input = { nextDueDate: '2026-06-15', nextDueMileage: null, currentMileage: 1000, mileageUpdatedAt: null };
+    const input = {
+      nextDueDate: '2026-06-15',
+      nextDueMileage: null,
+      currentMileage: 1000,
+      mileageUpdatedAt: null,
+    };
     const before = new Date('2026-06-14T18:59:00Z');
     const after = new Date('2026-06-14T19:01:00Z');
     expect(computeScheduleStatus(input, toLocalDate(before), before).status).toBe('DUE_SOON');
@@ -43,7 +48,12 @@ describe('Asia/Tashkent day boundary (UTC+5, no DST)', () => {
 describe('thresholds are inclusive at the exact boundary', () => {
   const now = new Date('2026-06-15T07:00:00Z');
   const today = '2026-06-15';
-  const base = { nextDueDate: null, nextDueMileage: null, currentMileage: 50000, mileageUpdatedAt: fresh(now) };
+  const base = {
+    nextDueDate: null,
+    nextDueMileage: null,
+    currentMileage: 50000,
+    mileageUpdatedAt: fresh(now),
+  };
   it.each([
     [{ nextDueDate: addDays(today, 15) }, 'OK'],
     [{ nextDueDate: addDays(today, 14) }, 'DUE_SOON'],
@@ -62,32 +72,73 @@ describe('thresholds are inclusive at the exact boundary', () => {
 
   it('mileage is stale only after more than mileageStaleDays', () => {
     const at = (days: number) => new Date(now.getTime() - days * 86_400_000);
-    expect(computeScheduleStatus({ ...base, nextDueMileage: 60000, mileageUpdatedAt: at(30) }, today, now).mileageStale).toBe(false);
-    expect(computeScheduleStatus({ ...base, nextDueMileage: 60000, mileageUpdatedAt: at(31) }, today, now).mileageStale).toBe(true);
+    expect(
+      computeScheduleStatus(
+        { ...base, nextDueMileage: 60000, mileageUpdatedAt: at(30) },
+        today,
+        now,
+      ).mileageStale,
+    ).toBe(false);
+    expect(
+      computeScheduleStatus(
+        { ...base, nextDueMileage: 60000, mileageUpdatedAt: at(31) },
+        today,
+        now,
+      ).mileageStale,
+    ).toBe(true);
   });
 
   it('whichever comes first: mileage OVERDUE wins over a date that is still far away', () => {
-    const r = computeScheduleStatus({ ...base, nextDueDate: addDays(today, 200), nextDueMileage: 49000 }, today, now);
-    expect(r).toMatchObject({ status: 'OVERDUE', triggeredBy: 'MILEAGE', daysRemaining: 200, kmRemaining: -1000 });
+    const r = computeScheduleStatus(
+      { ...base, nextDueDate: addDays(today, 200), nextDueMileage: 49000 },
+      today,
+      now,
+    );
+    expect(r).toMatchObject({
+      status: 'OVERDUE',
+      triggeredBy: 'MILEAGE',
+      daysRemaining: 200,
+      kmRemaining: -1000,
+    });
   });
 
   it('whichever comes first: date OVERDUE wins over mileage that is still far away', () => {
-    const r = computeScheduleStatus({ ...base, nextDueDate: addDays(today, -30), nextDueMileage: 90000 }, today, now);
+    const r = computeScheduleStatus(
+      { ...base, nextDueDate: addDays(today, -30), nextDueMileage: 90000 },
+      today,
+      now,
+    );
     expect(r).toMatchObject({ status: 'OVERDUE', triggeredBy: 'DATE' });
   });
 
   it('respects custom thresholds', () => {
     const t = { ...DEFAULT_THRESHOLDS, dueSoonDays: 30 };
-    expect(computeScheduleStatus({ ...base, nextDueDate: addDays(today, 25) }, today, now, t).status).toBe('DUE_SOON');
+    expect(
+      computeScheduleStatus({ ...base, nextDueDate: addDays(today, 25) }, today, now, t).status,
+    ).toBe('DUE_SOON');
   });
 });
 
 describe('next due after completion and interval changes', () => {
   it('recomputes from the completion baseline, across leap day', () => {
-    expect(computeNextDue({ lastServiceDate: '2027-09-01', lastServiceMileage: 99000, intervalDays: 180, intervalKm: 10000 })).toEqual({
+    expect(
+      computeNextDue({
+        lastServiceDate: '2027-09-01',
+        lastServiceMileage: 99000,
+        intervalDays: 180,
+        intervalKm: 10000,
+      }),
+    ).toEqual({
       nextDueDate: '2028-02-28',
       nextDueMileage: 109000,
     });
-    expect(computeNextDue({ lastServiceDate: '2027-09-01', lastServiceMileage: 99000, intervalDays: 181, intervalKm: null }).nextDueDate).toBe('2028-02-29');
+    expect(
+      computeNextDue({
+        lastServiceDate: '2027-09-01',
+        lastServiceMileage: 99000,
+        intervalDays: 181,
+        intervalKm: null,
+      }).nextDueDate,
+    ).toBe('2028-02-29');
   });
 });

@@ -7,7 +7,8 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 export const PERMISSIONS_KEY = 'adminPermissions';
 /** Admin routes: all listed permissions are required. */
-export const RequirePermissions = (...permissions: AdminPermission[]) => SetMetadata(PERMISSIONS_KEY, permissions);
+export const RequirePermissions = (...permissions: AdminPermission[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);
 
 export interface AuthUser {
   id: string;

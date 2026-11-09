@@ -21,11 +21,26 @@ export interface AppTextProps extends TextProps {
   uppercase?: boolean;
 }
 
-export function Text({ variant = 'body', tone = 'primary', align, uppercase, style, ...rest }: AppTextProps) {
+export function Text({
+  variant = 'body',
+  tone = 'primary',
+  align,
+  uppercase,
+  style,
+  ...rest
+}: AppTextProps) {
   return (
     <RNText
       maxFontSizeMultiplier={1.6}
-      style={[typography[variant], { color: toneColor[tone], textAlign: align, textTransform: uppercase ? 'uppercase' : undefined }, style]}
+      style={[
+        typography[variant],
+        {
+          color: toneColor[tone],
+          textAlign: align,
+          textTransform: uppercase ? 'uppercase' : undefined,
+        },
+        style,
+      ]}
       {...rest}
     />
   );

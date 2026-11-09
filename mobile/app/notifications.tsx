@@ -29,25 +29,45 @@ export default function NotificationsScreen() {
     queryKey: qk.notifications,
     queryFn: ({ pageParam }) => Api.notifications(pageParam),
     initialPageParam: 1,
-    getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
+    getNextPageParam: (last) =>
+      last.page * last.pageSize < last.total ? last.page + 1 : undefined,
   });
-  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: qk.notifications }), qc.invalidateQueries({ queryKey: ['dashboard'] })]);
+  const refresh = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: qk.notifications }),
+      qc.invalidateQueries({ queryKey: ['dashboard'] }),
+    ]);
   const readAll = useMutation({ mutationFn: Api.readAllNotifications, onSuccess: refresh });
-  const read = useMutation({ mutationFn: (id: string) => Api.readNotification(id), onSuccess: refresh });
+  const read = useMutation({
+    mutationFn: (id: string) => Api.readNotification(id),
+    onSuccess: refresh,
+  });
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   const unread = list.data?.pages[0]?.unread ?? 0;
 
   const open = (n: AppNotification) => {
     if (!n.readAt) read.mutate(n.id);
-    if (n.data?.scheduleId) router.push({ pathname: '/maintenance/[id]', params: { id: n.data.scheduleId } });
-    else if (n.data?.vehicleId) router.push({ pathname: '/vehicles/[id]', params: { id: n.data.vehicleId } });
+    if (n.data?.scheduleId)
+      router.push({ pathname: '/maintenance/[id]', params: { id: n.data.scheduleId } });
+    else if (n.data?.vehicleId)
+      router.push({ pathname: '/vehicles/[id]', params: { id: n.data.vehicleId } });
   };
 
   return (
     <Screen
       back
       title={t('notifications.title')}
-      right={unread > 0 ? <Button title={t('notifications.markAllRead')} variant="ghost" compact onPress={() => readAll.mutate()} loading={readAll.isPending} /> : null}
+      right={
+        unread > 0 ? (
+          <Button
+            title={t('notifications.markAllRead')}
+            variant="ghost"
+            compact
+            onPress={() => readAll.mutate()}
+            loading={readAll.isPending}
+          />
+        ) : null
+      }
       refreshing={list.isRefetching}
       onRefresh={() => list.refetch()}
       dataUpdatedAt={list.dataUpdatedAt}
@@ -57,13 +77,31 @@ export default function NotificationsScreen() {
       ) : list.isError && !list.data ? (
         <ErrorState message={errorMessage(t, list.error)} onRetry={() => list.refetch()} />
       ) : items.length === 0 ? (
-        <EmptyState icon="notifications-outline" title={t('notifications.empty')} body={t('notifications.emptyBody')} />
+        <EmptyState
+          icon="notifications-outline"
+          title={t('notifications.empty')}
+          body={t('notifications.emptyBody')}
+        />
       ) : (
         <>
           {items.map((n) => (
-            <Pressable key={n.id} accessibilityRole="button" accessibilityLabel={`${n.title}. ${n.body}`} onPress={() => open(n)} style={({ pressed }) => [styles.item, !n.readAt && styles.unread, pressed && { opacity: 0.85 }]}>
+            <Pressable
+              key={n.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${n.title}. ${n.body}`}
+              onPress={() => open(n)}
+              style={({ pressed }) => [
+                styles.item,
+                !n.readAt && styles.unread,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
               <View style={styles.icon}>
-                <Ionicons name={ICON[n.type]} size={20} color={n.type === 'MAINTENANCE_OVERDUE' ? colors.danger : colors.accent} />
+                <Ionicons
+                  name={ICON[n.type]}
+                  size={20}
+                  color={n.type === 'MAINTENANCE_OVERDUE' ? colors.danger : colors.accent}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text variant="bodyStrong">{n.title}</Text>
@@ -77,7 +115,15 @@ export default function NotificationsScreen() {
               {!n.readAt ? <View style={styles.dot} accessibilityLabel="unread" /> : null}
             </Pressable>
           ))}
-          {list.hasNextPage ? <Button title={t('common.loadMore')} variant="secondary" onPress={() => list.fetchNextPage()} loading={list.isFetchingNextPage} style={{ marginTop: spacing.md }} /> : null}
+          {list.hasNextPage ? (
+            <Button
+              title={t('common.loadMore')}
+              variant="secondary"
+              onPress={() => list.fetchNextPage()}
+              loading={list.isFetchingNextPage}
+              style={{ marginTop: spacing.md }}
+            />
+          ) : null}
         </>
       )}
     </Screen>
@@ -85,8 +131,24 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  item: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, marginTop: spacing.sm },
+  item: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
+  },
   unread: { borderColor: 'rgba(47,123,255,0.4)' },
-  icon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent, marginTop: 6 },
 });

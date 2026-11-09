@@ -21,7 +21,12 @@ export function toApiError(err: unknown): ApiError {
   if (err instanceof AxiosError) {
     if (err.response) {
       const b = err.response.data as Partial<ApiErrorBody> | undefined;
-      return new ApiError(err.response.status, b?.code ?? `HTTP_${err.response.status}`, b?.message ?? err.message, b?.details);
+      return new ApiError(
+        err.response.status,
+        b?.code ?? `HTTP_${err.response.status}`,
+        b?.message ?? err.message,
+        b?.details,
+      );
     }
     return new ApiError(0, 'NETWORK', 'Cannot reach the server. Check your connection.');
   }
@@ -44,7 +49,11 @@ let refreshing: Promise<string | null> | null = null;
 /** Exchanges the httpOnly refresh cookie for a new access token (single-flight). */
 export function refreshSession(): Promise<string | null> {
   refreshing ??= axios
-    .post<AdminLoginResponse>(`${BASE}/admin/auth/refresh`, null, { withCredentials: true, headers: CSRF, timeout: 15_000 })
+    .post<AdminLoginResponse>(`${BASE}/admin/auth/refresh`, null, {
+      withCredentials: true,
+      headers: CSRF,
+      timeout: 15_000,
+    })
     .then((r) => {
       useAdminAuth.getState().setSession(r.data.accessToken, r.data.admin);
       return r.data.accessToken;
@@ -70,8 +79,14 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (r) => r,
   async (error: AxiosError) => {
-    const original = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
-    if (error.response?.status === 401 && original && !original._retried && !original.url?.startsWith('/admin/auth/')) {
+    const original = error.config as
+      (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
+    if (
+      error.response?.status === 401 &&
+      original &&
+      !original._retried &&
+      !original.url?.startsWith('/admin/auth/')
+    ) {
       original._retried = true;
       const token = await refreshSession();
       if (token) {

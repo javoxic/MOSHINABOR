@@ -1,6 +1,8 @@
 // Environment for e2e tests: isolated database and Redis DB index.
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? 'postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_test?schema=public';
+process.env.DATABASE_URL =
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_test?schema=public';
 process.env.REDIS_URL = process.env.TEST_REDIS_URL ?? 'redis://localhost:6379/15';
 process.env.JWT_ACCESS_SECRET = 'test-access-secret-0123456789abcdefghijklmnop';
 process.env.JWT_ADMIN_SECRET = 'test-admin-secret-0123456789abcdefghijklmnopq';

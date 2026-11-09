@@ -51,13 +51,24 @@ export class AdminGuard implements CanActivate {
       where: { id: payload.sub },
       include: {
         role: { include: { permissions: true } },
-        sessions: { where: { familyId: payload.sid, revokedAt: null, expiresAt: { gt: now } }, select: { id: true }, take: 1 },
+        sessions: {
+          where: { familyId: payload.sid, revokedAt: null, expiresAt: { gt: now } },
+          select: { id: true },
+          take: 1,
+        },
       },
     });
-    if (!admin || !admin.isActive || admin.sessions.length === 0) throw AppException.unauthorized('Session is no longer valid');
+    if (!admin || !admin.isActive || admin.sessions.length === 0)
+      throw AppException.unauthorized('Session is no longer valid');
 
-    const permissions = new Set(admin.role.permissions.map((p) => p.permissionCode as AdminPermission));
-    const required = this.reflector.getAllAndOverride<AdminPermission[] | undefined>(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]) ?? [];
+    const permissions = new Set(
+      admin.role.permissions.map((p) => p.permissionCode as AdminPermission),
+    );
+    const required =
+      this.reflector.getAllAndOverride<AdminPermission[] | undefined>(PERMISSIONS_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? [];
     for (const p of required) {
       if (!permissions.has(p)) throw AppException.forbidden(`Missing permission: ${p}`);
     }

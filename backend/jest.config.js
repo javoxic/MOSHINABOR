@@ -7,7 +7,12 @@ const common = {
 };
 module.exports = {
   projects: [
-    { ...common, displayName: 'unit', rootDir: __dirname, testMatch: ['<rootDir>/src/**/*.spec.ts'] },
+    {
+      ...common,
+      displayName: 'unit',
+      rootDir: __dirname,
+      testMatch: ['<rootDir>/src/**/*.spec.ts'],
+    },
     {
       ...common,
       displayName: 'e2e',

@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/auth.decorators';
@@ -32,28 +44,42 @@ export class VehiclesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Edit a vehicle' })
-  update(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVehicleDto): Promise<VehicleView> {
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateVehicleDto,
+  ): Promise<VehicleView> {
     return this.vehicles.update(user.id, id, dto);
   }
 
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete a vehicle with its schedules, history, expenses and images' })
-  async remove(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async remove(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     await this.vehicles.remove(user.id, id);
   }
 
   @Post(':id/primary')
   @HttpCode(200)
   @ApiOperation({ summary: 'Set as primary vehicle' })
-  setPrimary(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<VehicleView> {
+  setPrimary(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<VehicleView> {
     return this.vehicles.setPrimary(user.id, id);
   }
 
   @Post(':id/mileage')
   @HttpCode(200)
   @ApiOperation({ summary: 'Record a new odometer reading' })
-  mileage(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateMileageDto): Promise<VehicleView> {
+  mileage(
+    @CurrentUser() user: AuthUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateMileageDto,
+  ): Promise<VehicleView> {
     return this.vehicles.updateMileage(user.id, id, dto.mileage);
   }
 
@@ -66,7 +92,9 @@ export class VehiclesController {
   @Post(':id/images')
   @ApiOperation({ summary: 'Upload a vehicle image (max 10 per vehicle)' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
+  })
   @UseInterceptors(FileInterceptor('file', imageUploadOptions))
   addImage(
     @CurrentUser() user: AuthUser,

@@ -27,7 +27,13 @@ export function Layout() {
   return (
     <div className={s.shell}>
       <div className={s.topbar}>
-        <Button variant="secondary" size="small" onClick={() => setOpen((o) => !o)} aria-label="Toggle navigation" aria-expanded={open}>
+        <Button
+          variant="secondary"
+          size="small"
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Toggle navigation"
+          aria-expanded={open}
+        >
           ☰
         </Button>
         <strong>MOSHINA BOR</strong>
@@ -42,7 +48,13 @@ export function Layout() {
         </div>
         <nav className={s.nav}>
           {items.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => `${s.link} ${isActive ? s.active : ''}`} onClick={() => setOpen(false)}>
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.to === '/'}
+              className={({ isActive }) => `${s.link} ${isActive ? s.active : ''}`}
+              onClick={() => setOpen(false)}
+            >
               <span className={s.icon} aria-hidden>
                 {n.icon}
               </span>
@@ -57,13 +69,19 @@ export function Layout() {
               {admin?.role.name} · {admin?.email}
             </span>
           </div>
-          <NavLink to="/account" className={({ isActive }) => `${s.link} ${isActive ? s.active : ''}`}>
+          <NavLink
+            to="/account"
+            className={({ isActive }) => `${s.link} ${isActive ? s.active : ''}`}
+          >
             <span className={s.icon} aria-hidden>
               ⚿
             </span>
             My account
           </NavLink>
-          <Button variant="secondary" onClick={() => void logout().then(() => navigate('/login', { replace: true }))}>
+          <Button
+            variant="secondary"
+            onClick={() => void logout().then(() => navigate('/login', { replace: true }))}
+          >
             Sign out
           </Button>
         </div>

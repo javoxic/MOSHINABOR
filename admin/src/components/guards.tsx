@@ -14,11 +14,18 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     if (status === 'unknown') void refreshSession();
   }, [status]);
   if (status === 'unknown') return <Loading label="Restoring session…" />;
-  if (status === 'anonymous') return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (status === 'anonymous')
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   return <>{children}</>;
 }
 
-export function RequirePermission({ permission, children }: { permission: AdminPermission; children: ReactNode }) {
+export function RequirePermission({
+  permission,
+  children,
+}: {
+  permission: AdminPermission;
+  children: ReactNode;
+}) {
   const can = useAdminAuth((s) => s.can);
   if (!can(permission)) return <Forbidden />;
   return <>{children}</>;

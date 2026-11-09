@@ -1,4 +1,11 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { ThrottlerException } from '@nestjs/throttler';
@@ -37,7 +44,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // Handled AppExceptions are logged where they originate; log only unexpected failures here.
     if (body.statusCode >= 500 && !(exception instanceof AppException)) {
       this.logger.error(
-        { err: exception instanceof Error ? { name: exception.name, message: exception.message, stack: exception.stack } : exception, path: req.url },
+        {
+          err:
+            exception instanceof Error
+              ? { name: exception.name, message: exception.message, stack: exception.stack }
+              : exception,
+          path: req.url,
+        },
         'Unhandled error',
       );
     }
@@ -54,7 +67,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       };
     }
     if (exception instanceof ThrottlerException) {
-      return { statusCode: 429, code: ERROR_CODES.RATE_LIMITED, message: 'Too many requests, please try again later' };
+      return {
+        statusCode: 429,
+        code: ERROR_CODES.RATE_LIMITED,
+        message: 'Too many requests, please try again later',
+      };
     }
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
@@ -71,21 +88,42 @@ export class AllExceptionsFilter implements ExceptionFilter {
         }
         if (r.details) details = r.details;
       }
-      return { statusCode: status, code: STATUS_CODE_MAP[status] ?? `HTTP_${status}`, message, details };
+      return {
+        statusCode: status,
+        code: STATUS_CODE_MAP[status] ?? `HTTP_${status}`,
+        message,
+        details,
+      };
     }
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       if (exception.code === 'P2002') {
-        return { statusCode: 409, code: ERROR_CODES.CONFLICT, message: 'A record with these values already exists' };
+        return {
+          statusCode: 409,
+          code: ERROR_CODES.CONFLICT,
+          message: 'A record with these values already exists',
+        };
       }
       if (exception.code === 'P2025') {
         return { statusCode: 404, code: ERROR_CODES.NOT_FOUND, message: 'Resource not found' };
       }
       if (exception.code === 'P2003') {
-        return { statusCode: 409, code: ERROR_CODES.CONFLICT, message: 'Related record constraint failed' };
+        return {
+          statusCode: 409,
+          code: ERROR_CODES.CONFLICT,
+          message: 'Related record constraint failed',
+        };
       }
     }
-    if (exception instanceof Error && 'code' in exception && (exception as { code?: string }).code === 'LIMIT_FILE_SIZE') {
-      return { statusCode: HttpStatus.PAYLOAD_TOO_LARGE, code: ERROR_CODES.FILE_INVALID, message: 'File is too large' };
+    if (
+      exception instanceof Error &&
+      'code' in exception &&
+      (exception as { code?: string }).code === 'LIMIT_FILE_SIZE'
+    ) {
+      return {
+        statusCode: HttpStatus.PAYLOAD_TOO_LARGE,
+        code: ERROR_CODES.FILE_INVALID,
+        message: 'File is too large',
+      };
     }
     return { statusCode: 500, code: ERROR_CODES.INTERNAL_ERROR, message: 'Internal server error' };
   }

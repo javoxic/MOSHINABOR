@@ -8,11 +8,19 @@ import { toDecimal } from '../common/utils/decimal';
 import { SystemSettingsService } from '../settings/system-settings.service';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { ServiceTypesService } from '../service-types/service-types.service';
-import type { CompleteScheduleDto, CreateScheduleDto, ScheduleQueryDto, UpdateScheduleDto } from './dto/maintenance.dto';
+import type {
+  CompleteScheduleDto,
+  CreateScheduleDto,
+  ScheduleQueryDto,
+  UpdateScheduleDto,
+} from './dto/maintenance.dto';
 import { RecordsService, type RecordView } from './records.service';
 import { toScheduleView, type ScheduleView } from './schedule-mapper';
 
-const INCLUDE = { serviceType: true, vehicle: { select: { currentMileage: true, mileageUpdatedAt: true } } } as const;
+const INCLUDE = {
+  serviceType: true,
+  vehicle: { select: { currentMileage: true, mileageUpdatedAt: true } },
+} as const;
 
 @Injectable()
 export class SchedulesService {
@@ -25,7 +33,10 @@ export class SchedulesService {
   ) {}
 
   private async view(id: string): Promise<ScheduleView> {
-    const s = await this.prisma.maintenanceSchedule.findUniqueOrThrow({ where: { id }, include: INCLUDE });
+    const s = await this.prisma.maintenanceSchedule.findUniqueOrThrow({
+      where: { id },
+      include: INCLUDE,
+    });
     return toScheduleView(s, await this.settings.thresholds());
   }
 
@@ -44,7 +55,8 @@ export class SchedulesService {
     const thresholds = await this.settings.thresholds();
     let views = rows.map((r) => toScheduleView(r, thresholds));
     if (q.status) views = views.filter((v) => v.computed.status === q.status);
-    if (q.attentionOnly) views = views.filter((v) => ['DUE_SOON', 'DUE', 'OVERDUE'].includes(v.computed.status));
+    if (q.attentionOnly)
+      views = views.filter((v) => ['DUE_SOON', 'DUE', 'OVERDUE'].includes(v.computed.status));
     return views.sort((a, b) => {
       const sev = statusSeverity(b.computed.status) - statusSeverity(a.computed.status);
       if (sev !== 0) return sev;
@@ -64,11 +76,17 @@ export class SchedulesService {
     const vehicle = await this.vehicles.getOwned(userId, dto.vehicleId);
     await this.types.getUsable(userId, dto.serviceTypeId);
     if (dto.lastServiceMileage > vehicle.currentMileage) {
-      throw AppException.validation('Last service mileage cannot exceed the current odometer reading. Update the mileage first.', [
-        { field: 'lastServiceMileage', messages: ['Exceeds current mileage'] },
-      ]);
+      throw AppException.validation(
+        'Last service mileage cannot exceed the current odometer reading. Update the mileage first.',
+        [{ field: 'lastServiceMileage', messages: ['Exceeds current mileage'] }],
+      );
     }
-    const next = this.next(dto.lastServiceDate, dto.lastServiceMileage, dto.intervalDays ?? null, dto.intervalKm ?? null);
+    const next = this.next(
+      dto.lastServiceDate,
+      dto.lastServiceMileage,
+      dto.intervalDays ?? null,
+      dto.intervalKm ?? null,
+    );
     try {
       const s = await this.prisma.maintenanceSchedule.create({
         data: {
@@ -99,11 +117,23 @@ export class SchedulesService {
     }
   }
 
-  private next(date: string, mileage: number, intervalDays: number | null, intervalKm: number | null) {
+  private next(
+    date: string,
+    mileage: number,
+    intervalDays: number | null,
+    intervalKm: number | null,
+  ) {
     if (!intervalDays && !intervalKm) {
-      throw AppException.validation('Set an interval in days, kilometres or both', [{ field: 'intervalDays', messages: ['Interval required'] }]);
+      throw AppException.validation('Set an interval in days, kilometres or both', [
+        { field: 'intervalDays', messages: ['Interval required'] },
+      ]);
     }
-    return computeNextDue({ lastServiceDate: date, lastServiceMileage: mileage, intervalDays, intervalKm });
+    return computeNextDue({
+      lastServiceDate: date,
+      lastServiceMileage: mileage,
+      intervalDays,
+      intervalKm,
+    });
   }
 
   async update(userId: string, id: string, dto: UpdateScheduleDto): Promise<ScheduleView> {
@@ -112,9 +142,10 @@ export class SchedulesService {
     const lastServiceDate = dto.lastServiceDate ?? dateOnly(s.lastServiceDate);
     const lastServiceMileage = dto.lastServiceMileage ?? s.lastServiceMileage;
     if (lastServiceMileage > s.vehicle.currentMileage) {
-      throw AppException.validation('Last service mileage cannot exceed the current odometer reading', [
-        { field: 'lastServiceMileage', messages: ['Exceeds current mileage'] },
-      ]);
+      throw AppException.validation(
+        'Last service mileage cannot exceed the current odometer reading',
+        [{ field: 'lastServiceMileage', messages: ['Exceeds current mileage'] }],
+      );
     }
     const intervalDays = dto.intervalDays !== undefined ? dto.intervalDays : s.intervalDays;
     const intervalKm = dto.intervalKm !== undefined ? dto.intervalKm : s.intervalKm;
@@ -145,16 +176,28 @@ export class SchedulesService {
    * Marks maintenance as done: in ONE transaction creates the service record, its expense,
    * records the odometer reading and moves the schedule to the next cycle.
    */
-  async complete(userId: string, id: string, dto: CompleteScheduleDto): Promise<{ schedule: ScheduleView; record: RecordView }> {
+  async complete(
+    userId: string,
+    id: string,
+    dto: CompleteScheduleDto,
+  ): Promise<{ schedule: ScheduleView; record: RecordView }> {
     const s = await this.getOwned(userId, id);
     if (dto.date < dateOnly(s.lastServiceDate)) {
-      throw AppException.validation('Service date is earlier than the previous service', [{ field: 'date', messages: ['Before last service date'] }]);
+      throw AppException.validation('Service date is earlier than the previous service', [
+        { field: 'date', messages: ['Before last service date'] },
+      ]);
     }
     if (dto.mileage < s.lastServiceMileage) {
-      throw AppException.validation('Mileage is lower than at the previous service', [{ field: 'mileage', messages: ['Below last service mileage'] }]);
+      throw AppException.validation('Mileage is lower than at the previous service', [
+        { field: 'mileage', messages: ['Below last service mileage'] },
+      ]);
     }
     const record = await this.prisma.$transaction((tx) =>
-      this.records.createInTx(tx, userId, { ...dto, vehicleId: s.vehicleId, serviceTypeId: s.serviceTypeId }),
+      this.records.createInTx(tx, userId, {
+        ...dto,
+        vehicleId: s.vehicleId,
+        serviceTypeId: s.serviceTypeId,
+      }),
     );
     return { schedule: await this.view(id), record: await this.records.get(userId, record.id) };
   }

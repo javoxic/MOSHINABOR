@@ -23,7 +23,13 @@ export function configureApp(app: NestExpressApplication, env: Env): INestApplic
     origin: env.CORS_ORIGINS,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key', 'X-Requested-With', 'Accept-Language'],
+    allowedHeaders: [
+      'Authorization',
+      'Content-Type',
+      'Idempotency-Key',
+      'X-Requested-With',
+      'Accept-Language',
+    ],
     maxAge: 600,
   });
   app.enableVersioning({ type: VersioningType.URI });

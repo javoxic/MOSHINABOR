@@ -8,7 +8,12 @@ export async function applyScheduleBaseline(
   date: string,
   mileage: number,
 ): Promise<void> {
-  const next = computeNextDue({ lastServiceDate: date, lastServiceMileage: mileage, intervalDays: schedule.intervalDays, intervalKm: schedule.intervalKm });
+  const next = computeNextDue({
+    lastServiceDate: date,
+    lastServiceMileage: mileage,
+    intervalDays: schedule.intervalDays,
+    intervalKm: schedule.intervalKm,
+  });
   await tx.maintenanceSchedule.update({
     where: { id: schedule.id },
     data: {
@@ -20,7 +25,10 @@ export async function applyScheduleBaseline(
   });
 }
 
-function isNewer(a: { date: string; mileage: number }, b: { date: string; mileage: number }): boolean {
+function isNewer(
+  a: { date: string; mileage: number },
+  b: { date: string; mileage: number },
+): boolean {
   return a.date > b.date || (a.date === b.date && a.mileage > b.mileage);
 }
 
@@ -35,15 +43,22 @@ export async function resyncSchedule(
   serviceTypeId: string,
   removedBaseline?: { date: string; mileage: number },
 ): Promise<void> {
-  const schedule = await tx.maintenanceSchedule.findUnique({ where: { vehicleId_serviceTypeId: { vehicleId, serviceTypeId } } });
+  const schedule = await tx.maintenanceSchedule.findUnique({
+    where: { vehicleId_serviceTypeId: { vehicleId, serviceTypeId } },
+  });
   if (!schedule) return;
   const latest = await tx.maintenanceRecord.findFirst({
     where: { vehicleId, serviceTypeId },
     orderBy: [{ serviceDate: 'desc' }, { mileage: 'desc' }],
   });
-  const baseline = { date: dateOnly(schedule.lastServiceDate), mileage: schedule.lastServiceMileage };
+  const baseline = {
+    date: dateOnly(schedule.lastServiceDate),
+    mileage: schedule.lastServiceMileage,
+  };
   const baselineRemoved =
-    removedBaseline !== undefined && removedBaseline.date === baseline.date && removedBaseline.mileage === baseline.mileage;
+    removedBaseline !== undefined &&
+    removedBaseline.date === baseline.date &&
+    removedBaseline.mileage === baseline.mileage;
 
   if (latest) {
     const candidate = { date: dateOnly(latest.serviceDate), mileage: latest.mileage };
@@ -53,8 +68,13 @@ export async function resyncSchedule(
   }
 }
 
-export function isBaselineOf(schedule: MaintenanceSchedule | null, record: { serviceDate: Date; mileage: number }): boolean {
+export function isBaselineOf(
+  schedule: MaintenanceSchedule | null,
+  record: { serviceDate: Date; mileage: number },
+): boolean {
   return Boolean(
-    schedule && dateOnly(schedule.lastServiceDate) === dateOnly(record.serviceDate) && schedule.lastServiceMileage === record.mileage,
+    schedule &&
+    dateOnly(schedule.lastServiceDate) === dateOnly(record.serviceDate) &&
+    schedule.lastServiceMileage === record.mileage,
   );
 }

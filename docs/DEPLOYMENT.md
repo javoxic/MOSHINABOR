@@ -2,21 +2,21 @@
 
 ## External services and credentials
 
-| Service | Needed for | What to obtain | Where to put it | Status in this repo |
-|---|---|---|---|---|
-| **Eskiz.uz** | SMS OTP to +998 numbers (sign-in) | Eskiz account (email + password), sender ID (`4546` default or an approved alpha name), **OTP template approved in the Eskiz cabinet** matching `SMS_OTP_TEMPLATE_*` exactly | `ESKIZ_EMAIL`, `ESKIZ_PASSWORD`, `ESKIZ_FROM`, `SMS_OTP_TEMPLATE_UZ/RU/EN` | Integration implemented (login + token cache + re-auth, send, delivery callbacks); **awaiting credentials** |
-| Twilio (optional) | SMS to non-Uzbek numbers | Account SID, Auth Token, sender number or Messaging Service SID | `SMS_INTERNATIONAL_PROVIDER=twilio`, `TWILIO_*` | Implemented; optional |
-| **Expo / EAS** | Push tokens, store builds, OTA updates | Expo account, EAS project (`eas init`) | `EAS_PROJECT_ID` (mobile build env); optional `EXPO_ACCESS_TOKEN` (API) | Implemented; **awaiting project** |
-| **Firebase (FCM)** | Android push delivery | Firebase project → `google-services.json`, FCM V1 service-account key uploaded to EAS (`eas credentials`) | EAS secret file `GOOGLE_SERVICES_JSON` | Awaiting |
-| **Apple Developer** | iOS builds + APNs | Apple Developer Program membership; EAS manages certificates and the APNs key | `eas credentials` | Awaiting |
-| Google Play / App Store Connect | Store distribution | Developer accounts, app records | `eas submit` | Awaiting |
+| Service                         | Needed for                             | What to obtain                                                                                                                                                               | Where to put it                                                            | Status in this repo                                                                                         |
+| ------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Eskiz.uz**                    | SMS OTP to +998 numbers (sign-in)      | Eskiz account (email + password), sender ID (`4546` default or an approved alpha name), **OTP template approved in the Eskiz cabinet** matching `SMS_OTP_TEMPLATE_*` exactly | `ESKIZ_EMAIL`, `ESKIZ_PASSWORD`, `ESKIZ_FROM`, `SMS_OTP_TEMPLATE_UZ/RU/EN` | Integration implemented (login + token cache + re-auth, send, delivery callbacks); **awaiting credentials** |
+| Twilio (optional)               | SMS to non-Uzbek numbers               | Account SID, Auth Token, sender number or Messaging Service SID                                                                                                              | `SMS_INTERNATIONAL_PROVIDER=twilio`, `TWILIO_*`                            | Implemented; optional                                                                                       |
+| **Expo / EAS**                  | Push tokens, store builds, OTA updates | Expo account, EAS project (`eas init`)                                                                                                                                       | `EAS_PROJECT_ID` (mobile build env); optional `EXPO_ACCESS_TOKEN` (API)    | Implemented; **awaiting project**                                                                           |
+| **Firebase (FCM)**              | Android push delivery                  | Firebase project → `google-services.json`, FCM V1 service-account key uploaded to EAS (`eas credentials`)                                                                    | EAS secret file `GOOGLE_SERVICES_JSON`                                     | Awaiting                                                                                                    |
+| **Apple Developer**             | iOS builds + APNs                      | Apple Developer Program membership; EAS manages certificates and the APNs key                                                                                                | `eas credentials`                                                          | Awaiting                                                                                                    |
+| Google Play / App Store Connect | Store distribution                     | Developer accounts, app records                                                                                                                                              | `eas submit`                                                               | Awaiting                                                                                                    |
 
 Until Eskiz is configured, `POST /v1/auth/otp/request` returns `503 SMS_NOT_CONFIGURED` and the admin
 **Settings → System health** page shows the SMS provider as not configured. Nothing pretends to succeed.
 
 **Verifying SMS after configuration:** request a code for a real test phone in the app (or
 `curl -X POST https://<host>/v1/auth/otp/request -H 'content-type: application/json' -d '{"phone":"+998…"}'`),
-confirm the SMS arrives, and check *System health → Last successful send*. Delivery reports arrive at
+confirm the SMS arrives, and check _System health → Last successful send_. Delivery reports arrive at
 `/v1/webhooks/sms/eskiz?secret=…` (set `API_PUBLIC_URL` to the public HTTPS origin).
 
 ## Server deployment (Docker Compose, single host)

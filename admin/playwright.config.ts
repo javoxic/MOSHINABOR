@@ -4,7 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * End-to-end tests run against the REAL backend (NestJS + PostgreSQL + Redis) and the production
  * build of the admin app. A dedicated database (name must end with "_e2e") is reset by global setup.
  */
-const E2E_DATABASE_URL = process.env.E2E_DATABASE_URL ?? 'postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_e2e?schema=public';
+const E2E_DATABASE_URL =
+  process.env.E2E_DATABASE_URL ??
+  'postgresql://moshina:moshina_dev@localhost:5432/moshina_bor_e2e?schema=public';
 const API_PORT = Number(process.env.E2E_API_PORT ?? 3100);
 
 export default defineConfig({

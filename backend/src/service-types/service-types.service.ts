@@ -3,7 +3,10 @@ import type { Prisma, ServiceType } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppException } from '../common/errors/app-exception';
-import type { CreateCustomServiceTypeDto, UpdateCustomServiceTypeDto } from './dto/service-types.dto';
+import type {
+  CreateCustomServiceTypeDto,
+  UpdateCustomServiceTypeDto,
+} from './dto/service-types.dto';
 
 export interface ServiceTypeView {
   id: string;
@@ -48,7 +51,11 @@ export class ServiceTypesService {
   }
 
   /** A type the user may use: an active system type or one of their own custom types. */
-  async getUsable(userId: string, id: string, tx: Prisma.TransactionClient = this.prisma): Promise<ServiceType> {
+  async getUsable(
+    userId: string,
+    id: string,
+    tx: Prisma.TransactionClient = this.prisma,
+  ): Promise<ServiceType> {
     const t = await tx.serviceType.findFirst({
       where: { id, OR: [{ ownerUserId: null, isActive: true }, { ownerUserId: userId }] },
     });
@@ -58,7 +65,8 @@ export class ServiceTypesService {
 
   async createCustom(userId: string, dto: CreateCustomServiceTypeDto): Promise<ServiceTypeView> {
     const count = await this.prisma.serviceType.count({ where: { ownerUserId: userId } });
-    if (count >= MAX_CUSTOM_TYPES) throw AppException.validation(`Up to ${MAX_CUSTOM_TYPES} custom services are allowed`);
+    if (count >= MAX_CUSTOM_TYPES)
+      throw AppException.validation(`Up to ${MAX_CUSTOM_TYPES} custom services are allowed`);
     const t = await this.prisma.serviceType.create({
       data: {
         ownerUserId: userId,
@@ -75,7 +83,11 @@ export class ServiceTypesService {
     return serviceTypeView(t);
   }
 
-  async updateCustom(userId: string, id: string, dto: UpdateCustomServiceTypeDto): Promise<ServiceTypeView> {
+  async updateCustom(
+    userId: string,
+    id: string,
+    dto: UpdateCustomServiceTypeDto,
+  ): Promise<ServiceTypeView> {
     const t = await this.prisma.serviceType.findFirst({ where: { id, ownerUserId: userId } });
     if (!t) throw AppException.notFound('Service type');
     const updated = await this.prisma.serviceType.update({
@@ -98,7 +110,9 @@ export class ServiceTypesService {
     });
     if (!t) throw AppException.notFound('Service type');
     if (t._count.schedules > 0 || t._count.records > 0) {
-      throw AppException.conflict('This service is used by schedules or history records and cannot be deleted');
+      throw AppException.conflict(
+        'This service is used by schedules or history records and cannot be deleted',
+      );
     }
     await this.prisma.serviceType.delete({ where: { id } });
   }

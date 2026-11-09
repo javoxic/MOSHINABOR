@@ -6,7 +6,12 @@ import { assertNotFuture, dateOnly, toDbDate, todayTashkent } from '../common/ut
 import { decimalToString } from '../common/utils/decimal';
 import { paginate } from '../common/dto/pagination.dto';
 import { VehiclesService } from '../vehicles/vehicles.service';
-import type { CreateExpenseDto, ExpenseQueryDto, ExpenseStatsQueryDto, UpdateExpenseDto } from './dto/expenses.dto';
+import type {
+  CreateExpenseDto,
+  ExpenseQueryDto,
+  ExpenseStatsQueryDto,
+  UpdateExpenseDto,
+} from './dto/expenses.dto';
 
 export interface ExpenseView {
   id: string;
@@ -57,10 +62,17 @@ export class ExpensesService {
       userId,
       vehicleId: q.vehicleId,
       category: q.category,
-      expenseDate: q.from || q.to ? { gte: q.from ? toDbDate(q.from) : undefined, lte: q.to ? toDbDate(q.to) : undefined } : undefined,
+      expenseDate:
+        q.from || q.to
+          ? { gte: q.from ? toDbDate(q.from) : undefined, lte: q.to ? toDbDate(q.to) : undefined }
+          : undefined,
     };
     const [items, total, sum] = await Promise.all([
-      this.prisma.expense.findMany({ where, orderBy: [{ expenseDate: 'desc' }, { createdAt: 'desc' }], ...paginate(q) }),
+      this.prisma.expense.findMany({
+        where,
+        orderBy: [{ expenseDate: 'desc' }, { createdAt: 'desc' }],
+        ...paginate(q),
+      }),
       this.prisma.expense.count({ where }),
       this.prisma.expense.aggregate({ where, _sum: { amount: true } }),
     ]);
@@ -93,7 +105,8 @@ export class ExpensesService {
           description: dto.description ?? null,
         },
       });
-      if (dto.mileage != null) await this.vehicles.applyMileage(tx, vehicle, dto.mileage, 'EXPENSE', new Date());
+      if (dto.mileage != null)
+        await this.vehicles.applyMileage(tx, vehicle, dto.mileage, 'EXPENSE', new Date());
       return created;
     });
     return expenseView(e);
@@ -102,7 +115,9 @@ export class ExpensesService {
   async update(userId: string, id: string, dto: UpdateExpenseDto): Promise<ExpenseView> {
     const existing = await this.getOwned(userId, id);
     if (existing.serviceRecordId) {
-      throw AppException.conflict('This expense belongs to a service record. Edit the service record instead.');
+      throw AppException.conflict(
+        'This expense belongs to a service record. Edit the service record instead.',
+      );
     }
     if (dto.date) assertNotFuture(dto.date, 'date');
     const e = await this.prisma.$transaction(async (tx) => {
@@ -113,7 +128,12 @@ export class ExpensesService {
           amount: dto.amount !== undefined ? new Prisma.Decimal(dto.amount) : undefined,
           expenseDate: dto.date ? toDbDate(dto.date) : undefined,
           mileage: dto.mileage,
-          liters: dto.liters === undefined ? undefined : dto.liters === null ? null : new Prisma.Decimal(dto.liters),
+          liters:
+            dto.liters === undefined
+              ? undefined
+              : dto.liters === null
+                ? null
+                : new Prisma.Decimal(dto.liters),
           description: dto.description,
         },
       });
@@ -129,7 +149,9 @@ export class ExpensesService {
   async remove(userId: string, id: string): Promise<void> {
     const existing = await this.getOwned(userId, id);
     if (existing.serviceRecordId) {
-      throw AppException.conflict('This expense belongs to a service record. Remove the cost from the service record instead.');
+      throw AppException.conflict(
+        'This expense belongs to a service record. Remove the cost from the service record instead.',
+      );
     }
     await this.prisma.expense.delete({ where: { id } });
   }
@@ -145,10 +167,17 @@ export class ExpensesService {
       vehicleId: q.vehicleId,
       expenseDate: { gte: toDbDate(from), lte: toDbDate(to) },
     };
-    const vehicleFilter = q.vehicleId ? Prisma.sql`AND vehicle_id = ${q.vehicleId}::uuid` : Prisma.empty;
+    const vehicleFilter = q.vehicleId
+      ? Prisma.sql`AND vehicle_id = ${q.vehicleId}::uuid`
+      : Prisma.empty;
     const [total, byCategory, byVehicle, byMonth] = await Promise.all([
       this.prisma.expense.aggregate({ where, _sum: { amount: true }, _count: true }),
-      this.prisma.expense.groupBy({ by: ['category'], where, _sum: { amount: true }, _count: true }),
+      this.prisma.expense.groupBy({
+        by: ['category'],
+        where,
+        _sum: { amount: true },
+        _count: true,
+      }),
       this.prisma.expense.groupBy({ by: ['vehicleId'], where, _sum: { amount: true } }),
       this.prisma.$queryRaw<{ month: string; total: Prisma.Decimal }[]>`
         SELECT to_char(expense_date, 'YYYY-MM') AS month, SUM(amount) AS total
@@ -163,15 +192,30 @@ export class ExpensesService {
       total: (total._sum.amount ?? zero).toFixed(2),
       count: total._count,
       byCategory: byCategory
-        .map((c) => ({ category: c.category, total: (c._sum.amount ?? zero).toFixed(2), count: c._count }))
+        .map((c) => ({
+          category: c.category,
+          total: (c._sum.amount ?? zero).toFixed(2),
+          count: c._count,
+        }))
         .sort((a, b) => Number(b.total) - Number(a.total)),
-      byMonth: this.fillMonths(from, to, byMonth.map((m) => ({ month: m.month, total: new Prisma.Decimal(m.total).toFixed(2) }))),
-      byVehicle: byVehicle.map((v) => ({ vehicleId: v.vehicleId, total: (v._sum.amount ?? zero).toFixed(2) })),
+      byMonth: this.fillMonths(
+        from,
+        to,
+        byMonth.map((m) => ({ month: m.month, total: new Prisma.Decimal(m.total).toFixed(2) })),
+      ),
+      byVehicle: byVehicle.map((v) => ({
+        vehicleId: v.vehicleId,
+        total: (v._sum.amount ?? zero).toFixed(2),
+      })),
     };
   }
 
   /** Includes months without expenses (total 0) so charts reflect the full period. */
-  private fillMonths(from: string, to: string, rows: { month: string; total: string }[]): { month: string; total: string }[] {
+  private fillMonths(
+    from: string,
+    to: string,
+    rows: { month: string; total: string }[],
+  ): { month: string; total: string }[] {
     const map = new Map(rows.map((r) => [r.month, r.total]));
     const result: { month: string; total: string }[] = [];
     let y = Number(from.slice(0, 4));
@@ -190,12 +234,27 @@ export class ExpensesService {
     return result;
   }
 
-  async summary(userId: string, vehicleId?: string): Promise<{ monthTotal: string; yearTotal: string }> {
+  async summary(
+    userId: string,
+    vehicleId?: string,
+  ): Promise<{ monthTotal: string; yearTotal: string }> {
     const today = todayTashkent();
     const base: Prisma.ExpenseWhereInput = { userId, vehicleId };
     const [month, year] = await Promise.all([
-      this.prisma.expense.aggregate({ where: { ...base, expenseDate: { gte: toDbDate(`${today.slice(0, 7)}-01`), lte: toDbDate(today) } }, _sum: { amount: true } }),
-      this.prisma.expense.aggregate({ where: { ...base, expenseDate: { gte: toDbDate(`${today.slice(0, 4)}-01-01`), lte: toDbDate(today) } }, _sum: { amount: true } }),
+      this.prisma.expense.aggregate({
+        where: {
+          ...base,
+          expenseDate: { gte: toDbDate(`${today.slice(0, 7)}-01`), lte: toDbDate(today) },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.aggregate({
+        where: {
+          ...base,
+          expenseDate: { gte: toDbDate(`${today.slice(0, 4)}-01-01`), lte: toDbDate(today) },
+        },
+        _sum: { amount: true },
+      }),
     ]);
     return {
       monthTotal: (month._sum.amount ?? new Prisma.Decimal(0)).toFixed(2),

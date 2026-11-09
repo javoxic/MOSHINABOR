@@ -7,7 +7,12 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/bootstrap';
 import { loadEnv } from '../src/config/env';
 import { SMS_PRIMARY_PROVIDER } from '../src/sms/sms.service';
-import { SmsProviderError, type SmsProvider, type SmsSendRequest, type SmsSendResult } from '../src/sms/sms-provider.interface';
+import {
+  SmsProviderError,
+  type SmsProvider,
+  type SmsSendRequest,
+  type SmsSendResult,
+} from '../src/sms/sms-provider.interface';
 import { EXPO_CLIENT } from '../src/notifications/notifications.constants';
 import type { ExpoClient } from '../src/notifications/push.service';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -41,19 +46,28 @@ export class CapturingSmsProvider implements SmsProvider {
 export class FakeExpo implements ExpoClient {
   sent: ExpoPushMessage[] = [];
   nextTickets: ((m: ExpoPushMessage) => ExpoPushTicket) | null = null;
-  receipts: Record<string, { status: 'ok' | 'error'; message?: string; details?: { error?: string } }> = {};
+  receipts: Record<
+    string,
+    { status: 'ok' | 'error'; message?: string; details?: { error?: string } }
+  > = {};
   chunkPushNotifications(messages: ExpoPushMessage[]): ExpoPushMessage[][] {
     return messages.length ? [messages] : [];
   }
   async sendPushNotificationsAsync(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     this.sent.push(...messages);
-    return messages.map((m) => (this.nextTickets ? this.nextTickets(m) : { status: 'ok', id: `ticket-${randomUUID()}` }));
+    return messages.map((m) =>
+      this.nextTickets ? this.nextTickets(m) : { status: 'ok', id: `ticket-${randomUUID()}` },
+    );
   }
   chunkPushNotificationReceiptIds(ids: string[]): string[][] {
     return ids.length ? [ids] : [];
   }
   async getPushNotificationReceiptsAsync(ids: string[]) {
-    return Object.fromEntries(ids.filter((id) => this.receipts[id]).map((id) => [id, this.receipts[id] as { status: 'ok' | 'error' }]));
+    return Object.fromEntries(
+      ids
+        .filter((id) => this.receipts[id])
+        .map((id) => [id, this.receipts[id] as { status: 'ok' | 'error' }]),
+    );
   }
 }
 
@@ -69,7 +83,9 @@ export async function createTestApp(): Promise<TestContext> {
   const env = loadEnv();
   const sms = new CapturingSmsProvider();
   const expo = new FakeExpo();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule.register(env, { withJobs: false, withHttp: true })] })
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule.register(env, { withJobs: false, withHttp: true })],
+  })
     .overrideProvider(SMS_PRIMARY_PROVIDER)
     .useValue(sms)
     .overrideProvider(EXPO_CLIENT)
@@ -78,7 +94,13 @@ export async function createTestApp(): Promise<TestContext> {
   const app = moduleRef.createNestApplication<NestExpressApplication>({ logger: ['error'] });
   configureApp(app, env);
   await app.init();
-  return { app, sms, expo, prisma: app.get(PrismaService), http: () => request(app.getHttpServer()) };
+  return {
+    app,
+    sms,
+    expo,
+    prisma: app.get(PrismaService),
+    http: () => request(app.getHttpServer()),
+  };
 }
 
 export function randomIp(): string {
@@ -100,14 +122,22 @@ export interface LoggedInUser {
 
 export async function login(ctx: TestContext, phone = randomPhone()): Promise<LoggedInUser> {
   const ip = randomIp();
-  await ctx.http().post('/v1/auth/otp/request').set('X-Forwarded-For', ip).send({ phone }).expect(200);
+  await ctx
+    .http()
+    .post('/v1/auth/otp/request')
+    .set('X-Forwarded-For', ip)
+    .send({ phone })
+    .expect(200);
   const res = await ctx
     .http()
     .post('/v1/auth/otp/verify')
     .set('X-Forwarded-For', ip)
     .send({ phone, code: ctx.sms.lastCodeFor(phone) })
     .expect(200);
-  const body = res.body as { tokens: { accessToken: string; refreshToken: string }; user: { id: string } };
+  const body = res.body as {
+    tokens: { accessToken: string; refreshToken: string };
+    user: { id: string };
+  };
   return {
     id: body.user.id,
     phone,
@@ -127,8 +157,17 @@ export const VEHICLE = {
   currentMileage: 45000,
 };
 
-export async function createVehicle(ctx: TestContext, user: LoggedInUser, overrides: Record<string, unknown> = {}): Promise<{ id: string; currentMileage: number }> {
-  const res = await ctx.http().post('/v1/vehicles').set(user.auth).send({ ...VEHICLE, ...overrides }).expect(201);
+export async function createVehicle(
+  ctx: TestContext,
+  user: LoggedInUser,
+  overrides: Record<string, unknown> = {},
+): Promise<{ id: string; currentMileage: number }> {
+  const res = await ctx
+    .http()
+    .post('/v1/vehicles')
+    .set(user.auth)
+    .send({ ...VEHICLE, ...overrides })
+    .expect(201);
   return res.body as { id: string; currentMileage: number };
 }
 

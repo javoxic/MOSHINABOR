@@ -26,7 +26,10 @@ export interface ReminderRunResult {
   mileagePrompts: number;
 }
 
-function serviceName(t: { nameUz: string; nameRu: string; nameEn: string }, lang: Language): string {
+function serviceName(
+  t: { nameUz: string; nameRu: string; nameEn: string },
+  lang: Language,
+): string {
   return lang === 'ru' ? t.nameRu : lang === 'en' ? t.nameEn : t.nameUz;
 }
 
@@ -49,8 +52,16 @@ export class ReminderEngineService {
     private readonly templates: TemplatesService,
   ) {}
 
-  async run(now = new Date(), opts: { ignoreSendWindow?: boolean } = {}): Promise<ReminderRunResult> {
-    const result: ReminderRunResult = { schedulesScanned: 0, created: 0, duplicatesSuppressed: 0, mileagePrompts: 0 };
+  async run(
+    now = new Date(),
+    opts: { ignoreSendWindow?: boolean } = {},
+  ): Promise<ReminderRunResult> {
+    const result: ReminderRunResult = {
+      schedulesScanned: 0,
+      created: 0,
+      duplicatesSuppressed: 0,
+      mileagePrompts: 0,
+    };
     const sendHour = await this.settings.get('reminders.sendHourLocal');
     const hour = localHour(now);
     if (!opts.ignoreSendWindow && (hour < sendHour || hour >= QUIET_FROM_HOUR)) {
@@ -61,14 +72,20 @@ export class ReminderEngineService {
     const repeatDays = Math.max(1, await this.settings.get('reminders.overdueRepeatDays'));
     const today = toLocalDate(now);
     const epochDay = Math.floor(new Date(`${today}T00:00:00Z`).getTime() / 86_400_000);
-    const staleVehicles = new Map<string, { userId: string; lang: Language; label: string; days: number }>();
+    const staleVehicles = new Map<
+      string,
+      { userId: string; lang: Language; label: string; days: number }
+    >();
 
     let cursor: string | undefined;
     for (;;) {
       const schedules = await this.prisma.maintenanceSchedule.findMany({
         where: {
           isActive: true,
-          user: { status: 'ACTIVE', settings: { is: { OR: [{ maintenanceReminders: true }, { mileageReminders: true }] } } },
+          user: {
+            status: 'ACTIVE',
+            settings: { is: { OR: [{ maintenanceReminders: true }, { mileageReminders: true }] } },
+          },
         },
         include: {
           serviceType: true,
@@ -86,7 +103,7 @@ export class ReminderEngineService {
         result.schedulesScanned += 1;
         const prefs = s.user.settings;
         if (!prefs) continue;
-        const lang = (prefs.language as PrismaLanguage) as Language;
+        const lang = prefs.language as PrismaLanguage as Language;
         const vehicleLabel = `${s.vehicle.brand} ${s.vehicle.model} (${s.vehicle.registrationNumber})`;
         const status = computeScheduleStatus(
           {
@@ -102,7 +119,9 @@ export class ReminderEngineService {
         );
 
         if (s.intervalKm && status.mileageStale && prefs.mileageReminders) {
-          const days = s.vehicle.mileageUpdatedAt ? daysBetweenInstants(s.vehicle.mileageUpdatedAt, now) : thresholds.mileageStaleDays;
+          const days = s.vehicle.mileageUpdatedAt
+            ? daysBetweenInstants(s.vehicle.mileageUpdatedAt, now)
+            : thresholds.mileageStaleDays;
           staleVehicles.set(s.vehicleId, { userId: s.userId, lang, label: vehicleLabel, days });
         }
         if (!prefs.maintenanceReminders) continue;
@@ -129,7 +148,10 @@ export class ReminderEngineService {
           service: serviceName(s.serviceType, lang),
           vehicle: vehicleLabel,
           days: status.daysRemaining != null ? Math.max(0, status.daysRemaining) : null,
-          km: status.kmRemaining != null && status.triggeredBy === 'MILEAGE' ? Math.max(0, status.kmRemaining) : null,
+          km:
+            status.kmRemaining != null && status.triggeredBy === 'MILEAGE'
+              ? Math.max(0, status.kmRemaining)
+              : null,
           date: dateOnly(s.nextDueDate),
         });
         if (!rendered) continue;
@@ -138,7 +160,11 @@ export class ReminderEngineService {
           type,
           title: rendered.title,
           body: rendered.body,
-          data: { scheduleId: s.id, vehicleId: s.vehicleId, triggeredBy: status.triggeredBy ?? 'DATE' },
+          data: {
+            scheduleId: s.id,
+            vehicleId: s.vehicleId,
+            triggeredBy: status.triggeredBy ?? 'DATE',
+          },
           dedupeKey: `sched:${s.id}:${cycle}:${type}${suffix}`,
         });
         if (created) result.created += 1;
@@ -149,7 +175,10 @@ export class ReminderEngineService {
 
     const staleBucketDays = Math.max(1, thresholds.mileageStaleDays);
     for (const [vehicleId, v] of staleVehicles) {
-      const rendered = await this.templates.render('MILEAGE_UPDATE_REQUIRED', v.lang, { vehicle: v.label, days: v.days });
+      const rendered = await this.templates.render('MILEAGE_UPDATE_REQUIRED', v.lang, {
+        vehicle: v.label,
+        days: v.days,
+      });
       if (!rendered) continue;
       const created = await this.notifications.create({
         userId: v.userId,
@@ -164,7 +193,9 @@ export class ReminderEngineService {
     }
 
     if (result.created || result.mileagePrompts) {
-      this.logger.log(`Reminders: ${result.created} maintenance, ${result.mileagePrompts} mileage prompts, ${result.duplicatesSuppressed} suppressed`);
+      this.logger.log(
+        `Reminders: ${result.created} maintenance, ${result.mileagePrompts} mileage prompts, ${result.duplicatesSuppressed} suppressed`,
+      );
     }
     return result;
   }

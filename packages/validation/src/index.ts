@@ -23,16 +23,36 @@ const optionalText = (max: number) =>
 const numeric = (inner: z.ZodNumber) =>
   z
     .union([z.string(), z.number()])
-    .transform((v) => (typeof v === 'string' ? (v.trim() === '' ? Number.NaN : Number(v.replace(/\s/g, '').replace(',', '.'))) : v))
+    .transform((v) =>
+      typeof v === 'string'
+        ? v.trim() === ''
+          ? Number.NaN
+          : Number(v.replace(/\s/g, '').replace(',', '.'))
+        : v,
+    )
     .pipe(inner);
-const money = numeric(z.number({ error: 'validation.number' }).min(0, { message: 'validation.min' }).max(100_000_000_000, { message: 'validation.max' }));
+const money = numeric(
+  z
+    .number({ error: 'validation.number' })
+    .min(0, { message: 'validation.min' })
+    .max(100_000_000_000, { message: 'validation.max' }),
+);
 const mileage = numeric(
-  z.number({ error: 'validation.required' }).int({ message: 'validation.integer' }).min(0, { message: 'validation.min' }).max(5_000_000, { message: 'validation.max' }),
+  z
+    .number({ error: 'validation.required' })
+    .int({ message: 'validation.integer' })
+    .min(0, { message: 'validation.min' })
+    .max(5_000_000, { message: 'validation.max' }),
 );
 const optionalPositiveInt = (max: number) =>
   z.preprocess(
     (v) => (v === '' || v === null || v === undefined ? null : v),
-    z.coerce.number().int({ message: 'validation.integer' }).positive({ message: 'validation.positive' }).max(max).nullable(),
+    z.coerce
+      .number()
+      .int({ message: 'validation.integer' })
+      .positive({ message: 'validation.positive' })
+      .max(max)
+      .nullable(),
   );
 
 export const phoneSchema = z
@@ -50,7 +70,11 @@ export const otpCodeSchema = z.object({
 export type OtpCodeInput = z.infer<typeof otpCodeSchema>;
 
 export const profileSchema = z.object({
-  fullName: z.string().trim().min(2, { message: 'validation.tooShort' }).max(120, { message: 'validation.tooLong' }),
+  fullName: z
+    .string()
+    .trim()
+    .min(2, { message: 'validation.tooShort' })
+    .max(120, { message: 'validation.tooLong' }),
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
 
@@ -61,7 +85,13 @@ const currentYear = new Date().getFullYear();
 export const vehicleSchema = z.object({
   brand: z.string().trim().min(1, { message: 'validation.required' }).max(60),
   model: z.string().trim().min(1, { message: 'validation.required' }).max(60),
-  year: numeric(z.number({ error: 'validation.year' }).int({ message: 'validation.year' }).min(1950, { message: 'validation.year' }).max(currentYear + 1, { message: 'validation.year' })),
+  year: numeric(
+    z
+      .number({ error: 'validation.year' })
+      .int({ message: 'validation.year' })
+      .min(1950, { message: 'validation.year' })
+      .max(currentYear + 1, { message: 'validation.year' }),
+  ),
   registrationNumber: z
     .string()
     .trim()
@@ -74,11 +104,17 @@ export const vehicleSchema = z.object({
     .toUpperCase()
     .optional()
     .transform((v) => (v === '' ? undefined : v))
-    .refine((v) => v === undefined || /^[A-HJ-NPR-Z0-9]{17}$/.test(v), { message: 'validation.vin' }),
+    .refine((v) => v === undefined || /^[A-HJ-NPR-Z0-9]{17}$/.test(v), {
+      message: 'validation.vin',
+    }),
   fuelType: z.enum(FUEL_TYPES, { error: 'validation.required' }),
   engineSize: z.preprocess(
     (v) => (v === '' || v === null || v === undefined ? null : v),
-    z.coerce.number().min(0.1, { message: 'validation.min' }).max(10, { message: 'validation.max' }).nullable(),
+    z.coerce
+      .number()
+      .min(0.1, { message: 'validation.min' })
+      .max(10, { message: 'validation.max' })
+      .nullable(),
   ),
   currentMileage: mileage,
   notes: optionalText(1000),
@@ -129,7 +165,12 @@ export type ServiceRecordInput = z.infer<typeof serviceRecordSchema>;
 export const expenseSchema = z.object({
   vehicleId: z.string().uuid({ message: 'validation.required' }),
   category: z.enum(EXPENSE_CATEGORIES),
-  amount: numeric(z.number({ error: 'validation.required' }).positive({ message: 'validation.positive' }).max(100_000_000_000, { message: 'validation.max' })),
+  amount: numeric(
+    z
+      .number({ error: 'validation.required' })
+      .positive({ message: 'validation.positive' })
+      .max(100_000_000_000, { message: 'validation.max' }),
+  ),
   date: isoDate,
   mileage: z.preprocess((v) => (v === '' || v == null ? null : v), mileage.nullable()),
   liters: z.preprocess(
@@ -175,7 +216,9 @@ export type AdminCreateInput = z.infer<typeof adminCreateSchema>;
 export const adminRoleSchema = z.object({
   name: z.string().trim().min(2, { message: 'Name is required' }).max(60),
   description: z.string().trim().max(240).optional(),
-  permissions: z.array(z.enum(ADMIN_PERMISSIONS)).min(1, { message: 'Select at least one permission' }),
+  permissions: z
+    .array(z.enum(ADMIN_PERMISSIONS))
+    .min(1, { message: 'Select at least one permission' }),
 });
 export type AdminRoleInput = z.infer<typeof adminRoleSchema>;
 
@@ -204,8 +247,14 @@ const localizedText = (max: number) =>
 export const announcementSchema = z.object({
   title: localizedText(120),
   body: localizedText(1000),
-  scheduledAt: z.iso.datetime({ offset: true }).optional().or(z.literal('').transform(() => undefined)),
-  targetLanguage: z.enum(LANGUAGES).optional().or(z.literal('').transform(() => undefined)),
+  scheduledAt: z.iso
+    .datetime({ offset: true })
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  targetLanguage: z
+    .enum(LANGUAGES)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 export type AnnouncementInput = z.infer<typeof announcementSchema>;
 

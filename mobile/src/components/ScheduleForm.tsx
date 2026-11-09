@@ -60,7 +60,12 @@ export function ScheduleForm({
   const selectedType = types.data?.find((x) => x.id === selectedTypeId);
 
   const createCustom = useMutation({
-    mutationFn: () => Api.createServiceType({ name: customName.trim(), suggestedIntervalDays: null, suggestedIntervalKm: null }),
+    mutationFn: () =>
+      Api.createServiceType({
+        name: customName.trim(),
+        suggestedIntervalDays: null,
+        suggestedIntervalKm: null,
+      }),
     onSuccess: async (created) => {
       await qc.invalidateQueries({ queryKey: qk.serviceTypes });
       setValue('serviceTypeId', created.id, { shouldValidate: true });
@@ -71,8 +76,14 @@ export function ScheduleForm({
 
   const applySuggested = () => {
     if (!selectedType) return;
-    setValue('intervalDays', selectedType.suggestedIntervalDays ? String(selectedType.suggestedIntervalDays) : '');
-    setValue('intervalKm', selectedType.suggestedIntervalKm ? String(selectedType.suggestedIntervalKm) : '');
+    setValue(
+      'intervalDays',
+      selectedType.suggestedIntervalDays ? String(selectedType.suggestedIntervalDays) : '',
+    );
+    setValue(
+      'intervalKm',
+      selectedType.suggestedIntervalKm ? String(selectedType.suggestedIntervalKm) : '',
+    );
   };
 
   const fieldErr = (name: keyof FormIn): string | undefined => {
@@ -103,7 +114,12 @@ export function ScheduleForm({
         description:
           x.suggestedIntervalDays || x.suggestedIntervalKm
             ? t('maintenance.suggested', {
-                value: [x.suggestedIntervalKm ? km(x.suggestedIntervalKm, i18n.language) : null, x.suggestedIntervalDays ? `${x.suggestedIntervalDays} ${t('common.days')}` : null].filter(Boolean).join(' / '),
+                value: [
+                  x.suggestedIntervalKm ? km(x.suggestedIntervalKm, i18n.language) : null,
+                  x.suggestedIntervalDays ? `${x.suggestedIntervalDays} ${t('common.days')}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' / '),
               })
             : undefined,
       })),
@@ -124,40 +140,152 @@ export function ScheduleForm({
           control={control}
           name="serviceTypeId"
           render={({ field }) => (
-            <SelectField label={t('maintenance.serviceType')} value={field.value === '' ? null : field.value} onChange={field.onChange} options={typeOptions} error={fieldErr('serviceTypeId')} />
+            <SelectField
+              label={t('maintenance.serviceType')}
+              value={field.value === '' ? null : field.value}
+              onChange={field.onChange}
+              options={typeOptions}
+              error={fieldErr('serviceTypeId')}
+            />
           )}
         />
       )}
       {selectedTypeId === CUSTOM ? (
         <Card style={{ marginBottom: spacing.lg }}>
-          <TextField label={t('maintenance.customName')} value={customName} onChangeText={setCustomName} error={customError ?? undefined} maxLength={80} />
-          <Button title={t('maintenance.createCustom')} variant="secondary" compact onPress={() => customName.trim().length >= 2 && createCustom.mutate()} loading={createCustom.isPending} />
+          <TextField
+            label={t('maintenance.customName')}
+            value={customName}
+            onChangeText={setCustomName}
+            error={customError ?? undefined}
+            maxLength={80}
+          />
+          <Button
+            title={t('maintenance.createCustom')}
+            variant="secondary"
+            compact
+            onPress={() => customName.trim().length >= 2 && createCustom.mutate()}
+            loading={createCustom.isPending}
+          />
         </Card>
       ) : null}
-      {selectedType && (selectedType.suggestedIntervalDays || selectedType.suggestedIntervalKm) && !initial ? (
+      {selectedType &&
+      (selectedType.suggestedIntervalDays || selectedType.suggestedIntervalKm) &&
+      !initial ? (
         <View style={{ marginBottom: spacing.lg, gap: spacing.sm }}>
           <InlineNotice tone="accent" text={t('maintenance.suggestedNote')} />
-          <Button title={t('maintenance.useSuggested')} variant="ghost" compact icon="sparkles-outline" onPress={applySuggested} style={{ alignSelf: 'flex-start' }} />
+          <Button
+            title={t('maintenance.useSuggested')}
+            variant="ghost"
+            compact
+            icon="sparkles-outline"
+            onPress={applySuggested}
+            style={{ alignSelf: 'flex-start' }}
+          />
         </View>
       ) : null}
 
-      <Controller control={control} name="lastServiceDate" render={({ field }) => <DateField label={t('maintenance.lastServiceDate')} value={String(field.value)} onChange={field.onChange} maximumDate={new Date()} error={fieldErr('lastServiceDate')} />} />
-      <Controller control={control} name="lastServiceMileage" render={({ field }) => <TextField label={t('maintenance.lastServiceMileage')} keyboardType="number-pad" suffix={t('common.km')} value={str(field.value)} onChangeText={(v) => field.onChange(digitsOnly(v))} error={fieldErr('lastServiceMileage')} testID="schedule-last-mileage" />} />
+      <Controller
+        control={control}
+        name="lastServiceDate"
+        render={({ field }) => (
+          <DateField
+            label={t('maintenance.lastServiceDate')}
+            value={String(field.value)}
+            onChange={field.onChange}
+            maximumDate={new Date()}
+            error={fieldErr('lastServiceDate')}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="lastServiceMileage"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.lastServiceMileage')}
+            keyboardType="number-pad"
+            suffix={t('common.km')}
+            value={str(field.value)}
+            onChangeText={(v) => field.onChange(digitsOnly(v))}
+            error={fieldErr('lastServiceMileage')}
+            testID="schedule-last-mileage"
+          />
+        )}
+      />
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          <Controller control={control} name="intervalKm" render={({ field }) => <TextField label={t('maintenance.intervalKm')} keyboardType="number-pad" value={str(field.value)} onChangeText={(v) => field.onChange(digitsOnly(v))} error={fieldErr('intervalKm')} testID="schedule-interval-km" />} />
+          <Controller
+            control={control}
+            name="intervalKm"
+            render={({ field }) => (
+              <TextField
+                label={t('maintenance.intervalKm')}
+                keyboardType="number-pad"
+                value={str(field.value)}
+                onChangeText={(v) => field.onChange(digitsOnly(v))}
+                error={fieldErr('intervalKm')}
+                testID="schedule-interval-km"
+              />
+            )}
+          />
         </View>
         <View style={{ flex: 1 }}>
-          <Controller control={control} name="intervalDays" render={({ field }) => <TextField label={t('maintenance.intervalDays')} keyboardType="number-pad" value={str(field.value)} onChangeText={(v) => field.onChange(digitsOnly(v))} error={fieldErr('intervalDays')} testID="schedule-interval-days" />} />
+          <Controller
+            control={control}
+            name="intervalDays"
+            render={({ field }) => (
+              <TextField
+                label={t('maintenance.intervalDays')}
+                keyboardType="number-pad"
+                value={str(field.value)}
+                onChangeText={(v) => field.onChange(digitsOnly(v))}
+                error={fieldErr('intervalDays')}
+                testID="schedule-interval-days"
+              />
+            )}
+          />
         </View>
       </View>
       <InlineNotice tone="accent" text={t('maintenance.whicheverFirst')} />
       <View style={{ height: spacing.lg }} />
-      <Controller control={control} name="estimatedCost" render={({ field }) => <TextField label={t('maintenance.estimatedCost')} optional keyboardType="decimal-pad" suffix="UZS" value={str(field.value)} onChangeText={(v) => field.onChange(decimalInput(v))} error={fieldErr('estimatedCost')} />} />
-      <Controller control={control} name="notes" render={({ field }) => <TextField label={t('maintenance.notes')} optional multiline value={str(field.value)} onChangeText={field.onChange} />} />
+      <Controller
+        control={control}
+        name="estimatedCost"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.estimatedCost')}
+            optional
+            keyboardType="decimal-pad"
+            suffix="UZS"
+            value={str(field.value)}
+            onChangeText={(v) => field.onChange(decimalInput(v))}
+            error={fieldErr('estimatedCost')}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="notes"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.notes')}
+            optional
+            multiline
+            value={str(field.value)}
+            onChangeText={field.onChange}
+          />
+        )}
+      />
       {serverError ? <InlineNotice tone="danger" text={errorMessage(t, serverError)} /> : null}
       {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
-      <Button title={t('common.save')} onPress={submit} loading={submitting} disabled={isOffline || selectedTypeId === CUSTOM} style={{ marginTop: spacing.lg }} testID="schedule-submit" />
+      <Button
+        title={t('common.save')}
+        onPress={submit}
+        loading={submitting}
+        disabled={isOffline || selectedTypeId === CUSTOM}
+        style={{ marginTop: spacing.lg }}
+        testID="schedule-submit"
+      />
     </View>
   );
 }

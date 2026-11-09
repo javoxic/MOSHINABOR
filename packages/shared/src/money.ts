@@ -28,6 +28,7 @@ export const LOCALE_TAGS = LOCALES;
 
 /** Parses a decimal money string safely into a number of so'm with 2 decimals precision. */
 export function parseMoney(value: string | number): number {
-  const n = typeof value === 'number' ? value : Number.parseFloat(String(value).replace(/[\s ,]/g, ''));
+  const n =
+    typeof value === 'number' ? value : Number.parseFloat(String(value).replace(/[\s ,]/g, ''));
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
 }

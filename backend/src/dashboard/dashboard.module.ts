@@ -5,5 +5,9 @@ import { VehiclesModule } from '../vehicles/vehicles.module';
 import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 
-@Module({ imports: [VehiclesModule, MaintenanceModule, ExpensesModule], controllers: [DashboardController], providers: [DashboardService] })
+@Module({
+  imports: [VehiclesModule, MaintenanceModule, ExpensesModule],
+  controllers: [DashboardController],
+  providers: [DashboardService],
+})
 export class DashboardModule {}

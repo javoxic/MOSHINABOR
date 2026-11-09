@@ -28,7 +28,11 @@ export class AuthService {
     const e164 = await this.otp.verify(phone, code);
     const { user, isNew } = await this.users.findOrCreateByPhone(e164, language ?? 'uz');
     if (user.status === 'RESTRICTED') {
-      throw new AppException(ERROR_CODES.ACCOUNT_RESTRICTED, HttpStatus.FORBIDDEN, 'Your account has been restricted. Contact support.');
+      throw new AppException(
+        ERROR_CODES.ACCOUNT_RESTRICTED,
+        HttpStatus.FORBIDDEN,
+        'Your account has been restricted. Contact support.',
+      );
     }
     const tokens = await this.tokens.issue(user.id, ctx);
     await this.prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } });
@@ -39,19 +43,30 @@ export class AuthService {
     return this.tokens.rotate(refreshToken, ctx);
   }
 
-  async logout(userId: string, familyId: string, refreshToken?: string, pushToken?: string): Promise<void> {
+  async logout(
+    userId: string,
+    familyId: string,
+    refreshToken?: string,
+    pushToken?: string,
+  ): Promise<void> {
     if (refreshToken) {
       const fam = await this.tokens.familyOf(refreshToken);
       if (fam && fam.userId === userId) await this.tokens.revokeFamily(fam.familyId, 'logout');
     }
     await this.tokens.revokeFamily(familyId, 'logout');
     if (pushToken) {
-      await this.prisma.pushDevice.updateMany({ where: { token: pushToken, userId }, data: { disabledAt: new Date() } });
+      await this.prisma.pushDevice.updateMany({
+        where: { token: pushToken, userId },
+        data: { disabledAt: new Date() },
+      });
     }
   }
 
   async logoutAll(userId: string): Promise<number> {
-    await this.prisma.pushDevice.updateMany({ where: { userId, disabledAt: null }, data: { disabledAt: new Date() } });
+    await this.prisma.pushDevice.updateMany({
+      where: { userId, disabledAt: null },
+      data: { disabledAt: new Date() },
+    });
     return this.tokens.revokeAllForUser(userId, 'logout_all');
   }
 }

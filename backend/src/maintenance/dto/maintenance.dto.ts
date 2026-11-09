@@ -1,12 +1,25 @@
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { SCHEDULE_STATUSES, type ScheduleStatus } from '@moshina/shared';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const emptyToNull = ({ value }: { value: unknown }) => (value === '' ? null : value);
-const optText = ({ value }: { value: unknown }) => (typeof value === 'string' ? (value.trim() === '' ? null : value.trim()) : value);
+const optText = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? (value.trim() === '' ? null : value.trim()) : value;
 
 export class CreateScheduleDto {
   @ApiProperty() @IsUUID() vehicleId: string;
@@ -58,7 +71,9 @@ export class CreateScheduleDto {
   notes?: string | null;
 }
 
-export class UpdateScheduleDto extends PartialType(OmitType(CreateScheduleDto, ['vehicleId', 'serviceTypeId'] as const)) {
+export class UpdateScheduleDto extends PartialType(
+  OmitType(CreateScheduleDto, ['vehicleId', 'serviceTypeId'] as const),
+) {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isActive?: boolean;
 }
 
@@ -107,7 +122,10 @@ export class CompleteScheduleDto {
 
 export class ScheduleQueryDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() vehicleId?: string;
-  @ApiPropertyOptional({ enum: SCHEDULE_STATUSES }) @IsOptional() @IsIn(SCHEDULE_STATUSES) status?: ScheduleStatus;
+  @ApiPropertyOptional({ enum: SCHEDULE_STATUSES })
+  @IsOptional()
+  @IsIn(SCHEDULE_STATUSES)
+  status?: ScheduleStatus;
   @ApiPropertyOptional({ description: 'Only overdue/due/due-soon' })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
@@ -120,7 +138,9 @@ export class CreateRecordDto extends CompleteScheduleDto {
   @ApiProperty() @IsUUID() serviceTypeId: string;
 }
 
-export class UpdateRecordDto extends PartialType(OmitType(CreateRecordDto, ['vehicleId'] as const)) {}
+export class UpdateRecordDto extends PartialType(
+  OmitType(CreateRecordDto, ['vehicleId'] as const),
+) {}
 
 export class RecordQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() vehicleId?: string;

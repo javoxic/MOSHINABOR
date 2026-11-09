@@ -24,7 +24,12 @@ export default function NewVehicleScreen() {
   });
   return (
     <Screen back title={t('vehicle.add')}>
-      <VehicleForm submitLabel={t('common.save')} onSubmit={(b) => create.mutate(b)} submitting={create.isPending} serverError={create.error} />
+      <VehicleForm
+        submitLabel={t('common.save')}
+        onSubmit={(b) => create.mutate(b)}
+        submitting={create.isPending}
+        serverError={create.error}
+      />
     </Screen>
   );
 }

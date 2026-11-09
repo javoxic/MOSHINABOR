@@ -2,7 +2,12 @@ import { Body, Controller, Get, Param, Put, Req, UseGuards } from '@nestjs/commo
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { LANGUAGES } from '@moshina/shared';
-import { CurrentAdmin, Public, RequirePermissions, type AuthAdmin } from '../../common/decorators/auth.decorators';
+import {
+  CurrentAdmin,
+  Public,
+  RequirePermissions,
+  type AuthAdmin,
+} from '../../common/decorators/auth.decorators';
 import { SystemSettingsService } from '../../settings/system-settings.service';
 import { HealthService } from '../../health/health.service';
 import { AdminGuard } from '../admin.guard';
@@ -31,9 +36,21 @@ export class AdminSettingsController {
   @Put(':key')
   @RequirePermissions('settings.manage')
   @ApiOperation({ summary: 'Change a system setting' })
-  async update(@CurrentAdmin() admin: AuthAdmin, @Param('key') key: string, @Body() dto: UpdateSettingDto, @Req() req: Request) {
+  async update(
+    @CurrentAdmin() admin: AuthAdmin,
+    @Param('key') key: string,
+    @Body() dto: UpdateSettingDto,
+    @Req() req: Request,
+  ) {
     const r = await this.settings.set(key, dto.value, admin.id);
-    await this.audit.log({ adminId: admin.id, action: 'settings.update', entityType: 'setting', entityId: key, metadata: { previous: r.previous, value: r.value }, req });
+    await this.audit.log({
+      adminId: admin.id,
+      action: 'settings.update',
+      entityType: 'setting',
+      entityId: key,
+      metadata: { previous: r.previous, value: r.value },
+      req,
+    });
     return r;
   }
 

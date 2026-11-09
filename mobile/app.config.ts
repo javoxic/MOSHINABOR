@@ -25,8 +25,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: process.env.IOS_BUILD_NUMBER ?? '1',
     supportsTablet: false,
     infoPlist: {
-      NSCameraUsageDescription: 'MOSHINA BOR uses the camera to photograph your vehicle and service receipts.',
-      NSPhotoLibraryUsageDescription: 'MOSHINA BOR uses your photo library to attach vehicle photos and service receipts.',
+      NSCameraUsageDescription:
+        'MOSHINA BOR uses the camera to photograph your vehicle and service receipts.',
+      NSPhotoLibraryUsageDescription:
+        'MOSHINA BOR uses your photo library to attach vehicle photos and service receipts.',
       ITSAppUsesNonExemptEncryption: false,
     },
   },
@@ -42,9 +44,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     'expo-localization',
-    ['expo-splash-screen', { image: './assets/splash.png', imageWidth: 200, backgroundColor: '#0B0D10' }],
+    [
+      'expo-splash-screen',
+      { image: './assets/splash.png', imageWidth: 200, backgroundColor: '#0B0D10' },
+    ],
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#2F7BFF' }],
-    ['expo-image-picker', { photosPermission: 'MOSHINA BOR uses your photos to attach vehicle images and receipts.', cameraPermission: 'MOSHINA BOR uses the camera to photograph your vehicle and receipts.' }],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'MOSHINA BOR uses your photos to attach vehicle images and receipts.',
+        cameraPermission: 'MOSHINA BOR uses the camera to photograph your vehicle and receipts.',
+      },
+    ],
     '@react-native-community/datetimepicker',
   ],
   experiments: { typedRoutes: true },
@@ -52,6 +63,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
     eas: { projectId: process.env.EAS_PROJECT_ID },
   },
-  updates: process.env.EAS_PROJECT_ID ? { url: `https://u.expo.dev/${process.env.EAS_PROJECT_ID}` } : undefined,
+  updates: process.env.EAS_PROJECT_ID
+    ? { url: `https://u.expo.dev/${process.env.EAS_PROJECT_ID}` }
+    : undefined,
   runtimeVersion: { policy: 'appVersion' },
 });

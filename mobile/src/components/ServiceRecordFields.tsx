@@ -28,7 +28,14 @@ export function ServiceRecordFields({
 }: {
   defaultMileage?: number;
   defaultCost?: string | null;
-  initial?: { date: string; mileage: number; cost: string | null; serviceProvider: string | null; partsUsed: string | null; notes: string | null };
+  initial?: {
+    date: string;
+    mileage: number;
+    cost: string | null;
+    serviceProvider: string | null;
+    partsUsed: string | null;
+    notes: string | null;
+  };
   submitLabel: string;
   onSubmit: (v: CompleteBody) => void;
   submitting: boolean;
@@ -42,7 +49,11 @@ export function ServiceRecordFields({
     defaultValues: {
       date: initial?.date ?? todayLocal(),
       mileage: String(initial?.mileage ?? defaultMileage ?? ''),
-      cost: initial?.cost ? String(Number(initial.cost)) : defaultCost ? String(Number(defaultCost)) : '',
+      cost: initial?.cost
+        ? String(Number(initial.cost))
+        : defaultCost
+          ? String(Number(defaultCost))
+          : '',
       serviceProvider: initial?.serviceProvider ?? '',
       partsUsed: initial?.partsUsed ?? '',
       notes: initial?.notes ?? '',
@@ -55,20 +66,113 @@ export function ServiceRecordFields({
   };
   const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   const submit = handleSubmit((v) =>
-    onSubmit({ date: v.date, mileage: v.mileage, cost: v.cost ?? null, serviceProvider: v.serviceProvider ?? null, partsUsed: v.partsUsed ?? null, notes: v.notes ?? null }),
+    onSubmit({
+      date: v.date,
+      mileage: v.mileage,
+      cost: v.cost ?? null,
+      serviceProvider: v.serviceProvider ?? null,
+      partsUsed: v.partsUsed ?? null,
+      notes: v.notes ?? null,
+    }),
   );
   return (
     <View>
       {header}
-      <Controller control={control} name="date" render={({ field }) => <DateField label={t('maintenance.serviceDate')} value={String(field.value)} onChange={field.onChange} maximumDate={new Date()} error={err('date')} />} />
-      <Controller control={control} name="mileage" render={({ field }) => <TextField label={t('maintenance.mileage')} keyboardType="number-pad" suffix={t('common.km')} value={str(field.value)} onChangeText={(v) => field.onChange(digitsOnly(v))} error={err('mileage')} testID="record-mileage" />} />
-      <Controller control={control} name="cost" render={({ field }) => <TextField label={t('maintenance.cost')} optional keyboardType="decimal-pad" suffix="UZS" value={str(field.value)} onChangeText={(v) => field.onChange(decimalInput(v))} error={err('cost')} testID="record-cost" />} />
-      <Controller control={control} name="serviceProvider" render={({ field }) => <TextField label={t('maintenance.provider')} optional value={str(field.value)} onChangeText={field.onChange} error={err('serviceProvider')} />} />
-      <Controller control={control} name="partsUsed" render={({ field }) => <TextField label={t('maintenance.partsUsed')} optional multiline value={str(field.value)} onChangeText={field.onChange} error={err('partsUsed')} />} />
-      <Controller control={control} name="notes" render={({ field }) => <TextField label={t('maintenance.notes')} optional multiline value={str(field.value)} onChangeText={field.onChange} error={err('notes')} />} />
+      <Controller
+        control={control}
+        name="date"
+        render={({ field }) => (
+          <DateField
+            label={t('maintenance.serviceDate')}
+            value={String(field.value)}
+            onChange={field.onChange}
+            maximumDate={new Date()}
+            error={err('date')}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="mileage"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.mileage')}
+            keyboardType="number-pad"
+            suffix={t('common.km')}
+            value={str(field.value)}
+            onChangeText={(v) => field.onChange(digitsOnly(v))}
+            error={err('mileage')}
+            testID="record-mileage"
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="cost"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.cost')}
+            optional
+            keyboardType="decimal-pad"
+            suffix="UZS"
+            value={str(field.value)}
+            onChangeText={(v) => field.onChange(decimalInput(v))}
+            error={err('cost')}
+            testID="record-cost"
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="serviceProvider"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.provider')}
+            optional
+            value={str(field.value)}
+            onChangeText={field.onChange}
+            error={err('serviceProvider')}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="partsUsed"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.partsUsed')}
+            optional
+            multiline
+            value={str(field.value)}
+            onChangeText={field.onChange}
+            error={err('partsUsed')}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="notes"
+        render={({ field }) => (
+          <TextField
+            label={t('maintenance.notes')}
+            optional
+            multiline
+            value={str(field.value)}
+            onChangeText={field.onChange}
+            error={err('notes')}
+          />
+        )}
+      />
       {serverError ? <InlineNotice tone="danger" text={errorMessage(t, serverError)} /> : null}
       {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
-      <Button title={submitLabel} onPress={submit} loading={submitting} disabled={isOffline} style={{ marginTop: spacing.lg }} testID="record-submit" />
+      <Button
+        title={submitLabel}
+        onPress={submit}
+        loading={submitting}
+        disabled={isOffline}
+        style={{ marginTop: spacing.lg }}
+        testID="record-submit"
+      />
     </View>
   );
 }

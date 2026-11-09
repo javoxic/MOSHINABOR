@@ -32,17 +32,29 @@ export default function ExpensesScreen() {
   const vehicleId = scope === 'vehicle' ? (selected?.id ?? null) : null;
   const filters = { vehicleId, from: `${year}-01-01`, to: todayLocal() };
 
-  const stats = useQuery({ queryKey: qk.expenseStats(filters), queryFn: () => Api.expenseStats(filters), enabled: !!selected });
+  const stats = useQuery({
+    queryKey: qk.expenseStats(filters),
+    queryFn: () => Api.expenseStats(filters),
+    enabled: !!selected,
+  });
   const listFilters = { vehicleId, category: category === 'ALL' ? null : category };
   const expenses = useInfiniteQuery({
     queryKey: qk.expenses(listFilters),
     queryFn: ({ pageParam }) => Api.expenses({ ...listFilters, page: pageParam, pageSize: 20 }),
     initialPageParam: 1,
-    getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
+    getNextPageParam: (last) =>
+      last.page * last.pageSize < last.total ? last.page + 1 : undefined,
     enabled: !!selected,
   });
   const items = expenses.data?.pages.flatMap((p) => p.items) ?? [];
-  const add = selected ? <IconButton icon="add" label={t('expenses.add')} tone="accent" onPress={() => router.push({ pathname: '/expenses/new', params: { vehicleId: selected.id } })} /> : null;
+  const add = selected ? (
+    <IconButton
+      icon="add"
+      label={t('expenses.add')}
+      tone="accent"
+      onPress={() => router.push({ pathname: '/expenses/new', params: { vehicleId: selected.id } })}
+    />
+  ) : null;
 
   return (
     <Screen
@@ -58,7 +70,11 @@ export default function ExpensesScreen() {
       {vehicles.isPending ? (
         <LoadingState />
       ) : !selected ? (
-        <EmptyState title={t('maintenance.noVehicle')} actionLabel={t('vehicle.add')} onAction={() => router.push('/vehicles/new')} />
+        <EmptyState
+          title={t('maintenance.noVehicle')}
+          actionLabel={t('vehicle.add')}
+          onAction={() => router.push('/vehicles/new')}
+        />
       ) : (
         <>
           {list.length > 1 ? (
@@ -73,7 +89,9 @@ export default function ExpensesScreen() {
               />
             </View>
           ) : null}
-          {scope === 'vehicle' ? <VehicleSwitcher vehicles={list} selectedId={selected.id} onSelect={select} /> : null}
+          {scope === 'vehicle' ? (
+            <VehicleSwitcher vehicles={list} selectedId={selected.id} onSelect={select} />
+          ) : null}
 
           {stats.isPending ? (
             <LoadingState />
@@ -82,14 +100,26 @@ export default function ExpensesScreen() {
           ) : stats.data ? (
             <>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <StatTile label={t('expenses.year', { year })} value={money(stats.data.total, i18n.language)} hint={t('expenses.records', { count: stats.data.count })} />
+                <StatTile
+                  label={t('expenses.year', { year })}
+                  value={money(stats.data.total, i18n.language)}
+                  hint={t('expenses.records', { count: stats.data.count })}
+                />
               </View>
               <SectionHeader title={t('expenses.byMonth')} />
               <Card>
                 <BarChart
                   width={width - spacing.lg * 2 - spacing.lg * 2 - 2}
-                  data={stats.data.byMonth.map((m) => ({ label: monthShort(m.month, i18n.language), value: Number(m.total) }))}
-                  accessibilityLabel={stats.data.byMonth.map((m) => `${monthShort(m.month, i18n.language)}: ${money(m.total, i18n.language)}`).join(', ')}
+                  data={stats.data.byMonth.map((m) => ({
+                    label: monthShort(m.month, i18n.language),
+                    value: Number(m.total),
+                  }))}
+                  accessibilityLabel={stats.data.byMonth
+                    .map(
+                      (m) =>
+                        `${monthShort(m.month, i18n.language)}: ${money(m.total, i18n.language)}`,
+                    )
+                    .join(', ')}
                 />
               </Card>
               {stats.data.byCategory.length ? (
@@ -97,15 +127,34 @@ export default function ExpensesScreen() {
                   <SectionHeader title={t('expenses.byCategory')} />
                   <Card>
                     {stats.data.byCategory.map((c) => {
-                      const share = Number(stats.data.total) > 0 ? Number(c.total) / Number(stats.data.total) : 0;
+                      const share =
+                        Number(stats.data.total) > 0
+                          ? Number(c.total) / Number(stats.data.total)
+                          : 0;
                       return (
                         <View key={c.category} style={{ marginVertical: spacing.xs }}>
                           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                             <Text>{t(`expenses.categories.${c.category}`)}</Text>
-                            <Text style={{ fontWeight: '600' }}>{money(c.total, i18n.language)}</Text>
+                            <Text style={{ fontWeight: '600' }}>
+                              {money(c.total, i18n.language)}
+                            </Text>
                           </View>
-                          <View style={{ height: 6, backgroundColor: colors.surfaceHigh, borderRadius: 3, marginTop: 4 }}>
-                            <View style={{ height: 6, width: `${Math.round(share * 100)}%`, backgroundColor: colors.accent, borderRadius: 3 }} />
+                          <View
+                            style={{
+                              height: 6,
+                              backgroundColor: colors.surfaceHigh,
+                              borderRadius: 3,
+                              marginTop: 4,
+                            }}
+                          >
+                            <View
+                              style={{
+                                height: 6,
+                                width: `${Math.round(share * 100)}%`,
+                                backgroundColor: colors.accent,
+                                borderRadius: 3,
+                              }}
+                            />
                           </View>
                         </View>
                       );
@@ -121,21 +170,47 @@ export default function ExpensesScreen() {
             label={t('expenses.category')}
             value={category}
             onChange={setCategory}
-            options={[{ value: 'ALL', label: t('common.all') }, ...EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`expenses.categories.${c}`) }))]}
+            options={[
+              { value: 'ALL', label: t('common.all') },
+              ...EXPENSE_CATEGORIES.map((c) => ({
+                value: c,
+                label: t(`expenses.categories.${c}`),
+              })),
+            ]}
           />
           {expenses.isPending ? (
             <LoadingState />
           ) : expenses.isError && !expenses.data ? (
-            <ErrorState message={errorMessage(t, expenses.error)} onRetry={() => expenses.refetch()} />
+            <ErrorState
+              message={errorMessage(t, expenses.error)}
+              onRetry={() => expenses.refetch()}
+            />
           ) : items.length === 0 ? (
-            <EmptyState icon="wallet-outline" title={t('expenses.empty')} actionLabel={t('expenses.add')} onAction={() => router.push({ pathname: '/expenses/new', params: { vehicleId: selected.id } })} />
+            <EmptyState
+              icon="wallet-outline"
+              title={t('expenses.empty')}
+              actionLabel={t('expenses.add')}
+              onAction={() =>
+                router.push({ pathname: '/expenses/new', params: { vehicleId: selected.id } })
+              }
+            />
           ) : (
             <>
               {items.map((e) => (
-                <ExpenseRow key={e.id} expense={e} onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: e.id } })} />
+                <ExpenseRow
+                  key={e.id}
+                  expense={e}
+                  onPress={() => router.push({ pathname: '/expenses/[id]', params: { id: e.id } })}
+                />
               ))}
               {expenses.hasNextPage ? (
-                <Button title={t('common.loadMore')} variant="secondary" onPress={() => expenses.fetchNextPage()} loading={expenses.isFetchingNextPage} style={{ marginTop: spacing.md }} />
+                <Button
+                  title={t('common.loadMore')}
+                  variant="secondary"
+                  onPress={() => expenses.fetchNextPage()}
+                  loading={expenses.isFetchingNextPage}
+                  style={{ marginTop: spacing.md }}
+                />
               ) : null}
             </>
           )}

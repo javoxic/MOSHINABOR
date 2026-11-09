@@ -28,7 +28,13 @@ export default function EditVehicleScreen() {
       ) : vehicle.isError ? (
         <ErrorState message={errorMessage(t, vehicle.error)} onRetry={() => vehicle.refetch()} />
       ) : (
-        <VehicleForm initial={vehicle.data} submitLabel={t('common.save')} onSubmit={(b) => update.mutate(b)} submitting={update.isPending} serverError={update.error} />
+        <VehicleForm
+          initial={vehicle.data}
+          submitLabel={t('common.save')}
+          onSubmit={(b) => update.mutate(b)}
+          submitting={update.isPending}
+          serverError={update.error}
+        />
       )}
     </Screen>
   );

@@ -12,7 +12,14 @@ const baseUser = {
   createdAt: '2026-01-01T00:00:00Z',
   deletionRequestedAt: null,
   deletionScheduledFor: null,
-  settings: { language: 'uz' as const, pushEnabled: true, maintenanceReminders: true, mileageReminders: true, announcements: true, primaryVehicleId: null },
+  settings: {
+    language: 'uz' as const,
+    pushEnabled: true,
+    maintenanceReminders: true,
+    mileageReminders: true,
+    announcements: true,
+    primaryVehicleId: null,
+  },
 };
 
 describe('entry routing', () => {

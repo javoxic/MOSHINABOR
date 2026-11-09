@@ -39,22 +39,40 @@ export class AdminAuthController {
 
   /** Cookie-authenticated endpoints additionally require a custom header (CSRF defence). */
   private requireCsrfHeader(req: Request): void {
-    if (req.headers[CSRF_HEADER] !== 'moshina-admin') throw AppException.forbidden('Missing CSRF header');
+    if (req.headers[CSRF_HEADER] !== 'moshina-admin')
+      throw AppException.forbidden('Missing CSRF header');
   }
 
   @Post('login')
   @HttpCode(200)
   @Throttle({ default: { limit: LOGIN_LIMIT, ttl: 60_000 } })
   @ApiOperation({ summary: 'Administrator login (sets httpOnly refresh cookie)' })
-  async login(@Body() dto: AdminLoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: AdminLoginDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const ctx = { ip: clientIp(req), userAgent: userAgent(req) };
     try {
       const { tokens, adminId } = await this.auth.login(dto.email, dto.password, ctx);
-      res.cookie(ADMIN_REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions(tokens.refreshExpiresAt));
+      res.cookie(
+        ADMIN_REFRESH_COOKIE,
+        tokens.refreshToken,
+        this.cookieOptions(tokens.refreshExpiresAt),
+      );
       await this.audit.log({ adminId, action: 'auth.login', req });
-      return { accessToken: tokens.accessToken, accessTokenExpiresAt: tokens.accessTokenExpiresAt, admin: await this.auth.profile(adminId) };
+      return {
+        accessToken: tokens.accessToken,
+        accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+        admin: await this.auth.profile(adminId),
+      };
     } catch (err) {
-      await this.audit.log({ adminId: null, action: 'auth.login_failed', metadata: { email: dto.email.toLowerCase().slice(0, 254) }, req });
+      await this.audit.log({
+        adminId: null,
+        action: 'auth.login_failed',
+        metadata: { email: dto.email.toLowerCase().slice(0, 254) },
+        req,
+      });
       throw err;
     }
   }
@@ -69,9 +87,20 @@ export class AdminAuthController {
     this.requireCsrfHeader(req);
     const token = (req.cookies as Record<string, string> | undefined)?.[ADMIN_REFRESH_COOKIE];
     try {
-      const { tokens, adminId } = await this.auth.refresh(token, { ip: clientIp(req), userAgent: userAgent(req) });
-      res.cookie(ADMIN_REFRESH_COOKIE, tokens.refreshToken, this.cookieOptions(tokens.refreshExpiresAt));
-      return { accessToken: tokens.accessToken, accessTokenExpiresAt: tokens.accessTokenExpiresAt, admin: await this.auth.profile(adminId) };
+      const { tokens, adminId } = await this.auth.refresh(token, {
+        ip: clientIp(req),
+        userAgent: userAgent(req),
+      });
+      res.cookie(
+        ADMIN_REFRESH_COOKIE,
+        tokens.refreshToken,
+        this.cookieOptions(tokens.refreshExpiresAt),
+      );
+      return {
+        accessToken: tokens.accessToken,
+        accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+        admin: await this.auth.profile(adminId),
+      };
     } catch (err) {
       res.clearCookie(ADMIN_REFRESH_COOKIE, this.cookieOptions());
       throw err;
@@ -84,7 +113,9 @@ export class AdminAuthController {
   @ApiOperation({ summary: 'End the admin session' })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     this.requireCsrfHeader(req);
-    const adminId = await this.auth.logout((req.cookies as Record<string, string> | undefined)?.[ADMIN_REFRESH_COOKIE]);
+    const adminId = await this.auth.logout(
+      (req.cookies as Record<string, string> | undefined)?.[ADMIN_REFRESH_COOKIE],
+    );
     res.clearCookie(ADMIN_REFRESH_COOKIE, this.cookieOptions());
     if (adminId) await this.audit.log({ adminId, action: 'auth.logout', req });
   }
@@ -102,9 +133,20 @@ export class AdminAuthController {
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change own password (signs out all sessions)' })
-  async changePassword(@CurrentAdmin() admin: AuthAdmin, @Body() dto: ChangePasswordDto, @Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+  async changePassword(
+    @CurrentAdmin() admin: AuthAdmin,
+    @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     await this.auth.changePassword(admin.id, dto.currentPassword, dto.newPassword);
     res.clearCookie(ADMIN_REFRESH_COOKIE, this.cookieOptions());
-    await this.audit.log({ adminId: admin.id, action: 'auth.password_changed', entityType: 'admin', entityId: admin.id, req });
+    await this.audit.log({
+      adminId: admin.id,
+      action: 'auth.password_changed',
+      entityType: 'admin',
+      entityId: admin.id,
+      req,
+    });
   }
 }

@@ -19,7 +19,10 @@ export default function ProfileSetupScreen() {
   const { t } = useTranslation();
   const setUser = useAuthStore((s) => s.setUser);
   const [error, setError] = useState<string | null>(null);
-  const { control, handleSubmit, formState } = useForm<ProfileInput>({ resolver: zodResolver(profileSchema), defaultValues: { fullName: '' } });
+  const { control, handleSubmit, formState } = useForm<ProfileInput>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { fullName: '' },
+  });
   const save = useMutation({
     mutationFn: (name: string) => Api.updateProfile(name),
     onSuccess: async (user) => {
@@ -30,7 +33,16 @@ export default function ProfileSetupScreen() {
   });
   const submit = handleSubmit((v) => save.mutate(v.fullName));
   return (
-    <Screen footer={<Button title={t('common.continue')} onPress={submit} loading={save.isPending} testID="profile-continue" />}>
+    <Screen
+      footer={
+        <Button
+          title={t('common.continue')}
+          onPress={submit}
+          loading={save.isPending}
+          testID="profile-continue"
+        />
+      }
+    >
       <Text variant="title" style={{ marginTop: spacing.xxxl }}>
         {t('auth.profileTitle')}
       </Text>
@@ -50,7 +62,11 @@ export default function ProfileSetupScreen() {
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            error={formState.errors.fullName ? t(formState.errors.fullName.message ?? 'validation.required') : undefined}
+            error={
+              formState.errors.fullName
+                ? t(formState.errors.fullName.message ?? 'validation.required')
+                : undefined
+            }
             testID="fullname-input"
           />
         )}

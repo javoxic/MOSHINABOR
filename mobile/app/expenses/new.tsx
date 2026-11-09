@@ -29,9 +29,19 @@ export default function NewExpenseScreen() {
       {vehicles.isPending ? (
         <LoadingState />
       ) : !defaultId ? (
-        <EmptyState title={t('maintenance.noVehicle')} actionLabel={t('vehicle.add')} onAction={() => router.replace('/vehicles/new')} />
+        <EmptyState
+          title={t('maintenance.noVehicle')}
+          actionLabel={t('vehicle.add')}
+          onAction={() => router.replace('/vehicles/new')}
+        />
       ) : (
-        <ExpenseForm vehicles={list} defaultVehicleId={defaultId} onSubmit={(b) => create.mutate(b)} submitting={create.isPending} serverError={create.error} />
+        <ExpenseForm
+          vehicles={list}
+          defaultVehicleId={defaultId}
+          onSubmit={(b) => create.mutate(b)}
+          submitting={create.isPending}
+          serverError={create.error}
+        />
       )}
     </Screen>
   );

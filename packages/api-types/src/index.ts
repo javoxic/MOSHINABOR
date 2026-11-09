@@ -261,8 +261,20 @@ export interface AdminUserDetail extends AdminUserListItem {
   deletionRequestedAt: string | null;
   activeSessions: number;
   pushDevices: { id: string; platform: string; lastSeenAt: string; disabled: boolean }[];
-  counts: { vehicles: number; records: number; expenses: number; schedules: number; notifications: number };
-  vehicles: { id: string; brand: string; model: string; year: number; registrationNumber: string }[];
+  counts: {
+    vehicles: number;
+    records: number;
+    expenses: number;
+    schedules: number;
+    notifications: number;
+  };
+  vehicles: {
+    id: string;
+    brand: string;
+    model: string;
+    year: number;
+    registrationNumber: string;
+  }[];
   recentActivity: { type: string; description: string; at: string }[];
 }
 
@@ -282,7 +294,13 @@ export interface AdminVehicleDetail extends AdminVehicleListItem {
   vin: string | null;
   engineSize: string | null;
   mileageUpdatedAt: string | null;
-  schedules: { id: string; serviceType: string; nextDueDate: string | null; nextDueMileage: number | null; status: ScheduleStatus }[];
+  schedules: {
+    id: string;
+    serviceType: string;
+    nextDueDate: string | null;
+    nextDueMileage: number | null;
+    status: ScheduleStatus;
+  }[];
   recordCount: number;
   expenseTotal: string;
 }
@@ -365,7 +383,13 @@ export interface SystemHealth {
   uptimeSeconds: number;
   database: { ok: boolean; latencyMs: number | null; migrations: number | null; error?: string };
   redis: { ok: boolean; latencyMs: number | null; error?: string };
-  sms: { provider: string; configured: boolean; lastSuccessAt: string | null; lastFailureAt: string | null; lastError: string | null };
+  sms: {
+    provider: string;
+    configured: boolean;
+    lastSuccessAt: string | null;
+    lastFailureAt: string | null;
+    lastError: string | null;
+  };
   push: { provider: 'expo'; accessTokenConfigured: boolean };
   queues: { name: string; waiting: number; active: number; failed: number; delayed: number }[];
   storage: { driver: string; writable: boolean };

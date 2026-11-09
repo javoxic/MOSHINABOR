@@ -28,7 +28,11 @@ export class OtpService {
   normalize(raw: string): string {
     const normalized = normalizePhone(raw);
     if (!normalized) {
-      throw new AppException(ERROR_CODES.PHONE_INVALID, HttpStatus.BAD_REQUEST, 'Enter a valid mobile phone number');
+      throw new AppException(
+        ERROR_CODES.PHONE_INVALID,
+        HttpStatus.BAD_REQUEST,
+        'Enter a valid mobile phone number',
+      );
     }
     return normalized.e164;
   }
@@ -44,16 +48,31 @@ export class OtpService {
   }
 
   private rateLimited(code: string, message: string, retryAfterSeconds: number): AppException {
-    return new AppException(code as typeof ERROR_CODES.RATE_LIMITED, HttpStatus.TOO_MANY_REQUESTS, message, { retryAfterSeconds });
+    return new AppException(
+      code as typeof ERROR_CODES.RATE_LIMITED,
+      HttpStatus.TOO_MANY_REQUESTS,
+      message,
+      { retryAfterSeconds },
+    );
   }
 
-  async request(rawPhone: string, ip: string, language: Language = 'uz', now = new Date()): Promise<OtpRequestResult> {
+  async request(
+    rawPhone: string,
+    ip: string,
+    language: Language = 'uz',
+    now = new Date(),
+  ): Promise<OtpRequestResult> {
     const phone = this.normalize(rawPhone);
 
     // Serialize concurrent requests for the same phone so limits cannot be raced.
     const lockKey = `otp:lock:${phone}`;
     const locked = await this.redis.set(lockKey, '1', 'EX', 15, 'NX');
-    if (!locked) throw this.rateLimited(ERROR_CODES.OTP_RESEND_COOLDOWN, 'A code is already being sent. Please wait.', 5);
+    if (!locked)
+      throw this.rateLimited(
+        ERROR_CODES.OTP_RESEND_COOLDOWN,
+        'A code is already being sent. Please wait.',
+        5,
+      );
 
     try {
       const hourAgo = new Date(now.getTime() - 3600_000);
@@ -62,21 +81,38 @@ export class OtpService {
         this.prisma.smsVerification.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' } }),
         this.prisma.smsVerification.count({ where: { phone, createdAt: { gte: hourAgo } } }),
         this.prisma.smsVerification.count({ where: { phone, createdAt: { gte: dayAgo } } }),
-        this.prisma.smsVerification.count({ where: { requestIp: ip, createdAt: { gte: hourAgo } } }),
+        this.prisma.smsVerification.count({
+          where: { requestIp: ip, createdAt: { gte: hourAgo } },
+        }),
       ]);
 
       if (latest && latest.smsStatus !== 'FAILED') {
         const elapsed = (now.getTime() - latest.createdAt.getTime()) / 1000;
         if (elapsed < this.env.OTP_RESEND_COOLDOWN_SECONDS) {
           const wait = Math.ceil(this.env.OTP_RESEND_COOLDOWN_SECONDS - elapsed);
-          throw this.rateLimited(ERROR_CODES.OTP_RESEND_COOLDOWN, `Please wait ${wait} seconds before requesting a new code`, wait);
+          throw this.rateLimited(
+            ERROR_CODES.OTP_RESEND_COOLDOWN,
+            `Please wait ${wait} seconds before requesting a new code`,
+            wait,
+          );
         }
       }
-      if (perPhoneHour >= this.env.OTP_MAX_PER_PHONE_PER_HOUR || perPhoneDay >= this.env.OTP_MAX_PER_PHONE_PER_DAY) {
-        throw this.rateLimited(ERROR_CODES.OTP_LIMIT_EXCEEDED, 'Too many codes requested for this number. Try again later.', 3600);
+      if (
+        perPhoneHour >= this.env.OTP_MAX_PER_PHONE_PER_HOUR ||
+        perPhoneDay >= this.env.OTP_MAX_PER_PHONE_PER_DAY
+      ) {
+        throw this.rateLimited(
+          ERROR_CODES.OTP_LIMIT_EXCEEDED,
+          'Too many codes requested for this number. Try again later.',
+          3600,
+        );
       }
       if (perIpHour >= this.env.OTP_MAX_PER_IP_PER_HOUR) {
-        throw this.rateLimited(ERROR_CODES.OTP_LIMIT_EXCEEDED, 'Too many requests from this network. Try again later.', 3600);
+        throw this.rateLimited(
+          ERROR_CODES.OTP_LIMIT_EXCEEDED,
+          'Too many requests from this network. Try again later.',
+          3600,
+        );
       }
 
       const code = generateNumericCode(6);
@@ -109,12 +145,20 @@ export class OtpService {
         });
         await this.prisma.smsVerification.update({
           where: { id: verification.id },
-          data: { smsStatus: 'SENT', providerMessageId: result.providerMessageId, provider: result.provider },
+          data: {
+            smsStatus: 'SENT',
+            providerMessageId: result.providerMessageId,
+            provider: result.provider,
+          },
         });
       } catch (err) {
         await this.prisma.smsVerification.update({
           where: { id: verification.id },
-          data: { smsStatus: 'FAILED', invalidatedAt: new Date(), smsError: err instanceof Error ? err.message.slice(0, 500) : 'unknown' },
+          data: {
+            smsStatus: 'FAILED',
+            invalidatedAt: new Date(),
+            smsError: err instanceof Error ? err.message.slice(0, 500) : 'unknown',
+          },
         });
         throw err;
       }
@@ -137,37 +181,69 @@ export class OtpService {
   async verify(rawPhone: string, code: string, now = new Date()): Promise<string> {
     const phone = this.normalize(rawPhone);
     const invalid = (remaining?: number) =>
-      new AppException(ERROR_CODES.OTP_INVALID, HttpStatus.BAD_REQUEST, 'The code is incorrect', remaining !== undefined ? { attemptsRemaining: remaining } : undefined);
+      new AppException(
+        ERROR_CODES.OTP_INVALID,
+        HttpStatus.BAD_REQUEST,
+        'The code is incorrect',
+        remaining !== undefined ? { attemptsRemaining: remaining } : undefined,
+      );
 
     const active = await this.prisma.smsVerification.findFirst({
       where: { phone, consumedAt: null, invalidatedAt: null },
       orderBy: { createdAt: 'desc' },
     });
     if (!active) {
-      const latest = await this.prisma.smsVerification.findFirst({ where: { phone }, orderBy: { createdAt: 'desc' } });
+      const latest = await this.prisma.smsVerification.findFirst({
+        where: { phone },
+        orderBy: { createdAt: 'desc' },
+      });
       if (latest && !latest.consumedAt && latest.expiresAt <= now) {
-        throw new AppException(ERROR_CODES.OTP_EXPIRED, HttpStatus.BAD_REQUEST, 'The code has expired. Request a new one.');
+        throw new AppException(
+          ERROR_CODES.OTP_EXPIRED,
+          HttpStatus.BAD_REQUEST,
+          'The code has expired. Request a new one.',
+        );
       }
       throw invalid();
     }
     if (active.expiresAt <= now) {
-      throw new AppException(ERROR_CODES.OTP_EXPIRED, HttpStatus.BAD_REQUEST, 'The code has expired. Request a new one.');
+      throw new AppException(
+        ERROR_CODES.OTP_EXPIRED,
+        HttpStatus.BAD_REQUEST,
+        'The code has expired. Request a new one.',
+      );
     }
 
     const counted = await this.prisma.smsVerification.updateMany({
-      where: { id: active.id, attempts: { lt: active.maxAttempts }, consumedAt: null, invalidatedAt: null },
+      where: {
+        id: active.id,
+        attempts: { lt: active.maxAttempts },
+        consumedAt: null,
+        invalidatedAt: null,
+      },
       data: { attempts: { increment: 1 } },
     });
     if (counted.count === 0) {
-      throw new AppException(ERROR_CODES.OTP_ATTEMPTS_EXCEEDED, HttpStatus.TOO_MANY_REQUESTS, 'Too many incorrect attempts. Request a new code.');
+      throw new AppException(
+        ERROR_CODES.OTP_ATTEMPTS_EXCEEDED,
+        HttpStatus.TOO_MANY_REQUESTS,
+        'Too many incorrect attempts. Request a new code.',
+      );
     }
     const attemptsUsed = active.attempts + 1;
 
     if (!safeEqualHex(active.codeHash, this.hash(phone, code))) {
       const remaining = Math.max(0, active.maxAttempts - attemptsUsed);
       if (remaining === 0) {
-        await this.prisma.smsVerification.update({ where: { id: active.id }, data: { invalidatedAt: now } });
-        throw new AppException(ERROR_CODES.OTP_ATTEMPTS_EXCEEDED, HttpStatus.TOO_MANY_REQUESTS, 'Too many incorrect attempts. Request a new code.');
+        await this.prisma.smsVerification.update({
+          where: { id: active.id },
+          data: { invalidatedAt: now },
+        });
+        throw new AppException(
+          ERROR_CODES.OTP_ATTEMPTS_EXCEEDED,
+          HttpStatus.TOO_MANY_REQUESTS,
+          'Too many incorrect attempts. Request a new code.',
+        );
       }
       throw invalid(remaining);
     }

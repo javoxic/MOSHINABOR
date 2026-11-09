@@ -21,6 +21,8 @@ export function todayTashkent(now: Date = new Date()): string {
 /** Rejects dates in the future (Tashkent calendar). */
 export function assertNotFuture(value: string, field: string, now: Date = new Date()): void {
   if (value > todayTashkent(now)) {
-    throw AppException.validation(`${field} cannot be in the future`, [{ field, messages: ['Date cannot be in the future'] }]);
+    throw AppException.validation(`${field} cannot be in the future`, [
+      { field, messages: ['Date cannot be in the future'] },
+    ]);
   }
 }

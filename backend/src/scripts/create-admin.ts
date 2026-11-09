@@ -18,11 +18,15 @@ async function main(): Promise<void> {
   const password = process.env.ADMIN_PASSWORD;
   const roleCode = (process.env.ADMIN_ROLE ?? 'SUPER_ADMIN') as AdminRoleCode;
 
-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('ADMIN_EMAIL must be a valid email');
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    throw new Error('ADMIN_EMAIL must be a valid email');
   if (!password || !PASSWORD_RULE.test(password)) {
-    throw new Error('ADMIN_PASSWORD must be 12-128 chars with upper- and lowercase letters and a digit');
+    throw new Error(
+      'ADMIN_PASSWORD must be 12-128 chars with upper- and lowercase letters and a digit',
+    );
   }
-  if (!ADMIN_ROLE_CODES.includes(roleCode)) throw new Error(`ADMIN_ROLE must be one of ${ADMIN_ROLE_CODES.join(', ')}`);
+  if (!ADMIN_ROLE_CODES.includes(roleCode))
+    throw new Error(`ADMIN_ROLE must be one of ${ADMIN_ROLE_CODES.join(', ')}`);
 
   const prisma = new PrismaClient();
   try {
@@ -32,9 +36,24 @@ async function main(): Promise<void> {
     const admin = await prisma.adminUser.upsert({
       where: { email },
       create: { email, fullName, passwordHash, roleId: role.id },
-      update: { fullName, passwordHash, roleId: role.id, isActive: true, failedAttempts: 0, lockedUntil: null, passwordChangedAt: new Date() },
+      update: {
+        fullName,
+        passwordHash,
+        roleId: role.id,
+        isActive: true,
+        failedAttempts: 0,
+        lockedUntil: null,
+        passwordChangedAt: new Date(),
+      },
     });
-    await prisma.adminAuditLog.create({ data: { action: 'admins.cli_upsert', entityType: 'admin', entityId: admin.id, metadata: { email, role: roleCode } } });
+    await prisma.adminAuditLog.create({
+      data: {
+        action: 'admins.cli_upsert',
+        entityType: 'admin',
+        entityId: admin.id,
+        metadata: { email, role: roleCode },
+      },
+    });
     console.log(`Administrator ${email} is ready with role ${roleCode}.`);
   } finally {
     await prisma.$disconnect();

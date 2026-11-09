@@ -21,9 +21,24 @@ export default function MaintenanceScreen() {
   const { t } = useTranslation();
   const { list, selected, select, vehicles } = useSelectedVehicle();
   const [tab, setTab] = useState<Tab>('attention');
-  const schedules = useQuery({ queryKey: qk.schedules(selected?.id ?? null), queryFn: () => Api.schedules({ vehicleId: selected?.id }), enabled: !!selected });
-  const items = (schedules.data ?? []).filter((s) => (tab === 'all' ? true : s.isActive && ['DUE_SOON', 'DUE', 'OVERDUE'].includes(s.computed.status)));
-  const add = selected ? <IconButton icon="add" label={t('maintenance.addSchedule')} tone="accent" onPress={() => router.push({ pathname: '/maintenance/new', params: { vehicleId: selected.id } })} /> : null;
+  const schedules = useQuery({
+    queryKey: qk.schedules(selected?.id ?? null),
+    queryFn: () => Api.schedules({ vehicleId: selected?.id }),
+    enabled: !!selected,
+  });
+  const items = (schedules.data ?? []).filter((s) =>
+    tab === 'all' ? true : s.isActive && ['DUE_SOON', 'DUE', 'OVERDUE'].includes(s.computed.status),
+  );
+  const add = selected ? (
+    <IconButton
+      icon="add"
+      label={t('maintenance.addSchedule')}
+      tone="accent"
+      onPress={() =>
+        router.push({ pathname: '/maintenance/new', params: { vehicleId: selected.id } })
+      }
+    />
+  ) : null;
 
   return (
     <Screen
@@ -36,7 +51,11 @@ export default function MaintenanceScreen() {
       {vehicles.isPending ? (
         <LoadingState />
       ) : !selected ? (
-        <EmptyState title={t('maintenance.noVehicle')} actionLabel={t('vehicle.add')} onAction={() => router.push('/vehicles/new')} />
+        <EmptyState
+          title={t('maintenance.noVehicle')}
+          actionLabel={t('vehicle.add')}
+          onAction={() => router.push('/vehicles/new')}
+        />
       ) : (
         <>
           <VehicleSwitcher vehicles={list} selectedId={selected.id} onSelect={select} />
@@ -54,19 +73,36 @@ export default function MaintenanceScreen() {
           {schedules.isPending ? (
             <LoadingState />
           ) : schedules.isError && !schedules.data ? (
-            <ErrorState message={errorMessage(t, schedules.error)} onRetry={() => schedules.refetch()} />
+            <ErrorState
+              message={errorMessage(t, schedules.error)}
+              onRetry={() => schedules.refetch()}
+            />
           ) : items.length === 0 ? (
             <EmptyState
               icon="checkmark-done-outline"
               title={tab === 'attention' ? t('maintenance.emptyAttention') : t('maintenance.empty')}
               body={tab === 'all' ? t('dashboard.noSchedulesBody') : undefined}
               actionLabel={tab === 'all' ? t('maintenance.addSchedule') : undefined}
-              onAction={() => router.push({ pathname: '/maintenance/new', params: { vehicleId: selected.id } })}
+              onAction={() =>
+                router.push({ pathname: '/maintenance/new', params: { vehicleId: selected.id } })
+              }
             />
           ) : (
-            items.map((s) => <ScheduleCard key={s.id} schedule={s} onPress={() => router.push({ pathname: '/maintenance/[id]', params: { id: s.id } })} />)
+            items.map((s) => (
+              <ScheduleCard
+                key={s.id}
+                schedule={s}
+                onPress={() => router.push({ pathname: '/maintenance/[id]', params: { id: s.id } })}
+              />
+            ))
           )}
-          <Button title={t('history.title')} variant="secondary" icon="time-outline" onPress={() => router.push('/history')} style={{ marginTop: spacing.xl }} />
+          <Button
+            title={t('history.title')}
+            variant="secondary"
+            icon="time-outline"
+            onPress={() => router.push('/history')}
+            style={{ marginTop: spacing.xl }}
+          />
         </>
       )}
     </Screen>

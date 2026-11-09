@@ -6,11 +6,27 @@ import { adminPasswordSchema, z } from '@moshina/validation';
 import { AdminApi } from '@/api/endpoints';
 import { errorText } from '@/api/client';
 import { useAdminAuth } from '@/store/auth';
-import { Badge, Button, Card, DescriptionList, Field, Input, Notice, PageHeader } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  DescriptionList,
+  Field,
+  Input,
+  Notice,
+  PageHeader,
+} from '@/components/ui';
 
 const schema = z
-  .object({ currentPassword: z.string().min(1, 'Required'), newPassword: adminPasswordSchema, confirm: z.string() })
-  .refine((v) => v.newPassword === v.confirm, { message: 'Passwords do not match', path: ['confirm'] });
+  .object({
+    currentPassword: z.string().min(1, 'Required'),
+    newPassword: adminPasswordSchema,
+    confirm: z.string(),
+  })
+  .refine((v) => v.newPassword === v.confirm, {
+    message: 'Passwords do not match',
+    path: ['confirm'],
+  });
 type Form = z.infer<typeof schema>;
 
 export default function AccountPage() {
@@ -31,7 +47,13 @@ export default function AccountPage() {
       <PageHeader title="My account" />
       <div style={{ display: 'grid', gap: 16, maxWidth: 640 }}>
         <Card title="Profile">
-          <DescriptionList items={[['Name', admin.fullName], ['Email', admin.email], ['Role', admin.role.name]]} />
+          <DescriptionList
+            items={[
+              ['Name', admin.fullName],
+              ['Email', admin.email],
+              ['Role', admin.role.name],
+            ]}
+          />
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
             {admin.permissions.map((p) => (
               <Badge key={p} tone="accent">
@@ -42,13 +64,31 @@ export default function AccountPage() {
         </Card>
         <Card title="Change password">
           <form onSubmit={handleSubmit((v) => change.mutate(v))} noValidate>
-            <Field label="Current password" htmlFor="cp" error={formState.errors.currentPassword?.message}>
-              <Input id="cp" type="password" autoComplete="current-password" {...register('currentPassword')} />
+            <Field
+              label="Current password"
+              htmlFor="cp"
+              error={formState.errors.currentPassword?.message}
+            >
+              <Input
+                id="cp"
+                type="password"
+                autoComplete="current-password"
+                {...register('currentPassword')}
+              />
             </Field>
             <Field label="New password" htmlFor="np" error={formState.errors.newPassword?.message}>
-              <Input id="np" type="password" autoComplete="new-password" {...register('newPassword')} />
+              <Input
+                id="np"
+                type="password"
+                autoComplete="new-password"
+                {...register('newPassword')}
+              />
             </Field>
-            <Field label="Confirm new password" htmlFor="cf" error={formState.errors.confirm?.message}>
+            <Field
+              label="Confirm new password"
+              htmlFor="cf"
+              error={formState.errors.confirm?.message}
+            >
               <Input id="cf" type="password" autoComplete="new-password" {...register('confirm')} />
             </Field>
             {change.isError ? <Notice tone="danger">{errorText(change.error)}</Notice> : null}

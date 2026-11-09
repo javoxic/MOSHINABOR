@@ -17,14 +17,20 @@ async function doRefresh(): Promise<string | null> {
   const { refreshToken, setTokens, clear } = useAuthStore.getState();
   if (!refreshToken) return null;
   try {
-    const res = await axios.post<AuthTokens>(`${apiBaseUrl()}/v1/auth/refresh`, { refreshToken }, { timeout: 15_000 });
+    const res = await axios.post<AuthTokens>(
+      `${apiBaseUrl()}/v1/auth/refresh`,
+      { refreshToken },
+      { timeout: 15_000 },
+    );
     await setTokens(res.data);
     return res.data.accessToken;
   } catch (err) {
     const e = toApiError(err);
     // Only sign out when the server rejected the session; keep it on network errors.
     if (e.status === 401 || e.status === 403) {
-      await purgeLocalUserData().catch((err: unknown) => console.warn('Local data purge failed', err));
+      await purgeLocalUserData().catch((err: unknown) =>
+        console.warn('Local data purge failed', err),
+      );
       await clear();
     }
     return null;
@@ -52,8 +58,10 @@ export function api(): AxiosInstance {
   instance.interceptors.response.use(
     (r) => r,
     async (error: AxiosError) => {
-      const original = error.config as (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
-      const isAuthCall = original?.url?.startsWith('/auth/otp') || original?.url?.startsWith('/auth/refresh');
+      const original = error.config as
+        (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
+      const isAuthCall =
+        original?.url?.startsWith('/auth/otp') || original?.url?.startsWith('/auth/refresh');
       if (error.response?.status === 401 && original && !original._retried && !isAuthCall) {
         original._retried = true;
         const token = await refreshAccessToken();

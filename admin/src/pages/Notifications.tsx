@@ -3,22 +3,65 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DELIVERY_STATUSES, LANGUAGES, NOTIFICATION_TYPES } from '@moshina/shared';
-import { announcementSchema, templateSchema, z, type AnnouncementInput, type TemplateInput } from '@moshina/validation';
+import {
+  announcementSchema,
+  templateSchema,
+  z,
+  type AnnouncementInput,
+  type TemplateInput,
+} from '@moshina/validation';
 import type { NotificationTemplate } from '@moshina/api-types';
 import { AdminApi } from '@/api/endpoints';
 import { errorText } from '@/api/client';
 import { useAdminAuth } from '@/store/auth';
 import { useListParams } from '@/hooks/useListParams';
-import { Badge, Button, Card, ConfirmDialog, DataTable, EmptyState, ErrorState, Field, Input, Loading, Modal, Notice, PageHeader, Pagination, Select, Tabs, Textarea, Toolbar, useToast, type BadgeTone } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  Field,
+  Input,
+  Loading,
+  Modal,
+  Notice,
+  PageHeader,
+  Pagination,
+  Select,
+  Tabs,
+  Textarea,
+  Toolbar,
+  useToast,
+  type BadgeTone,
+} from '@/components/ui';
 import { LANG_LABEL, fmtDateTime } from '@/utils/format';
 
 type Tab = 'history' | 'templates' | 'announcements' | 'scheduled';
-const DELIVERY_TONE: Record<string, BadgeTone> = { PENDING: 'neutral', SENT: 'accent', DELIVERED: 'success', FAILED: 'danger', SKIPPED: 'neutral' };
-const ANN_TONE: Record<string, BadgeTone> = { SCHEDULED: 'accent', SENDING: 'warning', SENT: 'success', CANCELLED: 'neutral', FAILED: 'danger' };
+const DELIVERY_TONE: Record<string, BadgeTone> = {
+  PENDING: 'neutral',
+  SENT: 'accent',
+  DELIVERED: 'success',
+  FAILED: 'danger',
+  SKIPPED: 'neutral',
+};
+const ANN_TONE: Record<string, BadgeTone> = {
+  SCHEDULED: 'accent',
+  SENDING: 'warning',
+  SENT: 'success',
+  CANCELLED: 'neutral',
+  FAILED: 'danger',
+};
 
 function History() {
   const { values, page, set } = useListParams(['type', 'status'] as const);
-  const q = useQuery({ queryKey: ['admin', 'notifications', values, page], queryFn: () => AdminApi.notifications({ ...values, page, pageSize: 25 }), placeholderData: keepPreviousData });
+  const q = useQuery({
+    queryKey: ['admin', 'notifications', values, page],
+    queryFn: () => AdminApi.notifications({ ...values, page, pageSize: 25 }),
+    placeholderData: keepPreviousData,
+  });
   return (
     <>
       <Toolbar>
@@ -33,7 +76,11 @@ function History() {
           </Select>
         </Field>
         <Field label="Push status" htmlFor="n-status">
-          <Select id="n-status" value={values.status} onChange={(e) => set({ status: e.target.value })}>
+          <Select
+            id="n-status"
+            value={values.status}
+            onChange={(e) => set({ status: e.target.value })}
+          >
             <option value="">All</option>
             {DELIVERY_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -57,24 +104,56 @@ function History() {
             columns={[
               { key: 't', header: 'Type', render: (n) => <span className="mono">{n.type}</span> },
               { key: 'ti', header: 'Title', render: (n) => n.title },
-              { key: 'u', header: 'User', render: (n) => <span className="mono">{n.userPhone}</span> },
-              { key: 's', header: 'Push', render: (n) => <Badge tone={DELIVERY_TONE[n.deliveryStatus]}>{n.deliveryStatus}</Badge> },
-              { key: 'e', header: 'Errors', render: (n) => n.deliveries.filter((d) => d.error).map((d) => d.error).join('; ') || '—' },
+              {
+                key: 'u',
+                header: 'User',
+                render: (n) => <span className="mono">{n.userPhone}</span>,
+              },
+              {
+                key: 's',
+                header: 'Push',
+                render: (n) => (
+                  <Badge tone={DELIVERY_TONE[n.deliveryStatus]}>{n.deliveryStatus}</Badge>
+                ),
+              },
+              {
+                key: 'e',
+                header: 'Errors',
+                render: (n) =>
+                  n.deliveries
+                    .filter((d) => d.error)
+                    .map((d) => d.error)
+                    .join('; ') || '—',
+              },
               { key: 'r', header: 'Read', render: (n) => (n.readAt ? fmtDateTime(n.readAt) : '—') },
               { key: 'c', header: 'Created', render: (n) => fmtDateTime(n.createdAt) },
             ]}
           />
-          <Pagination page={q.data.page} pageSize={q.data.pageSize} total={q.data.total} onPage={(p) => set({ page: String(p) })} />
+          <Pagination
+            page={q.data.page}
+            pageSize={q.data.pageSize}
+            total={q.data.total}
+            onPage={(p) => set({ page: String(p) })}
+          />
         </>
       )}
     </>
   );
 }
 
-function TemplateEditor({ template, onClose }: { template: NotificationTemplate; onClose: () => void }) {
+function TemplateEditor({
+  template,
+  onClose,
+}: {
+  template: NotificationTemplate;
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
   const toast = useToast((s) => s.show);
-  const { register, handleSubmit, formState } = useForm<TemplateInput>({ resolver: zodResolver(templateSchema), defaultValues: { title: template.title, body: template.body, isActive: template.isActive } });
+  const { register, handleSubmit, formState } = useForm<TemplateInput>({
+    resolver: zodResolver(templateSchema),
+    defaultValues: { title: template.title, body: template.body, isActive: template.isActive },
+  });
   const save = useMutation({
     mutationFn: (v: TemplateInput) => AdminApi.updateTemplate(template.code, v),
     onSuccess: async () => {
@@ -100,14 +179,24 @@ function TemplateEditor({ template, onClose }: { template: NotificationTemplate;
         </>
       }
     >
-      <Notice tone="info">Placeholders: {template.placeholders.map((p) => `{${p}}`).join(', ') || 'none'}</Notice>
+      <Notice tone="info">
+        Placeholders: {template.placeholders.map((p) => `{${p}}`).join(', ') || 'none'}
+      </Notice>
       <div style={{ height: 12 }} />
       {LANGUAGES.map((l) => (
         <div key={l}>
-          <Field label={`Title (${LANG_LABEL[l]})`} htmlFor={`t-${l}`} error={formState.errors.title?.[l]?.message}>
+          <Field
+            label={`Title (${LANG_LABEL[l]})`}
+            htmlFor={`t-${l}`}
+            error={formState.errors.title?.[l]?.message}
+          >
             <Input id={`t-${l}`} {...register(`title.${l}`)} />
           </Field>
-          <Field label={`Body (${LANG_LABEL[l]})`} htmlFor={`b-${l}`} error={formState.errors.body?.[l]?.message}>
+          <Field
+            label={`Body (${LANG_LABEL[l]})`}
+            htmlFor={`b-${l}`}
+            error={formState.errors.body?.[l]?.message}
+          >
             <Textarea id={`b-${l}`} {...register(`body.${l}`)} />
           </Field>
         </div>
@@ -133,10 +222,31 @@ function Templates() {
         columns={[
           { key: 'c', header: 'Code', render: (t) => <span className="mono">{t.code}</span> },
           { key: 'ti', header: 'Title (EN)', render: (t) => t.title.en },
-          { key: 'b', header: 'Body (EN)', render: (t) => <span className="secondary">{t.body.en}</span> },
-          { key: 's', header: 'Status', render: (t) => <Badge tone={t.isActive ? 'success' : 'neutral'}>{t.isActive ? 'Active' : 'Disabled'}</Badge> },
+          {
+            key: 'b',
+            header: 'Body (EN)',
+            render: (t) => <span className="secondary">{t.body.en}</span>,
+          },
+          {
+            key: 's',
+            header: 'Status',
+            render: (t) => (
+              <Badge tone={t.isActive ? 'success' : 'neutral'}>
+                {t.isActive ? 'Active' : 'Disabled'}
+              </Badge>
+            ),
+          },
           { key: 'u', header: 'Updated', render: (t) => fmtDateTime(t.updatedAt) },
-          { key: 'a', header: '', render: (t) => (canManage ? <Button size="small" variant="secondary" onClick={() => setEditing(t)}>Edit</Button> : null) },
+          {
+            key: 'a',
+            header: '',
+            render: (t) =>
+              canManage ? (
+                <Button size="small" variant="secondary" onClick={() => setEditing(t)}>
+                  Edit
+                </Button>
+              ) : null,
+          },
         ]}
       />
       {editing ? <TemplateEditor template={editing} onClose={() => setEditing(null)} /> : null}
@@ -151,10 +261,22 @@ function Announcements() {
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
   const [cancelling, setCancelling] = useState<string | null>(null);
-  const q = useQuery({ queryKey: ['admin', 'announcements', page], queryFn: () => AdminApi.announcements({ page, pageSize: 20 }) });
-  const { register, handleSubmit, formState, reset } = useForm<z.input<typeof announcementSchema>, unknown, AnnouncementInput>({ resolver: zodResolver(announcementSchema) });
+  const q = useQuery({
+    queryKey: ['admin', 'announcements', page],
+    queryFn: () => AdminApi.announcements({ page, pageSize: 20 }),
+  });
+  const { register, handleSubmit, formState, reset } = useForm<
+    z.input<typeof announcementSchema>,
+    unknown,
+    AnnouncementInput
+  >({ resolver: zodResolver(announcementSchema) });
   const create = useMutation({
-    mutationFn: (v: AnnouncementInput) => AdminApi.createAnnouncement({ ...v, scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : undefined, targetLanguage: v.targetLanguage || undefined }),
+    mutationFn: (v: AnnouncementInput) =>
+      AdminApi.createAnnouncement({
+        ...v,
+        scheduledAt: v.scheduledAt ? new Date(v.scheduledAt).toISOString() : undefined,
+        targetLanguage: v.targetLanguage || undefined,
+      }),
     onSuccess: async () => {
       toast('Announcement scheduled');
       setCreating(false);
@@ -192,15 +314,42 @@ function Announcements() {
             rows={q.data.items}
             columns={[
               { key: 't', header: 'Title', render: (a) => a.title.en },
-              { key: 'l', header: 'Audience', render: (a) => (a.targetLanguage ? `${LANG_LABEL[a.targetLanguage]} users` : 'All users') },
-              { key: 's', header: 'Status', render: (a) => <Badge tone={ANN_TONE[a.status]}>{a.status}</Badge> },
+              {
+                key: 'l',
+                header: 'Audience',
+                render: (a) =>
+                  a.targetLanguage ? `${LANG_LABEL[a.targetLanguage]} users` : 'All users',
+              },
+              {
+                key: 's',
+                header: 'Status',
+                render: (a) => <Badge tone={ANN_TONE[a.status]}>{a.status}</Badge>,
+              },
               { key: 'sc', header: 'Scheduled', render: (a) => fmtDateTime(a.scheduledAt) },
-              { key: 'r', header: 'Recipients', render: (a) => (a.status === 'SENT' ? a.recipientCount : '—') },
+              {
+                key: 'r',
+                header: 'Recipients',
+                render: (a) => (a.status === 'SENT' ? a.recipientCount : '—'),
+              },
               { key: 'b', header: 'Created by', render: (a) => a.createdBy },
-              { key: 'a', header: '', render: (a) => (canManage && a.status === 'SCHEDULED' ? <Button size="small" variant="ghost" onClick={() => setCancelling(a.id)}>Cancel</Button> : null) },
+              {
+                key: 'a',
+                header: '',
+                render: (a) =>
+                  canManage && a.status === 'SCHEDULED' ? (
+                    <Button size="small" variant="ghost" onClick={() => setCancelling(a.id)}>
+                      Cancel
+                    </Button>
+                  ) : null,
+              },
             ]}
           />
-          <Pagination page={q.data.page} pageSize={q.data.pageSize} total={q.data.total} onPage={setPage} />
+          <Pagination
+            page={q.data.page}
+            pageSize={q.data.pageSize}
+            total={q.data.total}
+            onPage={setPage}
+          />
         </>
       )}
       <Modal
@@ -220,10 +369,18 @@ function Announcements() {
       >
         {LANGUAGES.map((l) => (
           <div key={l}>
-            <Field label={`Title (${LANG_LABEL[l]})`} htmlFor={`a-t-${l}`} error={formState.errors.title?.[l]?.message}>
+            <Field
+              label={`Title (${LANG_LABEL[l]})`}
+              htmlFor={`a-t-${l}`}
+              error={formState.errors.title?.[l]?.message}
+            >
               <Input id={`a-t-${l}`} {...register(`title.${l}`)} />
             </Field>
-            <Field label={`Message (${LANG_LABEL[l]})`} htmlFor={`a-b-${l}`} error={formState.errors.body?.[l]?.message}>
+            <Field
+              label={`Message (${LANG_LABEL[l]})`}
+              htmlFor={`a-b-${l}`}
+              error={formState.errors.body?.[l]?.message}
+            >
               <Textarea id={`a-b-${l}`} {...register(`body.${l}`)} />
             </Field>
           </div>
@@ -238,11 +395,31 @@ function Announcements() {
             ))}
           </Select>
         </Field>
-        <Field label="Send at (leave empty to send now)" htmlFor="a-at" error={formState.errors.scheduledAt?.message} hint="Local time of your browser">
-          <Input id="a-at" type="datetime-local" {...register('scheduledAt', { setValueAs: (v: string) => (v ? new Date(v).toISOString() : '') })} />
+        <Field
+          label="Send at (leave empty to send now)"
+          htmlFor="a-at"
+          error={formState.errors.scheduledAt?.message}
+          hint="Local time of your browser"
+        >
+          <Input
+            id="a-at"
+            type="datetime-local"
+            {...register('scheduledAt', {
+              setValueAs: (v: string) => (v ? new Date(v).toISOString() : ''),
+            })}
+          />
         </Field>
       </Modal>
-      <ConfirmDialog open={!!cancelling} title="Cancel announcement" message="The announcement will not be sent." confirmLabel="Cancel announcement" danger loading={cancel.isPending} onCancel={() => setCancelling(null)} onConfirm={() => cancelling && cancel.mutate(cancelling)} />
+      <ConfirmDialog
+        open={!!cancelling}
+        title="Cancel announcement"
+        message="The announcement will not be sent."
+        confirmLabel="Cancel announcement"
+        danger
+        loading={cancel.isPending}
+        onCancel={() => setCancelling(null)}
+        onConfirm={() => cancelling && cancel.mutate(cancelling)}
+      />
     </>
   );
 }
@@ -253,21 +430,38 @@ function Scheduled() {
   const q = useQuery({ queryKey: ['admin', 'scheduled'], queryFn: AdminApi.scheduled });
   const run = useMutation({
     mutationFn: AdminApi.runReminders,
-    onSuccess: (r) => toast(`Scanned ${r.schedulesScanned} schedules: ${r.created} reminders, ${r.mileagePrompts} mileage prompts, ${r.duplicatesSuppressed} duplicates suppressed`),
+    onSuccess: (r) =>
+      toast(
+        `Scanned ${r.schedulesScanned} schedules: ${r.created} reminders, ${r.mileagePrompts} mileage prompts, ${r.duplicatesSuppressed} duplicates suppressed`,
+      ),
     onError: (e) => toast(errorText(e), 'danger'),
   });
   if (q.isPending) return <Loading />;
   if (q.isError) return <ErrorState message={errorText(q.error)} onRetry={() => q.refetch()} />;
   return (
     <>
-      <Card title="Background jobs" action={canManage ? <Button size="small" onClick={() => run.mutate()} loading={run.isPending}>Run reminder engine now</Button> : null}>
+      <Card
+        title="Background jobs"
+        action={
+          canManage ? (
+            <Button size="small" onClick={() => run.mutate()} loading={run.isPending}>
+              Run reminder engine now
+            </Button>
+          ) : null
+        }
+      >
         <p>
-          <strong>Reminder engine:</strong> <span className="secondary">{q.data.reminderEngine.cron}</span>
+          <strong>Reminder engine:</strong>{' '}
+          <span className="secondary">{q.data.reminderEngine.cron}</span>
         </p>
         <p>
-          <strong>Push receipt checks:</strong> <span className="secondary">{q.data.receiptChecks.cron}</span>
+          <strong>Push receipt checks:</strong>{' '}
+          <span className="secondary">{q.data.receiptChecks.cron}</span>
         </p>
-        <p className="muted">Reminders are deduplicated per schedule and service cycle; running the engine again never sends duplicates.</p>
+        <p className="muted">
+          Reminders are deduplicated per schedule and service cycle; running the engine again never
+          sends duplicates.
+        </p>
       </Card>
       <div style={{ height: 16 }} />
       <Card title="Scheduled announcements">
@@ -292,7 +486,10 @@ export default function NotificationsPage() {
   const [tab, setTab] = useState<Tab>('history');
   return (
     <>
-      <PageHeader title="Notifications" subtitle="Delivery history, templates, announcements and scheduled jobs" />
+      <PageHeader
+        title="Notifications"
+        subtitle="Delivery history, templates, announcements and scheduled jobs"
+      />
       <Tabs<Tab>
         value={tab}
         onChange={setTab}
@@ -303,7 +500,15 @@ export default function NotificationsPage() {
           { value: 'scheduled', label: 'Scheduled' },
         ]}
       />
-      {tab === 'history' ? <History /> : tab === 'templates' ? <Templates /> : tab === 'announcements' ? <Announcements /> : <Scheduled />}
+      {tab === 'history' ? (
+        <History />
+      ) : tab === 'templates' ? (
+        <Templates />
+      ) : tab === 'announcements' ? (
+        <Announcements />
+      ) : (
+        <Scheduled />
+      )}
     </>
   );
 }

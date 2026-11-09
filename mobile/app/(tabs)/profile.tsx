@@ -32,7 +32,12 @@ export default function ProfileScreen() {
     mutationFn: async () => {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) throw new Error(t('common.photoPermission'));
-      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
       if (res.canceled || !res.assets[0]) return null;
       const a = res.assets[0];
       return Api.uploadAvatar(await toUploadableJpeg(a));
@@ -40,7 +45,11 @@ export default function ProfileScreen() {
     onSuccess: async (u) => {
       if (u) await setUser(u);
     },
-    onError: (e) => Alert.alert(t('errors.title'), e instanceof Error && !('status' in e) ? e.message : errorMessage(t, e)),
+    onError: (e) =>
+      Alert.alert(
+        t('errors.title'),
+        e instanceof Error && !('status' in e) ? e.message : errorMessage(t, e),
+      ),
   });
 
   const cancelDeletion = useMutation({
@@ -52,7 +61,11 @@ export default function ProfileScreen() {
   const confirmLogout = () =>
     Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
-      { text: t('profile.logout'), style: 'destructive', onPress: () => void signOut().then(() => router.replace('/')) },
+      {
+        text: t('profile.logout'),
+        style: 'destructive',
+        onPress: () => void signOut().then(() => router.replace('/')),
+      },
     ]);
 
   if (!user) return null;
@@ -61,7 +74,11 @@ export default function ProfileScreen() {
       <Card style={styles.header}>
         <View style={styles.avatarWrap}>
           {user.avatarUrl ? (
-            <AuthImage uri={user.avatarUrl} style={styles.avatar} accessibilityLabel={user.fullName ?? ''} />
+            <AuthImage
+              uri={user.avatarUrl}
+              style={styles.avatar}
+              accessibilityLabel={user.fullName ?? ''}
+            />
           ) : (
             <View style={[styles.avatar, styles.avatarEmpty]}>
               <Ionicons name="person" size={34} color={colors.textMuted} />
@@ -76,29 +93,77 @@ export default function ProfileScreen() {
           </Text>
         </View>
       </Card>
-      <Button title={t('profile.changePhoto')} variant="ghost" compact icon="camera-outline" onPress={() => avatar.mutate()} loading={avatar.isPending} style={{ alignSelf: 'flex-start', marginTop: spacing.sm }} />
+      <Button
+        title={t('profile.changePhoto')}
+        variant="ghost"
+        compact
+        icon="camera-outline"
+        onPress={() => avatar.mutate()}
+        loading={avatar.isPending}
+        style={{ alignSelf: 'flex-start', marginTop: spacing.sm }}
+      />
 
       {user.status === 'DELETION_PENDING' && user.deletionScheduledFor ? (
         <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
-          <InlineNotice tone="danger" text={t('profile.deletionPending', { date: formatDate(user.deletionScheduledFor, i18n.language) })} />
-          <Button title={t('profile.cancelDeletion')} variant="secondary" onPress={() => cancelDeletion.mutate()} loading={cancelDeletion.isPending} />
+          <InlineNotice
+            tone="danger"
+            text={t('profile.deletionPending', {
+              date: formatDate(user.deletionScheduledFor, i18n.language),
+            })}
+          />
+          <Button
+            title={t('profile.cancelDeletion')}
+            variant="secondary"
+            onPress={() => cancelDeletion.mutate()}
+            loading={cancelDeletion.isPending}
+          />
         </View>
       ) : null}
 
       <SectionHeader title={t('profile.settings')} />
       <Card style={{ padding: spacing.xs }}>
-        <ListRow icon="create-outline" title={t('profile.editProfile')} onPress={() => router.push('/settings/edit-profile')} />
-        <ListRow icon="language-outline" title={t('profile.language')} value={LANG_LABEL[user.settings.language]} onPress={() => router.push('/settings/language')} />
-        <ListRow icon="notifications-outline" title={t('profile.notifications')} onPress={() => router.push('/settings/notifications')} />
-        <ListRow icon="settings-outline" title={t('settings.title')} onPress={() => router.push('/settings')} />
+        <ListRow
+          icon="create-outline"
+          title={t('profile.editProfile')}
+          onPress={() => router.push('/settings/edit-profile')}
+        />
+        <ListRow
+          icon="language-outline"
+          title={t('profile.language')}
+          value={LANG_LABEL[user.settings.language]}
+          onPress={() => router.push('/settings/language')}
+        />
+        <ListRow
+          icon="notifications-outline"
+          title={t('profile.notifications')}
+          onPress={() => router.push('/settings/notifications')}
+        />
+        <ListRow
+          icon="settings-outline"
+          title={t('settings.title')}
+          onPress={() => router.push('/settings')}
+        />
       </Card>
       <SectionHeader title={t('profile.help')} />
       <Card style={{ padding: spacing.xs }}>
-        <ListRow icon="shield-checkmark-outline" title={t('profile.privacy')} onPress={() => router.push('/settings/privacy')} />
-        <ListRow icon="help-buoy-outline" title={t('profile.help')} onPress={() => router.push('/settings/help')} />
+        <ListRow
+          icon="shield-checkmark-outline"
+          title={t('profile.privacy')}
+          onPress={() => router.push('/settings/privacy')}
+        />
+        <ListRow
+          icon="help-buoy-outline"
+          title={t('profile.help')}
+          onPress={() => router.push('/settings/help')}
+        />
       </Card>
       <Card style={{ padding: spacing.xs, marginTop: spacing.xl }}>
-        <ListRow icon="log-out-outline" title={t('profile.logout')} onPress={confirmLogout} danger />
+        <ListRow
+          icon="log-out-outline"
+          title={t('profile.logout')}
+          onPress={confirmLogout}
+          danger
+        />
       </Card>
       <Text variant="caption" tone="muted" align="center" style={{ marginTop: spacing.xl }}>
         {t('settings.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
@@ -111,5 +176,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center' },
   avatarWrap: { borderRadius: radius.pill, overflow: 'hidden' },
   avatar: { width: 72, height: 72, borderRadius: 36 },
-  avatarEmpty: { backgroundColor: colors.surfaceHigh, alignItems: 'center', justifyContent: 'center' },
+  avatarEmpty: {
+    backgroundColor: colors.surfaceHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

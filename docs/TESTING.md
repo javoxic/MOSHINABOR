@@ -2,16 +2,16 @@
 
 Last full run: 2026-11-09 (Node 22, PostgreSQL 16, Redis 7, Chromium via Playwright 1.63).
 
-| Suite | Tool | Scope | Result |
-|---|---|---|---|
-| `packages/shared` | Jest | phone normalization, dates, maintenance engine (next due, status, stale mileage, cycle keys), money | **32/32 passed** |
-| `packages/validation` | Jest | Zod form schemas (vehicle, schedule, expense, phone, admin password, numeric text input) | **8/8 passed** |
-| `backend` unit | Jest | Eskiz/Twilio adapters against mocked HTTP, env validation, templates, image sniffing | **16/16 passed** |
-| `backend` integration | Jest + Supertest, real PostgreSQL + Redis | auth/OTP, sessions, ownership, maintenance, expenses, reminders & push, admin RBAC, security | **86/86 passed** |
-| `mobile` | Jest + React Native Testing Library | auth flow, entry routing, vehicle creation, schedule form, service records, dashboard loading/empty/error states, i18n, token refresh | **24/24 passed** |
-| `admin` unit | Vitest + Testing Library | login validation, redirects, permission-filtered navigation, forbidden pages, filters, tables | **7/7 passed** |
-| `admin` E2E | Playwright, real backend + production build | login/cookie session/logout, dashboard numbers, RBAC, admin management, user search/filter/restrict, vehicles, settings & health | **10/10 passed** |
-| **Total** | | | **183 passed, 0 failed** |
+| Suite                 | Tool                                        | Scope                                                                                                                                 | Result                   |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `packages/shared`     | Jest                                        | phone normalization, dates, maintenance engine (next due, status, stale mileage, cycle keys), money                                   | **32/32 passed**         |
+| `packages/validation` | Jest                                        | Zod form schemas (vehicle, schedule, expense, phone, admin password, numeric text input)                                              | **8/8 passed**           |
+| `backend` unit        | Jest                                        | Eskiz/Twilio adapters against mocked HTTP, env validation, templates, image sniffing                                                  | **16/16 passed**         |
+| `backend` integration | Jest + Supertest, real PostgreSQL + Redis   | auth/OTP, sessions, ownership, maintenance, expenses, reminders & push, admin RBAC, security                                          | **86/86 passed**         |
+| `mobile`              | Jest + React Native Testing Library         | auth flow, entry routing, vehicle creation, schedule form, service records, dashboard loading/empty/error states, i18n, token refresh | **24/24 passed**         |
+| `admin` unit          | Vitest + Testing Library                    | login validation, redirects, permission-filtered navigation, forbidden pages, filters, tables                                         | **7/7 passed**           |
+| `admin` E2E           | Playwright, real backend + production build | login/cookie session/logout, dashboard numbers, RBAC, admin management, user search/filter/restrict, vehicles, settings & health      | **10/10 passed**         |
+| **Total**             |                                             |                                                                                                                                       | **183 passed, 0 failed** |
 
 Builds verified: backend `nest build`; admin `tsc -b && vite build`; mobile `expo export` for Android
 and iOS (Hermes bundles); Docker images for API and admin; full production Compose stack started

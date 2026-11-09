@@ -26,7 +26,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   restore: async () => {
     try {
-      const [refreshToken, accessToken, userJson] = await Promise.all([secure.get(KEYS.refreshToken), secure.get(KEYS.accessToken), secure.get(KEYS.user)]);
+      const [refreshToken, accessToken, userJson] = await Promise.all([
+        secure.get(KEYS.refreshToken),
+        secure.get(KEYS.accessToken),
+        secure.get(KEYS.user),
+      ]);
       if (!refreshToken) {
         set({ status: 'signedOut', accessToken: null, refreshToken: null, user: null });
         return;
@@ -52,11 +56,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       secure.set(KEYS.accessToken, tokens.accessToken),
       secure.set(KEYS.user, JSON.stringify(user)),
     ]);
-    set({ status: 'signedIn', accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user });
+    set({
+      status: 'signedIn',
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user,
+    });
   },
 
   setTokens: async (tokens) => {
-    await Promise.all([secure.set(KEYS.refreshToken, tokens.refreshToken), secure.set(KEYS.accessToken, tokens.accessToken)]);
+    await Promise.all([
+      secure.set(KEYS.refreshToken, tokens.refreshToken),
+      secure.set(KEYS.accessToken, tokens.accessToken),
+    ]);
     set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
   },
 
@@ -66,7 +78,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clear: async () => {
-    await Promise.all([secure.remove(KEYS.refreshToken), secure.remove(KEYS.accessToken), secure.remove(KEYS.user)]);
+    await Promise.all([
+      secure.remove(KEYS.refreshToken),
+      secure.remove(KEYS.accessToken),
+      secure.remove(KEYS.user),
+    ]);
     set({ status: 'signedOut', accessToken: null, refreshToken: null, user: null });
   },
 }));

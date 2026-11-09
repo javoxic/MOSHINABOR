@@ -3,5 +3,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './token.service';
 
 @Global()
-@Module({ imports: [JwtModule.register({})], providers: [TokenService], exports: [TokenService, JwtModule] })
+@Module({
+  imports: [JwtModule.register({})],
+  providers: [TokenService],
+  exports: [TokenService, JwtModule],
+})
 export class TokenModule {}

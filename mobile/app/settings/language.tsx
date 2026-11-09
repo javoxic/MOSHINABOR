@@ -32,11 +32,21 @@ export default function LanguageSettingsScreen() {
         {LANGUAGE_OPTIONS.map((o) => {
           const active = o.code === language;
           return (
-            <Pressable key={o.code} accessibilityRole="radio" accessibilityState={{ checked: active }} onPress={() => choose(o.code)} style={[styles.option, active && styles.active]}>
+            <Pressable
+              key={o.code}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: active }}
+              onPress={() => choose(o.code)}
+              style={[styles.option, active && styles.active]}
+            >
               <Text variant="bodyStrong" style={{ flex: 1 }}>
                 {o.label}
               </Text>
-              <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={22} color={active ? colors.accent : colors.textMuted} />
+              <Ionicons
+                name={active ? 'radio-button-on' : 'radio-button-off'}
+                size={22}
+                color={active ? colors.accent : colors.textMuted}
+              />
             </Pressable>
           );
         })}
@@ -51,6 +61,15 @@ export default function LanguageSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  option: { minHeight: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  option: {
+    minHeight: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   active: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
 });

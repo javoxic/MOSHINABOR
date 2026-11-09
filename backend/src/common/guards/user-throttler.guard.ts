@@ -24,8 +24,13 @@ export function subjectFromBearer(header: string | undefined): string | null {
   const parts = header.slice(7).split('.');
   if (parts.length !== 3 || !parts[1]) return null;
   try {
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as { sub?: unknown; typ?: unknown };
-    return typeof payload.sub === 'string' && payload.sub.length <= 64 ? `${String(payload.typ ?? 'u')}:${payload.sub}` : null;
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as {
+      sub?: unknown;
+      typ?: unknown;
+    };
+    return typeof payload.sub === 'string' && payload.sub.length <= 64
+      ? `${String(payload.typ ?? 'u')}:${payload.sub}`
+      : null;
   } catch {
     return null;
   }

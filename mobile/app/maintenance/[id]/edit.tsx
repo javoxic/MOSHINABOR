@@ -14,7 +14,11 @@ export default function EditScheduleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const invalidate = useInvalidateData();
   const schedule = useQuery({ queryKey: qk.schedule(id), queryFn: () => Api.schedule(id) });
-  const vehicle = useQuery({ queryKey: qk.vehicle(schedule.data?.vehicleId ?? ''), queryFn: () => Api.vehicle(schedule.data!.vehicleId), enabled: !!schedule.data });
+  const vehicle = useQuery({
+    queryKey: qk.vehicle(schedule.data?.vehicleId ?? ''),
+    queryFn: () => Api.vehicle(schedule.data!.vehicleId),
+    enabled: !!schedule.data,
+  });
   const update = useMutation({
     mutationFn: (body: ScheduleBody) => Api.updateSchedule(id, body),
     onSuccess: async () => {
@@ -26,9 +30,19 @@ export default function EditScheduleScreen() {
   return (
     <Screen back title={t('maintenance.editSchedule')}>
       {schedule.isPending || vehicle.isPending ? (
-        error ? <ErrorState message={errorMessage(t, error)} onRetry={() => schedule.refetch()} /> : <LoadingState />
+        error ? (
+          <ErrorState message={errorMessage(t, error)} onRetry={() => schedule.refetch()} />
+        ) : (
+          <LoadingState />
+        )
       ) : (
-        <ScheduleForm vehicle={vehicle.data!} initial={schedule.data} onSubmit={(b) => update.mutate(b)} submitting={update.isPending} serverError={update.error} />
+        <ScheduleForm
+          vehicle={vehicle.data!}
+          initial={schedule.data}
+          onSubmit={(b) => update.mutate(b)}
+          submitting={update.isPending}
+          serverError={update.error}
+        />
       )}
     </Screen>
   );

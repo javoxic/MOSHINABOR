@@ -4,7 +4,9 @@ import { queryClient } from '@/api/queryClient';
 import { purgeLocalUserData, PUSH_TOKEN_KEY } from '@/session-cleanup';
 import { todayLocal, daysAgoLocal } from '@/utils/format';
 
-jest.mock('expo-image', () => ({ Image: { clearMemoryCache: jest.fn(async () => true), clearDiskCache: jest.fn(async () => true) } }));
+jest.mock('expo-image', () => ({
+  Image: { clearMemoryCache: jest.fn(async () => true), clearDiskCache: jest.fn(async () => true) },
+}));
 
 describe('purgeLocalUserData', () => {
   it('removes cached API data, private images and the push token reference', async () => {

@@ -26,7 +26,13 @@ export function monthShort(yyyyMm: string, l: string): string {
 
 export function formatDateTime(d: Date, l: string): string {
   try {
-    return new Intl.DateTimeFormat(LOCALE[lang(l)], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tashkent' }).format(d);
+    return new Intl.DateTimeFormat(LOCALE[lang(l)], {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Tashkent',
+    }).format(d);
   } catch {
     return d.toISOString().slice(0, 16).replace('T', ' ');
   }
@@ -53,7 +59,10 @@ export function daysAgoLocal(days: number, now: Date = new Date()): string {
   return addDays(toLocalDate(now), -days);
 }
 
-export function serviceTypeName(t: { nameUz: string; nameRu: string; nameEn: string }, l: string): string {
+export function serviceTypeName(
+  t: { nameUz: string; nameRu: string; nameEn: string },
+  l: string,
+): string {
   const k = lang(l);
   return k === 'ru' ? t.nameRu : k === 'en' ? t.nameEn : t.nameUz;
 }

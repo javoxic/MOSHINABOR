@@ -13,9 +13,12 @@ describe('normalizePhone', () => {
     expect(normalizePhone(input)?.e164).toBe(expected);
   });
 
-  it.each(['', '123', 'abc', '+998 12', '+99890123456789', '+998 71 123 45 67xx'])('rejects %s', (input) => {
-    expect(normalizePhone(input)).toBeNull();
-  });
+  it.each(['', '123', 'abc', '+998 12', '+99890123456789', '+998 71 123 45 67xx'])(
+    'rejects %s',
+    (input) => {
+      expect(normalizePhone(input)).toBeNull();
+    },
+  );
 
   it('rejects Uzbek fixed-line numbers that cannot receive SMS', () => {
     // 71 is the Tashkent landline area code

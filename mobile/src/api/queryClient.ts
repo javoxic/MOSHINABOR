@@ -6,7 +6,9 @@ import type { ApiError } from './errors';
 
 // TanStack Query pauses requests while offline and resumes when connectivity returns.
 onlineManager.setEventListener((setOnline) =>
-  NetInfo.addEventListener((state) => setOnline(state.isConnected !== false && state.isInternetReachable !== false)),
+  NetInfo.addEventListener((state) =>
+    setOnline(state.isConnected !== false && state.isInternetReachable !== false),
+  ),
 );
 
 export const queryClient = new QueryClient({
@@ -26,4 +28,8 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: 'mb.query-cache', throttleTime: 2000 });
+export const persister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: 'mb.query-cache',
+  throttleTime: 2000,
+});

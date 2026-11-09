@@ -38,7 +38,8 @@ export class AnnouncementsService {
 
   async create(adminId: string, input: AnnouncementInput): Promise<Announcement> {
     const scheduledAt = input.scheduledAt ?? new Date();
-    if (scheduledAt.getTime() < Date.now() - 60_000) throw AppException.validation('scheduledAt must be in the future');
+    if (scheduledAt.getTime() < Date.now() - 60_000)
+      throw AppException.validation('scheduledAt must be in the future');
     return this.prisma.announcement.create({
       data: {
         titleUz: input.title.uz,
@@ -56,28 +57,44 @@ export class AnnouncementsService {
 
   async list(q: { page: number; pageSize: number }) {
     const [items, total] = await Promise.all([
-      this.prisma.announcement.findMany({ orderBy: { scheduledAt: 'desc' }, include: { createdBy: { select: { email: true } } }, ...paginate(q) }),
+      this.prisma.announcement.findMany({
+        orderBy: { scheduledAt: 'desc' },
+        include: { createdBy: { select: { email: true } } },
+        ...paginate(q),
+      }),
       this.prisma.announcement.count(),
     ]);
     return { items: items.map(announcementView), total, page: q.page, pageSize: q.pageSize };
   }
 
   async cancel(id: string): Promise<Announcement> {
-    const r = await this.prisma.announcement.updateMany({ where: { id, status: 'SCHEDULED' }, data: { status: 'CANCELLED' } });
+    const r = await this.prisma.announcement.updateMany({
+      where: { id, status: 'SCHEDULED' },
+      data: { status: 'CANCELLED' },
+    });
     if (r.count === 0) throw AppException.conflict('Only scheduled announcements can be cancelled');
     return this.prisma.announcement.findUniqueOrThrow({ where: { id } });
   }
 
   /** Delivers announcements whose scheduled time has come. Safe to run concurrently. */
   async dispatchDue(now = new Date()): Promise<number> {
-    const due = await this.prisma.announcement.findMany({ where: { status: 'SCHEDULED', scheduledAt: { lte: now } }, take: 5 });
+    const due = await this.prisma.announcement.findMany({
+      where: { status: 'SCHEDULED', scheduledAt: { lte: now } },
+      take: 5,
+    });
     let dispatched = 0;
     for (const a of due) {
-      const claimed = await this.prisma.announcement.updateMany({ where: { id: a.id, status: 'SCHEDULED' }, data: { status: 'SENDING' } });
+      const claimed = await this.prisma.announcement.updateMany({
+        where: { id: a.id, status: 'SCHEDULED' },
+        data: { status: 'SENDING' },
+      });
       if (claimed.count === 0) continue;
       try {
         const count = await this.deliver(a);
-        await this.prisma.announcement.update({ where: { id: a.id }, data: { status: 'SENT', sentAt: new Date(), recipientCount: count } });
+        await this.prisma.announcement.update({
+          where: { id: a.id },
+          data: { status: 'SENT', sentAt: new Date(), recipientCount: count },
+        });
         dispatched += 1;
       } catch (err) {
         this.logger.error(`Announcement ${a.id} failed: ${(err as Error).message}`);
@@ -92,7 +109,9 @@ export class AnnouncementsService {
     let count = 0;
     const where: Prisma.UserWhereInput = {
       status: 'ACTIVE',
-      settings: { is: { announcements: true, ...(a.targetLanguage ? { language: a.targetLanguage } : {}) } },
+      settings: {
+        is: { announcements: true, ...(a.targetLanguage ? { language: a.targetLanguage } : {}) },
+      },
     };
     for (;;) {
       const users = await this.prisma.user.findMany({

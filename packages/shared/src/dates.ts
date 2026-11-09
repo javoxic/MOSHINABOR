@@ -23,7 +23,11 @@ export function toLocalDate(instant: Date, timeZone: string = TIMEZONE): string 
 
 /** Hour (0-23) of an instant in the given time zone. */
 export function localHour(instant: Date, timeZone: string = TIMEZONE): number {
-  const h = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(instant);
+  const h = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }).format(instant);
   return Number.parseInt(h, 10);
 }
 

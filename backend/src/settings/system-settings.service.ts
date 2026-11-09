@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DEFAULT_SYSTEM_SETTINGS, type ReminderThresholds, type SystemSettingKey } from '@moshina/shared';
+import {
+  DEFAULT_SYSTEM_SETTINGS,
+  type ReminderThresholds,
+  type SystemSettingKey,
+} from '@moshina/shared';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppException } from '../common/errors/app-exception';
@@ -14,7 +18,8 @@ export class SystemSettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private async load(): Promise<Map<string, SettingValue>> {
-    if (this.cache && Date.now() - this.cache.at < SystemSettingsService.TTL_MS) return this.cache.values;
+    if (this.cache && Date.now() - this.cache.at < SystemSettingsService.TTL_MS)
+      return this.cache.values;
     const rows = await this.prisma.systemSetting.findMany();
     const values = new Map<string, SettingValue>(Object.entries(DEFAULT_SYSTEM_SETTINGS));
     for (const row of rows) {
@@ -42,7 +47,11 @@ export class SystemSettingsService {
     });
   }
 
-  async set(key: string, value: unknown, adminId: string): Promise<{ key: string; value: SettingValue; previous: SettingValue }> {
+  async set(
+    key: string,
+    value: unknown,
+    adminId: string,
+  ): Promise<{ key: string; value: SettingValue; previous: SettingValue }> {
     if (!(key in DEFAULT_SYSTEM_SETTINGS)) throw AppException.validation(`Unknown setting: ${key}`);
     const k = key as SystemSettingKey;
     const def = DEFAULT_SYSTEM_SETTINGS[k];
@@ -60,16 +69,20 @@ export class SystemSettingsService {
   private coerce(key: SystemSettingKey, def: SettingValue, value: unknown): SettingValue {
     if (typeof def === 'number') {
       const n = typeof value === 'number' ? value : Number(value);
-      if (!Number.isInteger(n) || n < 0 || n > 1_000_000) throw AppException.validation(`${key} must be a non-negative integer`);
-      if (key === 'reminders.sendHourLocal' && n > 23) throw AppException.validation('sendHourLocal must be 0-23');
+      if (!Number.isInteger(n) || n < 0 || n > 1_000_000)
+        throw AppException.validation(`${key} must be a non-negative integer`);
+      if (key === 'reminders.sendHourLocal' && n > 23)
+        throw AppException.validation('sendHourLocal must be 0-23');
       return n;
     }
     if (typeof def === 'boolean') {
       if (typeof value !== 'boolean') throw AppException.validation(`${key} must be a boolean`);
       return value;
     }
-    if (typeof value !== 'string' || value.length > 200) throw AppException.validation(`${key} must be a string (max 200)`);
-    if (key === 'app.defaultLanguage' && !['uz', 'ru', 'en'].includes(value)) throw AppException.validation('Invalid language');
+    if (typeof value !== 'string' || value.length > 200)
+      throw AppException.validation(`${key} must be a string (max 200)`);
+    if (key === 'app.defaultLanguage' && !['uz', 'ru', 'en'].includes(value))
+      throw AppException.validation('Invalid language');
     return value.trim();
   }
 
