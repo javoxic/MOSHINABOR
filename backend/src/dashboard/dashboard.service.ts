@@ -21,11 +21,16 @@ export class DashboardService {
       const settings = await this.prisma.userSettings.findUnique({ where: { userId } });
       targetId = settings?.primaryVehicleId ?? undefined;
       if (!targetId) {
-        const first = await this.prisma.vehicle.findFirst({ where: { userId }, orderBy: { createdAt: 'asc' } });
+        const first = await this.prisma.vehicle.findFirst({
+          where: { userId },
+          orderBy: { createdAt: 'asc' },
+        });
         targetId = first?.id;
       }
     }
-    const unreadNotifications = await this.prisma.notification.count({ where: { userId, readAt: null } });
+    const unreadNotifications = await this.prisma.notification.count({
+      where: { userId, readAt: null },
+    });
     if (!targetId) {
       return {
         vehicle: null,
@@ -45,12 +50,16 @@ export class DashboardService {
       this.expenses.summary(userId, targetId),
     ]);
     const active = schedules.filter((s) => s.isActive);
-    const overdue = active.filter((s) => s.computed.status === 'OVERDUE' || s.computed.status === 'DUE');
+    const overdue = active.filter(
+      (s) => s.computed.status === 'OVERDUE' || s.computed.status === 'DUE',
+    );
     const upcoming = active.filter((s) => s.computed.status === 'DUE_SOON');
     const nextMaintenance =
       active
         .filter((s) => s.computed.status !== 'UNKNOWN')
-        .sort((a, b) => (a.computed.daysRemaining ?? Infinity) - (b.computed.daysRemaining ?? Infinity))[0] ?? null;
+        .sort(
+          (a, b) => (a.computed.daysRemaining ?? Infinity) - (b.computed.daysRemaining ?? Infinity),
+        )[0] ?? null;
     return {
       vehicle,
       nextMaintenance: overdue[0] ?? upcoming[0] ?? nextMaintenance,

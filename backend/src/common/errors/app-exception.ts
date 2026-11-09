@@ -24,7 +24,12 @@ export class AppException extends HttpException {
   }
 
   static validation(message: string, details?: unknown): AppException {
-    return new AppException(ERROR_CODES.VALIDATION_FAILED, HttpStatus.BAD_REQUEST, message, details);
+    return new AppException(
+      ERROR_CODES.VALIDATION_FAILED,
+      HttpStatus.BAD_REQUEST,
+      message,
+      details,
+    );
   }
 
   static conflict(message: string): AppException {

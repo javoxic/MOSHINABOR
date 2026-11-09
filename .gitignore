@@ -7,6 +7,8 @@ coverage/
 .env.*
 !.env.example
 !**/.env.example
+# Configuration templates (never contain real values)
+!**/.env.*.example
 .DS_Store
 # Expo
 .expo/
@@ -20,6 +22,12 @@ mobile/ios/
 *.keystore
 google-services.json
 GoogleService-Info.plist
+# Service-account keys and other credential files (docs/MOBILE_PUSH_SETUP.md, docs/BACKUP_MONITORING_SETUP.md)
+*-firebase-adminsdk-*.json
+*service-account*.json
+*serviceaccount*.json
+rclone.conf
+*.pem
 # Backend uploads
 backend/storage/
 # Playwright
@@ -29,3 +37,24 @@ admin/blob-report/
 # Backups
 infrastructure/deployment/backups/
 *.tsbuildinfo
+# Uploaded files written by tests and local runs
+backend/storage-test/
+backend/storage-e2e/
+**/storage/
+# Database/cache snapshots and dumps — never commit
+*.rdb
+*.aof
+appendonlydir/
+*.dump
+*.sql.gz
+*.bak
+infrastructure/deployment/.env
+# Local build outputs
+mobile/dist/
+admin/dist/
+infrastructure/deployment/secrets/
+.deploy-history-*
+monitor.log
+.env.staging
+backups-staging/
+mobile/dist-pilot/

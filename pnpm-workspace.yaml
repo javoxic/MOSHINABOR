@@ -4,11 +4,11 @@ packages:
   - mobile
   - packages/*
 onlyBuiltDependencies:
-  - "@prisma/client"
-  - "@prisma/engines"
+  - '@prisma/client'
+  - '@prisma/engines'
   - prisma
   - argon2
   - sharp
   - esbuild
   - msgpackr-extract
-  - "@nestjs/core"
+  - '@nestjs/core'

@@ -42,7 +42,8 @@ export default function VerifyScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       qc.clear();
       await signIn(res.tokens, res.user);
-      if (res.user.settings.language !== language) useAppStore.getState().setLanguage(res.user.settings.language);
+      if (res.user.settings.language !== language)
+        useAppStore.getState().setLanguage(res.user.settings.language);
       router.replace(res.user.fullName ? '/(tabs)' : '/(auth)/profile-setup');
     },
     onError: (err) => {
@@ -78,7 +79,18 @@ export default function VerifyScreen() {
   };
 
   return (
-    <Screen back footer={<Button title={t('auth.verify')} onPress={() => verify.mutate(code)} disabled={code.length !== LENGTH} loading={verify.isPending} testID="verify" />}>
+    <Screen
+      back
+      footer={
+        <Button
+          title={t('auth.verify')}
+          onPress={() => verify.mutate(code)}
+          disabled={code.length !== LENGTH}
+          loading={verify.isPending}
+          testID="verify"
+        />
+      }
+    >
       <Text variant="title" style={{ marginTop: spacing.lg }}>
         {t('auth.verifyTitle')}
       </Text>
@@ -86,9 +98,20 @@ export default function VerifyScreen() {
         {t('auth.verifySubtitle', { phone: formatPhoneDisplay(phone) })}
       </Text>
 
-      <Pressable onPress={() => inputRef.current?.focus()} accessibilityLabel={t('auth.codeLabel')} style={styles.cells}>
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
+        accessibilityLabel={t('auth.codeLabel')}
+        style={styles.cells}
+      >
         {Array.from({ length: LENGTH }).map((_, i) => (
-          <View key={i} style={[styles.cell, i === code.length && styles.cellActive, !!error && styles.cellError]}>
+          <View
+            key={i}
+            style={[
+              styles.cell,
+              i === code.length && styles.cellActive,
+              !!error && styles.cellError,
+            ]}
+          >
             <Text variant="title">{code[i] ?? ''}</Text>
           </View>
         ))}
@@ -114,9 +137,21 @@ export default function VerifyScreen() {
         {cooldown > 0 ? (
           <Text tone="muted">{t('auth.resendIn', { seconds: cooldown })}</Text>
         ) : (
-          <Button title={t('auth.resend')} variant="ghost" compact onPress={() => resend.mutate()} loading={resend.isPending} testID="resend" />
+          <Button
+            title={t('auth.resend')}
+            variant="ghost"
+            compact
+            onPress={() => resend.mutate()}
+            loading={resend.isPending}
+            testID="resend"
+          />
         )}
-        <Button title={t('auth.changeNumber')} variant="ghost" compact onPress={() => router.back()} />
+        <Button
+          title={t('auth.changeNumber')}
+          variant="ghost"
+          compact
+          onPress={() => router.back()}
+        />
       </View>
     </Screen>
   );
@@ -124,7 +159,16 @@ export default function VerifyScreen() {
 
 const styles = StyleSheet.create({
   cells: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.lg },
-  cell: { width: 48, height: 58, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  cell: {
+    width: 48,
+    height: 58,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cellActive: { borderColor: colors.accent },
   cellError: { borderColor: colors.danger },
   hidden: { position: 'absolute', opacity: 0, height: 1, width: 1 },

@@ -2,7 +2,12 @@ import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { maskPhone } from '@moshina/shared';
-import { CurrentAdmin, Public, RequirePermissions, type AuthAdmin } from '../../common/decorators/auth.decorators';
+import {
+  CurrentAdmin,
+  Public,
+  RequirePermissions,
+  type AuthAdmin,
+} from '../../common/decorators/auth.decorators';
 import { AppException } from '../../common/errors/app-exception';
 import { paginate, parseSort } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -41,7 +46,10 @@ export class AdminVehiclesController {
         { vin: { contains: term.toUpperCase() } },
       ];
     }
-    const sort = parseSort(q.sort, ['createdAt', 'year', 'currentMileage', 'brand'] as const, { field: 'createdAt', dir: 'desc' });
+    const sort = parseSort(q.sort, ['createdAt', 'year', 'currentMileage', 'brand'] as const, {
+      field: 'createdAt',
+      dir: 'desc',
+    });
     const [rows, total] = await Promise.all([
       this.prisma.vehicle.findMany({
         where,
@@ -60,7 +68,11 @@ export class AdminVehiclesController {
         registrationNumber: v.registrationNumber,
         fuelType: v.fuelType,
         currentMileage: v.currentMileage,
-        owner: { id: v.user.id, fullName: v.user.fullName, phone: pii ? v.user.phone : maskPhone(v.user.phone) },
+        owner: {
+          id: v.user.id,
+          fullName: v.user.fullName,
+          phone: pii ? v.user.phone : maskPhone(v.user.phone),
+        },
         createdAt: v.createdAt.toISOString(),
       })),
       total,
@@ -95,14 +107,30 @@ export class AdminVehiclesController {
       registrationNumber: v.registrationNumber,
       fuelType: v.fuelType,
       currentMileage: v.currentMileage,
-      owner: { id: v.user.id, fullName: v.user.fullName, phone: pii ? v.user.phone : maskPhone(v.user.phone) },
+      owner: {
+        id: v.user.id,
+        fullName: v.user.fullName,
+        phone: pii ? v.user.phone : maskPhone(v.user.phone),
+      },
       createdAt: v.createdAt.toISOString(),
       vin: v.vin,
       engineSize: v.engineSize?.toFixed(1) ?? null,
       mileageUpdatedAt: v.mileageUpdatedAt?.toISOString() ?? null,
       schedules: v.schedules.map((s) => {
-        const view = toScheduleView({ ...s, vehicle: { currentMileage: v.currentMileage, mileageUpdatedAt: v.mileageUpdatedAt } }, thresholds);
-        return { id: s.id, serviceType: s.serviceType.nameEn, nextDueDate: view.nextDueDate, nextDueMileage: view.nextDueMileage, status: view.computed.status };
+        const view = toScheduleView(
+          {
+            ...s,
+            vehicle: { currentMileage: v.currentMileage, mileageUpdatedAt: v.mileageUpdatedAt },
+          },
+          thresholds,
+        );
+        return {
+          id: s.id,
+          serviceType: s.serviceType.nameEn,
+          nextDueDate: view.nextDueDate,
+          nextDueMileage: view.nextDueMileage,
+          status: view.computed.status,
+        };
       }),
       recordCount: v._count.records,
       expenseTotal: (expense._sum.amount ?? new Prisma.Decimal(0)).toFixed(2),

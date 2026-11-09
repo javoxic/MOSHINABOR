@@ -17,4 +17,11 @@ export const qk = {
 };
 
 /** Keys invalidated after anything that changes maintenance/expense data. */
-export const DATA_ROOTS = [['dashboard'], ['vehicles'], ['schedules'], ['records'], ['expenses'], ['expense-stats']] as const;
+export const DATA_ROOTS = [
+  ['dashboard'],
+  ['vehicles'],
+  ['schedules'],
+  ['records'],
+  ['expenses'],
+  ['expense-stats'],
+] as const;

@@ -12,11 +12,17 @@ export const TEMPLATE_PLACEHOLDERS: Record<NotificationType, string[]> = {
 };
 
 /** Substitutes {placeholders}; unknown placeholders are left untouched. */
-export function renderTemplate(text: string, vars: Record<string, string | number | null | undefined>): string {
-  return text.replace(/\{(\w+)\}/g, (match, key: string) => {
-    const v = vars[key];
-    return v === null || v === undefined ? match : String(v);
-  }).replace(/\s{2,}/g, ' ').trim();
+export function renderTemplate(
+  text: string,
+  vars: Record<string, string | number | null | undefined>,
+): string {
+  return text
+    .replace(/\{(\w+)\}/g, (match, key: string) => {
+      const v = vars[key];
+      return v === null || v === undefined ? match : String(v);
+    })
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 @Injectable()

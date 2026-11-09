@@ -68,29 +68,49 @@ export class NotificationsService {
     await this.pushQueue.add(
       'send',
       { notificationId },
-      { jobId: `push-${notificationId}`, attempts: 4, backoff: { type: 'exponential', delay: 30_000 }, removeOnComplete: 1000, removeOnFail: 5000 },
+      {
+        jobId: `push-${notificationId}`,
+        attempts: 4,
+        backoff: { type: 'exponential', delay: 30_000 },
+        removeOnComplete: 1000,
+        removeOnFail: 5000,
+      },
     );
   }
 
   async list(userId: string, q: { page: number; pageSize: number; unreadOnly?: boolean }) {
-    const where: Prisma.NotificationWhereInput = { userId, readAt: q.unreadOnly ? null : undefined };
+    const where: Prisma.NotificationWhereInput = {
+      userId,
+      readAt: q.unreadOnly ? null : undefined,
+    };
     const [items, total, unread] = await Promise.all([
       this.prisma.notification.findMany({ where, orderBy: { createdAt: 'desc' }, ...paginate(q) }),
       this.prisma.notification.count({ where }),
       this.prisma.notification.count({ where: { userId, readAt: null } }),
     ]);
-    return { items: items.map(notificationView), total, page: q.page, pageSize: q.pageSize, unread };
+    return {
+      items: items.map(notificationView),
+      total,
+      page: q.page,
+      pageSize: q.pageSize,
+      unread,
+    };
   }
 
   async markRead(userId: string, id: string) {
     const n = await this.prisma.notification.findFirst({ where: { id, userId } });
     if (!n) throw AppException.notFound('Notification');
-    const updated = n.readAt ? n : await this.prisma.notification.update({ where: { id }, data: { readAt: new Date() } });
+    const updated = n.readAt
+      ? n
+      : await this.prisma.notification.update({ where: { id }, data: { readAt: new Date() } });
     return notificationView(updated);
   }
 
   async markAllRead(userId: string): Promise<{ updated: number }> {
-    const r = await this.prisma.notification.updateMany({ where: { userId, readAt: null }, data: { readAt: new Date() } });
+    const r = await this.prisma.notification.updateMany({
+      where: { userId, readAt: null },
+      data: { readAt: new Date() },
+    });
     return { updated: r.count };
   }
 

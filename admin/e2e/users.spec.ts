@@ -2,11 +2,15 @@ import { expect, test } from '@playwright/test';
 import { loginAs } from './helpers';
 
 test.describe('User management', () => {
-  test('support searches by phone, filters, and restricts a user with an audited reason', async ({ page }) => {
+  test('support searches by phone, filters, and restricts a user with an audited reason', async ({
+    page,
+  }) => {
     await loginAs(page, 'support');
     await page.getByRole('link', { name: 'Users' }).click();
     await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
-    await expect(page.getByText('Full phone numbers are visible to your role; views are audited.')).toBeVisible();
+    await expect(
+      page.getByText('Full phone numbers are visible to your role; views are audited.'),
+    ).toBeVisible();
 
     await page.getByLabel('Search name or phone').fill('935554433');
     await expect(page.getByRole('row', { name: /Dilnoza Rahimova/ })).toBeVisible();

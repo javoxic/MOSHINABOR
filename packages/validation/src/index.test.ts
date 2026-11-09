@@ -1,4 +1,10 @@
-import { vehicleSchema, scheduleSchema, otpRequestSchema, expenseSchema, adminPasswordSchema } from './index';
+import {
+  vehicleSchema,
+  scheduleSchema,
+  otpRequestSchema,
+  expenseSchema,
+  adminPasswordSchema,
+} from './index';
 
 describe('validation schemas', () => {
   it('accepts a valid vehicle and normalizes the registration number', () => {
@@ -21,7 +27,14 @@ describe('validation schemas', () => {
 
   it('rejects invalid VIN', () => {
     const r = vehicleSchema.safeParse({
-      brand: 'A', model: 'B', year: 2020, registrationNumber: '01A123BC', vin: 'IIIII', fuelType: 'PETROL', engineSize: null, currentMileage: 1,
+      brand: 'A',
+      model: 'B',
+      year: 2020,
+      registrationNumber: '01A123BC',
+      vin: 'IIIII',
+      fuelType: 'PETROL',
+      engineSize: null,
+      currentMileage: 1,
     });
     expect(r.success).toBe(false);
   });
@@ -46,7 +59,12 @@ describe('validation schemas', () => {
 
   it('requires positive expense amounts', () => {
     expect(
-      expenseSchema.safeParse({ vehicleId: '3f9b2c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f', category: 'FUEL', amount: 0, date: '2026-01-01' }).success,
+      expenseSchema.safeParse({
+        vehicleId: '3f9b2c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f',
+        category: 'FUEL',
+        amount: 0,
+        date: '2026-01-01',
+      }).success,
     ).toBe(false);
   });
 
@@ -58,12 +76,30 @@ describe('validation schemas', () => {
 
 describe('numeric text input', () => {
   it('treats empty strings as missing, not zero', () => {
-    const r = vehicleSchema.safeParse({ brand: 'A', model: 'B', year: '2020', registrationNumber: '01A123BC', fuelType: 'PETROL', engineSize: '', currentMileage: '' });
+    const r = vehicleSchema.safeParse({
+      brand: 'A',
+      model: 'B',
+      year: '2020',
+      registrationNumber: '01A123BC',
+      fuelType: 'PETROL',
+      engineSize: '',
+      currentMileage: '',
+    });
     expect(r.success).toBe(false);
-    if (!r.success) expect(r.error.issues.find((i) => i.path[0] === 'currentMileage')?.message).toBe('validation.required');
+    if (!r.success)
+      expect(r.error.issues.find((i) => i.path[0] === 'currentMileage')?.message).toBe(
+        'validation.required',
+      );
   });
   it('accepts spaced thousands', () => {
-    const r = expenseSchema.parse({ vehicleId: '3f9b2c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f', category: 'FUEL', amount: '150 000', date: '2026-01-01', mileage: '', liters: '' });
+    const r = expenseSchema.parse({
+      vehicleId: '3f9b2c1e-1a2b-4c3d-8e9f-0a1b2c3d4e5f',
+      category: 'FUEL',
+      amount: '150 000',
+      date: '2026-01-01',
+      mileage: '',
+      liters: '',
+    });
     expect(r.amount).toBe(150000);
     expect(r.mileage).toBeNull();
   });

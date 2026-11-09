@@ -27,7 +27,11 @@ export class RedisFactory implements OnApplicationShutdown {
 @Module({
   providers: [
     RedisFactory,
-    { provide: REDIS, inject: [RedisFactory], useFactory: (f: RedisFactory) => f.create({ maxRetriesPerRequest: 3 }) },
+    {
+      provide: REDIS,
+      inject: [RedisFactory],
+      useFactory: (f: RedisFactory) => f.create({ maxRetriesPerRequest: 3 }),
+    },
   ],
   exports: [REDIS, RedisFactory],
 })

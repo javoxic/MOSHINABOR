@@ -1,6 +1,9 @@
 import type { NotificationType } from '@prisma/client';
 
-export const DEFAULT_TEMPLATES: Record<Exclude<NotificationType, 'ANNOUNCEMENT'>, { title: [string, string, string]; body: [string, string, string] }> = {
+export const DEFAULT_TEMPLATES: Record<
+  Exclude<NotificationType, 'ANNOUNCEMENT'>,
+  { title: [string, string, string]; body: [string, string, string] }
+> = {
   MAINTENANCE_UPCOMING: {
     title: ['Texnik xizmat yaqinlashmoqda', 'Скоро техобслуживание', 'Maintenance coming up'],
     body: [

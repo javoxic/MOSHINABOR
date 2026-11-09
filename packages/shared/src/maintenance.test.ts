@@ -1,4 +1,9 @@
-import { computeNextDue, computeScheduleStatus, scheduleCycleKey, DEFAULT_THRESHOLDS } from './maintenance';
+import {
+  computeNextDue,
+  computeScheduleStatus,
+  scheduleCycleKey,
+  DEFAULT_THRESHOLDS,
+} from './maintenance';
 import { addDays, diffDays, toLocalDate, isIsoDate } from './dates';
 import { formatUZS } from './money';
 
@@ -27,73 +32,136 @@ describe('dates', () => {
 describe('computeNextDue', () => {
   it('computes date and mileage', () => {
     expect(
-      computeNextDue({ lastServiceDate: '2026-01-01', lastServiceMileage: 50000, intervalDays: 180, intervalKm: 8000 }),
+      computeNextDue({
+        lastServiceDate: '2026-01-01',
+        lastServiceMileage: 50000,
+        intervalDays: 180,
+        intervalKm: 8000,
+      }),
     ).toEqual({ nextDueDate: '2026-06-30', nextDueMileage: 58000 });
   });
   it('supports date-only and km-only intervals', () => {
-    expect(computeNextDue({ lastServiceDate: '2026-01-01', lastServiceMileage: 1, intervalDays: 10, intervalKm: null }))
-      .toEqual({ nextDueDate: '2026-01-11', nextDueMileage: null });
-    expect(computeNextDue({ lastServiceDate: '2026-01-01', lastServiceMileage: 1, intervalDays: null, intervalKm: 100 }))
-      .toEqual({ nextDueDate: null, nextDueMileage: 101 });
+    expect(
+      computeNextDue({
+        lastServiceDate: '2026-01-01',
+        lastServiceMileage: 1,
+        intervalDays: 10,
+        intervalKm: null,
+      }),
+    ).toEqual({ nextDueDate: '2026-01-11', nextDueMileage: null });
+    expect(
+      computeNextDue({
+        lastServiceDate: '2026-01-01',
+        lastServiceMileage: 1,
+        intervalDays: null,
+        intervalKm: 100,
+      }),
+    ).toEqual({ nextDueDate: null, nextDueMileage: 101 });
   });
   it('requires an interval', () => {
     expect(() =>
-      computeNextDue({ lastServiceDate: '2026-01-01', lastServiceMileage: 1, intervalDays: null, intervalKm: 0 }),
+      computeNextDue({
+        lastServiceDate: '2026-01-01',
+        lastServiceMileage: 1,
+        intervalDays: null,
+        intervalKm: 0,
+      }),
     ).toThrow();
   });
 });
 
 describe('computeScheduleStatus', () => {
-  const base = { nextDueDate: null, nextDueMileage: null, currentMileage: 50000, mileageUpdatedAt: fresh };
+  const base = {
+    nextDueDate: null,
+    nextDueMileage: null,
+    currentMileage: 50000,
+    mileageUpdatedAt: fresh,
+  };
 
   it('is UNKNOWN without due data', () => {
     expect(computeScheduleStatus(base, TODAY, NOW).status).toBe('UNKNOWN');
   });
 
   it('is OK when far from both thresholds', () => {
-    const r = computeScheduleStatus({ ...base, nextDueDate: '2026-12-01', nextDueMileage: 60000 }, TODAY, NOW);
+    const r = computeScheduleStatus(
+      { ...base, nextDueDate: '2026-12-01', nextDueMileage: 60000 },
+      TODAY,
+      NOW,
+    );
     expect(r.status).toBe('OK');
     expect(r.kmRemaining).toBe(10000);
   });
 
   it('triggers by mileage when mileage is reached first', () => {
-    const r = computeScheduleStatus({ ...base, nextDueDate: '2026-12-01', nextDueMileage: 50500 }, TODAY, NOW);
+    const r = computeScheduleStatus(
+      { ...base, nextDueDate: '2026-12-01', nextDueMileage: 50500 },
+      TODAY,
+      NOW,
+    );
     expect(r.status).toBe('DUE_SOON');
     expect(r.triggeredBy).toBe('MILEAGE');
   });
 
   it('triggers by date when date is reached first', () => {
-    const r = computeScheduleStatus({ ...base, nextDueDate: '2026-06-15', nextDueMileage: 70000 }, TODAY, NOW);
+    const r = computeScheduleStatus(
+      { ...base, nextDueDate: '2026-06-15', nextDueMileage: 70000 },
+      TODAY,
+      NOW,
+    );
     expect(r.status).toBe('DUE');
     expect(r.triggeredBy).toBe('DATE');
     expect(r.daysRemaining).toBe(0);
   });
 
   it('becomes OVERDUE after the grace period', () => {
-    expect(computeScheduleStatus({ ...base, nextDueDate: addDays(TODAY, -7) }, TODAY, NOW).status).toBe('OVERDUE');
-    expect(computeScheduleStatus({ ...base, nextDueDate: addDays(TODAY, -6) }, TODAY, NOW).status).toBe('DUE');
-    expect(computeScheduleStatus({ ...base, nextDueMileage: 49500 }, TODAY, NOW).status).toBe('OVERDUE');
+    expect(
+      computeScheduleStatus({ ...base, nextDueDate: addDays(TODAY, -7) }, TODAY, NOW).status,
+    ).toBe('OVERDUE');
+    expect(
+      computeScheduleStatus({ ...base, nextDueDate: addDays(TODAY, -6) }, TODAY, NOW).status,
+    ).toBe('DUE');
+    expect(computeScheduleStatus({ ...base, nextDueMileage: 49500 }, TODAY, NOW).status).toBe(
+      'OVERDUE',
+    );
   });
 
   it('flags stale mileage and can ignore it for reminders', () => {
-    const stale = { ...base, nextDueMileage: 49000, mileageUpdatedAt: new Date('2026-04-01T00:00:00Z') };
+    const stale = {
+      ...base,
+      nextDueMileage: 49000,
+      mileageUpdatedAt: new Date('2026-04-01T00:00:00Z'),
+    };
     const shown = computeScheduleStatus(stale, TODAY, NOW, DEFAULT_THRESHOLDS);
     expect(shown.mileageStale).toBe(true);
     expect(shown.status).toBe('OVERDUE');
-    const forReminder = computeScheduleStatus(stale, TODAY, NOW, DEFAULT_THRESHOLDS, { ignoreStaleMileage: true });
+    const forReminder = computeScheduleStatus(stale, TODAY, NOW, DEFAULT_THRESHOLDS, {
+      ignoreStaleMileage: true,
+    });
     expect(forReminder.status).toBe('UNKNOWN');
     expect(forReminder.kmRemaining).toBe(-1000);
   });
 
   it('treats missing mileage timestamp as stale', () => {
-    expect(computeScheduleStatus({ ...base, mileageUpdatedAt: null }, TODAY, NOW).mileageStale).toBe(true);
+    expect(
+      computeScheduleStatus({ ...base, mileageUpdatedAt: null }, TODAY, NOW).mileageStale,
+    ).toBe(true);
   });
 });
 
 describe('scheduleCycleKey', () => {
   it('changes when the schedule is serviced', () => {
-    const a = scheduleCycleKey({ lastServiceDate: '2026-01-01', lastServiceMileage: 1000, intervalDays: 180, intervalKm: null });
-    const b = scheduleCycleKey({ lastServiceDate: '2026-06-01', lastServiceMileage: 9000, intervalDays: 180, intervalKm: null });
+    const a = scheduleCycleKey({
+      lastServiceDate: '2026-01-01',
+      lastServiceMileage: 1000,
+      intervalDays: 180,
+      intervalKm: null,
+    });
+    const b = scheduleCycleKey({
+      lastServiceDate: '2026-06-01',
+      lastServiceMileage: 9000,
+      intervalDays: 180,
+      intervalKm: null,
+    });
     expect(a).not.toBe(b);
   });
 });

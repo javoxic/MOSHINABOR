@@ -34,7 +34,8 @@ function SessionEffects() {
     Api.me()
       .then(async (user) => {
         await useAuthStore.getState().setUser(user);
-        if (user.settings.language !== useAppStore.getState().language) useAppStore.getState().setLanguage(user.settings.language);
+        if (user.settings.language !== useAppStore.getState().language)
+          useAppStore.getState().setLanguage(user.settings.language);
       })
       .catch((e: unknown) => console.warn('Profile refresh failed', e));
   }, [status]);
@@ -64,11 +65,22 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <PersistQueryClientProvider
           client={queryClient}
-          persistOptions={{ persister, maxAge: 7 * 24 * 3600_000, buster: 'v1', dehydrateOptions: { shouldDehydrateQuery: (q) => q.state.status === 'success' } }}
+          persistOptions={{
+            persister,
+            maxAge: 7 * 24 * 3600_000,
+            buster: 'v1',
+            dehydrateOptions: { shouldDehydrateQuery: (q) => q.state.status === 'success' },
+          }}
         >
           <SessionEffects />
           <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'slide_from_right' }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: 'slide_from_right',
+            }}
+          />
         </PersistQueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

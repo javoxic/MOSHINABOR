@@ -15,7 +15,9 @@ interface AppState {
 }
 
 function persist(s: Pick<AppState, 'language' | 'languageChosen' | 'selectedVehicleId'>) {
-  AsyncStorage.setItem(KEY, JSON.stringify(s)).catch((e: unknown) => console.warn('Failed to persist app state', e));
+  AsyncStorage.setItem(KEY, JSON.stringify(s)).catch((e: unknown) =>
+    console.warn('Failed to persist app state', e),
+  );
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

@@ -1,4 +1,12 @@
-import { Body, Controller, ForbiddenException, HttpCode, Inject, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  HttpCode,
+  Inject,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { timingSafeEqual } from 'node:crypto';
@@ -30,14 +38,25 @@ export class SmsWebhookController {
 
   @Post('eskiz')
   @HttpCode(200)
-  async eskiz(@Query('secret') secret: string | undefined, @Body() body: Record<string, unknown>): Promise<{ ok: true }> {
+  async eskiz(
+    @Query('secret') secret: string | undefined,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ ok: true }> {
     this.verify(secret);
-    const messageId = typeof body.message_id === 'string' ? body.message_id : typeof body.id === 'string' ? body.id : null;
+    const messageId =
+      typeof body.message_id === 'string'
+        ? body.message_id
+        : typeof body.id === 'string'
+          ? body.id
+          : null;
     if (messageId) {
       const status = mapEskizStatus(typeof body.status === 'string' ? body.status : undefined);
       await this.prisma.smsVerification.updateMany({
         where: { providerMessageId: messageId },
-        data: { smsStatus: status, smsError: status === 'FAILED' ? String(body.status).slice(0, 100) : null },
+        data: {
+          smsStatus: status,
+          smsError: status === 'FAILED' ? String(body.status).slice(0, 100) : null,
+        },
       });
     }
     return { ok: true };
@@ -45,7 +64,10 @@ export class SmsWebhookController {
 
   @Post('twilio')
   @HttpCode(200)
-  async twilio(@Query('secret') secret: string | undefined, @Body() body: Record<string, unknown>): Promise<{ ok: true }> {
+  async twilio(
+    @Query('secret') secret: string | undefined,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ ok: true }> {
     this.verify(secret);
     const sid = typeof body.MessageSid === 'string' ? body.MessageSid : null;
     if (sid) {
@@ -53,7 +75,11 @@ export class SmsWebhookController {
       const status = mapTwilioStatus(raw);
       await this.prisma.smsVerification.updateMany({
         where: { providerMessageId: sid },
-        data: { smsStatus: status, smsError: status === 'FAILED' ? `${raw ?? ''} ${String(body.ErrorCode ?? '')}`.trim() : null },
+        data: {
+          smsStatus: status,
+          smsError:
+            status === 'FAILED' ? `${raw ?? ''} ${String(body.ErrorCode ?? '')}`.trim() : null,
+        },
       });
     }
     return { ok: true };

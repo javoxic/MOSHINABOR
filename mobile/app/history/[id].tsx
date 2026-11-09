@@ -13,6 +13,7 @@ import { ErrorState, LoadingState } from '@/components/States';
 import { AuthImage, IconButton, ListRow, SectionHeader } from '@/components/Misc';
 import { ServiceIcon } from '@/components/domain';
 import { ServiceRecordFields } from '@/components/ServiceRecordFields';
+import { toUploadableJpeg } from '@/utils/images';
 import { Api, type CompleteBody } from '@/api/endpoints';
 import { qk } from '@/api/keys';
 import { errorMessage } from '@/api/errors';
@@ -26,7 +27,11 @@ export default function RecordDetailsScreen() {
   const invalidate = useInvalidateData();
   const [editing, setEditing] = useState(false);
   const record = useQuery({ queryKey: qk.record(id), queryFn: () => Api.record(id) });
-  const onError = (e: unknown) => Alert.alert(t('errors.title'), e instanceof Error && !('status' in e) ? e.message : errorMessage(t, e));
+  const onError = (e: unknown) =>
+    Alert.alert(
+      t('errors.title'),
+      e instanceof Error && !('status' in e) ? e.message : errorMessage(t, e),
+    );
 
   const update = useMutation({
     mutationFn: (body: CompleteBody) => Api.updateRecord(id, body),
@@ -45,18 +50,31 @@ export default function RecordDetailsScreen() {
   });
   const attach = useMutation({
     mutationFn: async (source: 'camera' | 'library') => {
-      const perm = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) throw new Error(t(source === 'camera' ? 'common.cameraPermission' : 'common.photoPermission'));
+      const perm =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted)
+        throw new Error(
+          t(source === 'camera' ? 'common.cameraPermission' : 'common.photoPermission'),
+        );
       const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.85 };
-      const res = source === 'camera' ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+      const res =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync(opts)
+          : await ImagePicker.launchImageLibraryAsync(opts);
       if (res.canceled || !res.assets[0]) return null;
       const a = res.assets[0];
-      return Api.addAttachment(id, { uri: a.uri, name: a.fileName ?? 'receipt.jpg', mimeType: a.mimeType ?? 'image/jpeg' });
+      return Api.addAttachment(id, await toUploadableJpeg(a));
     },
     onSuccess: () => invalidate(),
     onError,
   });
-  const detach = useMutation({ mutationFn: (attachmentId: string) => Api.deleteAttachment(id, attachmentId), onSuccess: () => invalidate(), onError });
+  const detach = useMutation({
+    mutationFn: (attachmentId: string) => Api.deleteAttachment(id, attachmentId),
+    onSuccess: () => invalidate(),
+    onError,
+  });
 
   if (record.isPending)
     return (
@@ -76,14 +94,36 @@ export default function RecordDetailsScreen() {
   if (editing) {
     return (
       <Screen back title={t('history.edit')} subtitle={name}>
-        <ServiceRecordFields initial={r} submitLabel={t('common.save')} onSubmit={(v) => update.mutate(v)} submitting={update.isPending} serverError={update.error} />
-        <Button title={t('common.cancel')} variant="ghost" onPress={() => setEditing(false)} style={{ marginTop: spacing.sm }} />
+        <ServiceRecordFields
+          initial={r}
+          submitLabel={t('common.save')}
+          onSubmit={(v) => update.mutate(v)}
+          submitting={update.isPending}
+          serverError={update.error}
+        />
+        <Button
+          title={t('common.cancel')}
+          variant="ghost"
+          onPress={() => setEditing(false)}
+          style={{ marginTop: spacing.sm }}
+        />
       </Screen>
     );
   }
 
   return (
-    <Screen back title={name} right={<IconButton icon="create-outline" label={t('history.edit')} onPress={() => setEditing(true)} />} dataUpdatedAt={record.dataUpdatedAt}>
+    <Screen
+      back
+      title={name}
+      right={
+        <IconButton
+          icon="create-outline"
+          label={t('history.edit')}
+          onPress={() => setEditing(true)}
+        />
+      }
+      dataUpdatedAt={record.dataUpdatedAt}
+    >
       <Card style={{ flexDirection: 'row', alignItems: 'center' }}>
         <ServiceIcon icon={r.serviceType.icon} />
         <View style={{ marginLeft: spacing.md, flex: 1 }}>
@@ -94,14 +134,24 @@ export default function RecordDetailsScreen() {
         </View>
       </Card>
       <Card style={{ marginTop: spacing.md, padding: spacing.xs }}>
-        <ListRow title={t('maintenance.cost')} value={r.cost ? money(r.cost, i18n.language) : t('common.notSet')} />
-        <ListRow title={t('maintenance.provider')} value={r.serviceProvider ?? t('common.notSet')} />
+        <ListRow
+          title={t('maintenance.cost')}
+          value={r.cost ? money(r.cost, i18n.language) : t('common.notSet')}
+        />
+        <ListRow
+          title={t('maintenance.provider')}
+          value={r.serviceProvider ?? t('common.notSet')}
+        />
         {r.partsUsed ? <ListRow title={t('maintenance.partsUsed')} subtitle={r.partsUsed} /> : null}
         {r.notes ? <ListRow title={t('maintenance.notes')} subtitle={r.notes} /> : null}
       </Card>
 
       <SectionHeader title={t('history.attachments')} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: spacing.sm }}
+      >
         {r.attachments.map((a) => (
           <Pressable
             key={a.id}
@@ -110,7 +160,11 @@ export default function RecordDetailsScreen() {
             onLongPress={() =>
               Alert.alert(t('common.deleteConfirmTitle'), t('common.deleteConfirmBody'), [
                 { text: t('common.cancel'), style: 'cancel' },
-                { text: t('common.delete'), style: 'destructive', onPress: () => detach.mutate(a.id) },
+                {
+                  text: t('common.delete'),
+                  style: 'destructive',
+                  onPress: () => detach.mutate(a.id),
+                },
               ])
             }
           >
@@ -130,7 +184,11 @@ export default function RecordDetailsScreen() {
           }
           style={[styles.thumb, styles.add]}
         >
-          <Ionicons name={attach.isPending ? 'hourglass-outline' : 'receipt-outline'} size={24} color={colors.accent} />
+          <Ionicons
+            name={attach.isPending ? 'hourglass-outline' : 'receipt-outline'}
+            size={24}
+            color={colors.accent}
+          />
           <Text variant="caption" tone="accent">
             {t('history.addAttachment')}
           </Text>
@@ -156,5 +214,14 @@ export default function RecordDetailsScreen() {
 
 const styles = StyleSheet.create({
   thumb: { width: 110, height: 110, borderRadius: radius.md },
-  add: { borderWidth: 1, borderStyle: 'dashed', borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, gap: spacing.xs, padding: spacing.sm },
+  add: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    gap: spacing.xs,
+    padding: spacing.sm,
+  },
 });

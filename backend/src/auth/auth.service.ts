@@ -3,6 +3,7 @@ import { ERROR_CODES, type Language } from '@moshina/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppException } from '../common/errors/app-exception';
 import { UsersService, type UserProfileView } from '../users/users.service';
+import { AccessService } from '../access/access.service';
 import { OtpService, type OtpRequestResult } from './otp.service';
 import { TokenService, type ClientContext, type IssuedTokens } from './token.service';
 
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly tokens: TokenService,
     private readonly users: UsersService,
     private readonly prisma: PrismaService,
+    private readonly access: AccessService,
   ) {}
 
   requestCode(phone: string, ip: string, language?: Language): Promise<OtpRequestResult> {
@@ -26,9 +28,14 @@ export class AuthService {
     language?: Language,
   ): Promise<{ tokens: IssuedTokens; user: UserProfileView; isNewUser: boolean }> {
     const e164 = await this.otp.verify(phone, code);
+    await this.access.assertMaySignIn(e164);
     const { user, isNew } = await this.users.findOrCreateByPhone(e164, language ?? 'uz');
     if (user.status === 'RESTRICTED') {
-      throw new AppException(ERROR_CODES.ACCOUNT_RESTRICTED, HttpStatus.FORBIDDEN, 'Your account has been restricted. Contact support.');
+      throw new AppException(
+        ERROR_CODES.ACCOUNT_RESTRICTED,
+        HttpStatus.FORBIDDEN,
+        'Your account has been restricted. Contact support.',
+      );
     }
     const tokens = await this.tokens.issue(user.id, ctx);
     await this.prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } });
@@ -39,19 +46,30 @@ export class AuthService {
     return this.tokens.rotate(refreshToken, ctx);
   }
 
-  async logout(userId: string, familyId: string, refreshToken?: string, pushToken?: string): Promise<void> {
+  async logout(
+    userId: string,
+    familyId: string,
+    refreshToken?: string,
+    pushToken?: string,
+  ): Promise<void> {
     if (refreshToken) {
       const fam = await this.tokens.familyOf(refreshToken);
       if (fam && fam.userId === userId) await this.tokens.revokeFamily(fam.familyId, 'logout');
     }
     await this.tokens.revokeFamily(familyId, 'logout');
     if (pushToken) {
-      await this.prisma.pushDevice.updateMany({ where: { token: pushToken, userId }, data: { disabledAt: new Date() } });
+      await this.prisma.pushDevice.updateMany({
+        where: { token: pushToken, userId },
+        data: { disabledAt: new Date() },
+      });
     }
   }
 
   async logoutAll(userId: string): Promise<number> {
-    await this.prisma.pushDevice.updateMany({ where: { userId, disabledAt: null }, data: { disabledAt: new Date() } });
+    await this.prisma.pushDevice.updateMany({
+      where: { userId, disabledAt: null },
+      data: { disabledAt: new Date() },
+    });
     return this.tokens.revokeAllForUser(userId, 'logout_all');
   }
 }

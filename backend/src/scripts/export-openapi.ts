@@ -15,10 +15,17 @@ import { loadEnv } from '../config/env';
 
 async function main(): Promise<void> {
   const env = loadEnv();
-  const app = await NestFactory.create<NestExpressApplication>(AppModule.register(env, { withJobs: false, withHttp: true }), { logger: ['error'] });
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule.register(env, { withJobs: false, withHttp: true }),
+    { logger: ['error'] },
+  );
   configureApp(app, env);
   await app.init();
-  const config = new DocumentBuilder().setTitle('MOSHINA BOR API').setVersion('1.0.0').addBearerAuth().build();
+  const config = new DocumentBuilder()
+    .setTitle('MOSHINA BOR API')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
   const doc = SwaggerModule.createDocument(app, config);
   const out = join(__dirname, '..', '..', '..', 'docs', 'openapi.json');
   writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);

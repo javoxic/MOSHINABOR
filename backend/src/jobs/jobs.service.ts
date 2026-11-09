@@ -26,7 +26,11 @@ export class JobsService {
     private readonly users: UsersService,
   ) {}
 
-  private async withLock(name: string, ttlSeconds: number, fn: () => Promise<unknown>): Promise<void> {
+  private async withLock(
+    name: string,
+    ttlSeconds: number,
+    fn: () => Promise<unknown>,
+  ): Promise<void> {
     const key = `lock:job:${name}`;
     const token = randomUUID();
     const ok = await this.redis.set(key, token, 'EX', ttlSeconds, 'NX');
@@ -34,7 +38,10 @@ export class JobsService {
     try {
       await fn();
     } catch (err) {
-      this.logger.error({ job: name, error: (err as Error).message, stack: (err as Error).stack }, 'Scheduled job failed');
+      this.logger.error(
+        { job: name, error: (err as Error).message, stack: (err as Error).stack },
+        'Scheduled job failed',
+      );
     } finally {
       // Release only our own lock.
       await this.redis.eval(
@@ -70,11 +77,21 @@ export class JobsService {
   runCleanup(): Promise<void> {
     return this.withLock('cleanup', 3600, async () => {
       const now = Date.now();
-      const otp = await this.prisma.smsVerification.deleteMany({ where: { createdAt: { lt: new Date(now - 30 * 86_400_000) } } });
-      const tokens = await this.prisma.refreshToken.deleteMany({ where: { expiresAt: { lt: new Date(now - 7 * 86_400_000) } } });
-      const adminSessions = await this.prisma.adminSession.deleteMany({ where: { expiresAt: { lt: new Date(now - 7 * 86_400_000) } } });
-      const smsEvents = await this.prisma.smsProviderEvent.deleteMany({ where: { createdAt: { lt: new Date(now - 90 * 86_400_000) } } });
-      this.logger.log(`Cleanup: ${otp.count} OTP rows, ${tokens.count} refresh tokens, ${adminSessions.count} admin sessions, ${smsEvents.count} SMS events`);
+      const otp = await this.prisma.smsVerification.deleteMany({
+        where: { createdAt: { lt: new Date(now - 30 * 86_400_000) } },
+      });
+      const tokens = await this.prisma.refreshToken.deleteMany({
+        where: { expiresAt: { lt: new Date(now - 7 * 86_400_000) } },
+      });
+      const adminSessions = await this.prisma.adminSession.deleteMany({
+        where: { expiresAt: { lt: new Date(now - 7 * 86_400_000) } },
+      });
+      const smsEvents = await this.prisma.smsProviderEvent.deleteMany({
+        where: { createdAt: { lt: new Date(now - 90 * 86_400_000) } },
+      });
+      this.logger.log(
+        `Cleanup: ${otp.count} OTP rows, ${tokens.count} refresh tokens, ${adminSessions.count} admin sessions, ${smsEvents.count} SMS events`,
+      );
     });
   }
 }

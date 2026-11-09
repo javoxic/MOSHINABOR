@@ -6,23 +6,64 @@ import { serviceTypeAdminSchema, z } from '@moshina/validation';
 import { AdminApi, type AdminServiceType } from '@/api/endpoints';
 import { errorText } from '@/api/client';
 import { useAdminAuth } from '@/store/auth';
-import { Badge, Button, Card, ConfirmDialog, DataTable, ErrorState, Field, Grid, Input, Loading, Modal, Notice, PageHeader, StatCard, useToast } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  DataTable,
+  ErrorState,
+  Field,
+  Grid,
+  Input,
+  Loading,
+  Modal,
+  Notice,
+  PageHeader,
+  StatCard,
+  useToast,
+} from '@/components/ui';
 import { fmtMoney, fmtNumber } from '@/utils/format';
 
 type FormIn = z.input<typeof serviceTypeAdminSchema>;
 type FormOut = z.output<typeof serviceTypeAdminSchema>;
 
-function ServiceTypeForm({ initial, onClose }: { initial: AdminServiceType | null; onClose: () => void }) {
+function ServiceTypeForm({
+  initial,
+  onClose,
+}: {
+  initial: AdminServiceType | null;
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
   const toast = useToast((s) => s.show);
   const { register, handleSubmit, formState } = useForm<FormIn, unknown, FormOut>({
     resolver: zodResolver(serviceTypeAdminSchema),
     defaultValues: initial
-      ? { code: initial.code, nameUz: initial.nameUz, nameRu: initial.nameRu, nameEn: initial.nameEn, suggestedIntervalDays: initial.suggestedIntervalDays ?? '', suggestedIntervalKm: initial.suggestedIntervalKm ?? '', icon: initial.icon, isActive: initial.isActive }
-      : { code: '', nameUz: '', nameRu: '', nameEn: '', suggestedIntervalDays: '', suggestedIntervalKm: '', icon: 'wrench', isActive: true },
+      ? {
+          code: initial.code,
+          nameUz: initial.nameUz,
+          nameRu: initial.nameRu,
+          nameEn: initial.nameEn,
+          suggestedIntervalDays: initial.suggestedIntervalDays ?? '',
+          suggestedIntervalKm: initial.suggestedIntervalKm ?? '',
+          icon: initial.icon,
+          isActive: initial.isActive,
+        }
+      : {
+          code: '',
+          nameUz: '',
+          nameRu: '',
+          nameEn: '',
+          suggestedIntervalDays: '',
+          suggestedIntervalKm: '',
+          icon: 'wrench',
+          isActive: true,
+        },
   });
   const save = useMutation({
-    mutationFn: (v: FormOut) => (initial ? AdminApi.updateServiceType(initial.id, v) : AdminApi.createServiceType(v)),
+    mutationFn: (v: FormOut) =>
+      initial ? AdminApi.updateServiceType(initial.id, v) : AdminApi.createServiceType(v),
     onSuccess: async () => {
       toast(initial ? 'Category updated' : 'Category created');
       await qc.invalidateQueries({ queryKey: ['admin', 'service-types'] });
@@ -48,7 +89,12 @@ function ServiceTypeForm({ initial, onClose }: { initial: AdminServiceType | nul
       }
     >
       <form onSubmit={(e) => e.preventDefault()} aria-label="Service type">
-        <Field label="Code" htmlFor="st-code" error={err('code')} hint={initial ? 'The code cannot be changed' : 'UPPER_SNAKE_CASE, e.g. WHEEL_ALIGNMENT'}>
+        <Field
+          label="Code"
+          htmlFor="st-code"
+          error={err('code')}
+          hint={initial ? 'The code cannot be changed' : 'UPPER_SNAKE_CASE, e.g. WHEEL_ALIGNMENT'}
+        >
           <Input id="st-code" disabled={!!initial} invalid={!!err('code')} {...register('code')} />
         </Field>
         <Field label="Name (Uzbek)" htmlFor="st-uz" error={err('nameUz')}>
@@ -64,7 +110,11 @@ function ServiceTypeForm({ initial, onClose }: { initial: AdminServiceType | nul
           <Field label="Suggested interval (km)" htmlFor="st-km" error={err('suggestedIntervalKm')}>
             <Input id="st-km" type="number" min={1} {...register('suggestedIntervalKm')} />
           </Field>
-          <Field label="Suggested interval (days)" htmlFor="st-days" error={err('suggestedIntervalDays')}>
+          <Field
+            label="Suggested interval (days)"
+            htmlFor="st-days"
+            error={err('suggestedIntervalDays')}
+          >
             <Input id="st-days" type="number" min={1} {...register('suggestedIntervalDays')} />
           </Field>
         </Grid>
@@ -83,7 +133,10 @@ export default function MaintenancePage() {
   const [editing, setEditing] = useState<AdminServiceType | null | 'new'>(null);
   const [deleting, setDeleting] = useState<AdminServiceType | null>(null);
   const types = useQuery({ queryKey: ['admin', 'service-types'], queryFn: AdminApi.serviceTypes });
-  const stats = useQuery({ queryKey: ['admin', 'maintenance-stats'], queryFn: AdminApi.maintenanceStats });
+  const stats = useQuery({
+    queryKey: ['admin', 'maintenance-stats'],
+    queryFn: AdminApi.maintenanceStats,
+  });
   const del = useMutation({
     mutationFn: (id: string) => AdminApi.deleteServiceType(id),
     onSuccess: async () => {
@@ -96,21 +149,38 @@ export default function MaintenancePage() {
 
   return (
     <>
-      <PageHeader title="Maintenance" subtitle="Categories, suggested intervals and service statistics" actions={canManage ? <Button onClick={() => setEditing('new')}>New category</Button> : null} />
+      <PageHeader
+        title="Maintenance"
+        subtitle="Categories, suggested intervals and service statistics"
+        actions={canManage ? <Button onClick={() => setEditing('new')}>New category</Button> : null}
+      />
       {stats.data ? (
         <>
           <Grid>
             <StatCard label="Active schedules" value={fmtNumber(stats.data.schedules.total)} />
-            <StatCard label="Overdue by date" value={fmtNumber(stats.data.schedules.overdueByDate)} />
-            <StatCard label="Due within 14 days" value={fmtNumber(stats.data.schedules.dueSoonByDate)} />
-            <StatCard label="Total service spend" value={fmtMoney(stats.data.totalServiceCost)} hint={`Average ${fmtMoney(stats.data.averageServiceCost)}`} />
+            <StatCard
+              label="Overdue by date"
+              value={fmtNumber(stats.data.schedules.overdueByDate)}
+            />
+            <StatCard
+              label="Due within 14 days"
+              value={fmtNumber(stats.data.schedules.dueSoonByDate)}
+            />
+            <StatCard
+              label="Total service spend"
+              value={fmtMoney(stats.data.totalServiceCost)}
+              hint={`Average ${fmtMoney(stats.data.averageServiceCost)}`}
+            />
           </Grid>
           <div style={{ height: 16 }} />
         </>
       ) : stats.isError ? (
         <ErrorState message={errorText(stats.error)} onRetry={() => stats.refetch()} />
       ) : null}
-      <Notice tone="info">Suggested intervals are shown to users as general guidance only — never as manufacturer requirements. Users can always edit them.</Notice>
+      <Notice tone="info">
+        Suggested intervals are shown to users as general guidance only — never as manufacturer
+        requirements. Users can always edit them.
+      </Notice>
       <div style={{ height: 16 }} />
       <Card title="Categories">
         {types.isPending ? (
@@ -122,12 +192,40 @@ export default function MaintenancePage() {
             caption="Maintenance categories"
             rows={types.data}
             columns={[
-              { key: 'n', header: 'Name', render: (t) => <span>{t.nameEn}<br /><span className="muted" style={{ fontSize: 12 }}>{t.nameUz} · {t.nameRu}</span></span> },
+              {
+                key: 'n',
+                header: 'Name',
+                render: (t) => (
+                  <span>
+                    {t.nameEn}
+                    <br />
+                    <span className="muted" style={{ fontSize: 12 }}>
+                      {t.nameUz} · {t.nameRu}
+                    </span>
+                  </span>
+                ),
+              },
               { key: 'c', header: 'Code', render: (t) => <span className="mono">{t.code}</span> },
-              { key: 'km', header: 'Suggested km', render: (t) => (t.suggestedIntervalKm ? fmtNumber(t.suggestedIntervalKm) : '—') },
+              {
+                key: 'km',
+                header: 'Suggested km',
+                render: (t) => (t.suggestedIntervalKm ? fmtNumber(t.suggestedIntervalKm) : '—'),
+              },
               { key: 'd', header: 'Suggested days', render: (t) => t.suggestedIntervalDays ?? '—' },
-              { key: 'u', header: 'Usage', render: (t) => `${t.scheduleCount} schedules · ${t.recordCount} records` },
-              { key: 's', header: 'Status', render: (t) => <Badge tone={t.isActive ? 'success' : 'neutral'}>{t.isActive ? 'Active' : 'Inactive'}</Badge> },
+              {
+                key: 'u',
+                header: 'Usage',
+                render: (t) => `${t.scheduleCount} schedules · ${t.recordCount} records`,
+              },
+              {
+                key: 's',
+                header: 'Status',
+                render: (t) => (
+                  <Badge tone={t.isActive ? 'success' : 'neutral'}>
+                    {t.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                ),
+              },
               {
                 key: 'a',
                 header: '',
@@ -137,7 +235,17 @@ export default function MaintenancePage() {
                       <Button size="small" variant="secondary" onClick={() => setEditing(t)}>
                         Edit
                       </Button>
-                      <Button size="small" variant="ghost" onClick={() => setDeleting(t)} disabled={t.scheduleCount + t.recordCount > 0} title={t.scheduleCount + t.recordCount > 0 ? 'In use — deactivate instead' : undefined}>
+                      <Button
+                        size="small"
+                        variant="ghost"
+                        onClick={() => setDeleting(t)}
+                        disabled={t.scheduleCount + t.recordCount > 0}
+                        title={
+                          t.scheduleCount + t.recordCount > 0
+                            ? 'In use — deactivate instead'
+                            : undefined
+                        }
+                      >
                         Delete
                       </Button>
                     </div>
@@ -163,8 +271,22 @@ export default function MaintenancePage() {
           </Card>
         </>
       ) : null}
-      {editing ? <ServiceTypeForm initial={editing === 'new' ? null : editing} onClose={() => setEditing(null)} /> : null}
-      <ConfirmDialog open={!!deleting} title="Delete category" message={`Delete "${deleting?.nameEn}"? This cannot be undone.`} confirmLabel="Delete" danger loading={del.isPending} onCancel={() => setDeleting(null)} onConfirm={() => deleting && del.mutate(deleting.id)} />
+      {editing ? (
+        <ServiceTypeForm
+          initial={editing === 'new' ? null : editing}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={!!deleting}
+        title="Delete category"
+        message={`Delete "${deleting?.nameEn}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        danger
+        loading={del.isPending}
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => deleting && del.mutate(deleting.id)}
+      />
     </>
   );
 }

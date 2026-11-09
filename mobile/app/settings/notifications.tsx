@@ -34,7 +34,8 @@ export default function NotificationSettingsScreen() {
     onSuccess: (u) => setUser(u),
   });
   if (!user) return null;
-  const s = save.isPending && save.variables ? { ...user.settings, ...save.variables } : user.settings;
+  const s =
+    save.isPending && save.variables ? { ...user.settings, ...save.variables } : user.settings;
 
   const toggle = async (key: PrefKey, value: boolean) => {
     if (key === 'pushEnabled' && value) {
@@ -48,7 +49,15 @@ export default function NotificationSettingsScreen() {
     <ListRow
       title={t(`settings.${key}`)}
       subtitle={t(hintKey)}
-      right={<Switch value={s[key]} onValueChange={(v) => void toggle(key, v)} trackColor={{ true: colors.accent, false: colors.surfaceHigh }} thumbColor="#fff" accessibilityLabel={t(`settings.${key}`)} />}
+      right={
+        <Switch
+          value={s[key]}
+          onValueChange={(v) => void toggle(key, v)}
+          trackColor={{ true: colors.accent, false: colors.surfaceHigh }}
+          thumbColor="#fff"
+          accessibilityLabel={t(`settings.${key}`)}
+        />
+      }
     />
   );
 
@@ -57,7 +66,12 @@ export default function NotificationSettingsScreen() {
       {permissionDenied ? (
         <View style={{ marginBottom: spacing.md, gap: spacing.sm }}>
           <InlineNotice tone="warning" text={t('settings.pushPermissionDenied')} />
-          <Button title={t('settings.openSystemSettings')} variant="secondary" compact onPress={() => void Linking.openSettings()} />
+          <Button
+            title={t('settings.openSystemSettings')}
+            variant="secondary"
+            compact
+            onPress={() => void Linking.openSettings()}
+          />
         </View>
       ) : null}
       <Card style={{ padding: spacing.xs }}>

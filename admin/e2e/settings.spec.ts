@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { loginAs } from './helpers';
 
-test('settings: health reports SMS provider status honestly and settings are editable', async ({ page }) => {
+test('settings: health reports SMS provider status honestly and settings are editable', async ({
+  page,
+}) => {
   await loginAs(page, 'super');
   await page.getByRole('link', { name: 'Settings' }).click();
   const field = page.getByLabel('Upcoming reminder (days before due)');

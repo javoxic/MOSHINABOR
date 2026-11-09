@@ -16,7 +16,14 @@ interface AppConfig {
 export default function HelpScreen() {
   const { t } = useTranslation();
   const faq = t('help.faq', { returnObjects: true }) as { q: string; a: string }[];
-  const config = useQuery({ queryKey: ['app-config'], queryFn: () => api().get<AppConfig>('/app-config').then((r) => r.data), staleTime: 3600_000 });
+  const config = useQuery({
+    queryKey: ['app-config'],
+    queryFn: () =>
+      api()
+        .get<AppConfig>('/app-config')
+        .then((r) => r.data),
+    staleTime: 3600_000,
+  });
   const phone = config.data?.supportPhone;
   const email = config.data?.supportEmail;
   return (
@@ -31,9 +38,25 @@ export default function HelpScreen() {
       ))}
       <SectionHeader title={t('help.contact')} />
       <Card style={{ padding: spacing.xs }}>
-        {phone ? <ListRow icon="call-outline" title={t('help.contactPhone')} subtitle={phone} onPress={() => void Linking.openURL(`tel:${phone}`)} /> : null}
-        {email ? <ListRow icon="mail-outline" title={t('help.contactEmail')} subtitle={email} onPress={() => void Linking.openURL(`mailto:${email}`)} /> : null}
-        {!phone && !email ? <ListRow icon="information-circle-outline" title={t('help.contactUnavailable')} /> : null}
+        {phone ? (
+          <ListRow
+            icon="call-outline"
+            title={t('help.contactPhone')}
+            subtitle={phone}
+            onPress={() => void Linking.openURL(`tel:${phone}`)}
+          />
+        ) : null}
+        {email ? (
+          <ListRow
+            icon="mail-outline"
+            title={t('help.contactEmail')}
+            subtitle={email}
+            onPress={() => void Linking.openURL(`mailto:${email}`)}
+          />
+        ) : null}
+        {!phone && !email ? (
+          <ListRow icon="information-circle-outline" title={t('help.contactUnavailable')} />
+        ) : null}
       </Card>
     </Screen>
   );

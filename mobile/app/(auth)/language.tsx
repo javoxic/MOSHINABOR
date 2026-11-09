@@ -24,7 +24,11 @@ export default function LanguageScreen() {
   };
 
   return (
-    <Screen footer={<Button title={t('common.continue')} onPress={() => router.replace('/(auth)/phone')} />}>
+    <Screen
+      footer={
+        <Button title={t('common.continue')} onPress={() => router.replace('/(auth)/phone')} />
+      }
+    >
       <View style={styles.hero}>
         <Image source={appIcon} style={styles.logo} accessibilityIgnoresInvertColors />
         <Text variant="display" style={{ marginTop: spacing.xl }}>
@@ -55,7 +59,11 @@ export default function LanguageScreen() {
                   {o.native}
                 </Text>
               </View>
-              <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={22} color={active ? colors.accent : colors.textMuted} />
+              <Ionicons
+                name={active ? 'radio-button-on' : 'radio-button-off'}
+                size={22}
+                color={active ? colors.accent : colors.textMuted}
+              />
             </Pressable>
           );
         })}
@@ -67,6 +75,15 @@ export default function LanguageScreen() {
 const styles = StyleSheet.create({
   hero: { paddingTop: spacing.xxxl, paddingBottom: spacing.xxl },
   logo: { width: 72, height: 72, borderRadius: radius.lg },
-  option: { minHeight: 64, flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  option: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   optionActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
 });

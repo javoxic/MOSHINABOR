@@ -15,13 +15,16 @@ export class AuthController {
   @Public()
   @Post('otp/request')
   @HttpCode(200)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // Keyed by IP (anonymous); generous for carrier NAT — per-phone/per-IP hourly limits in OtpService are the abuse controls.
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Send an SMS verification code',
     description:
       'Normalizes the phone to E.164 and sends a 6-digit code through the configured SMS provider. The response never contains the code and is identical for new and existing accounts.',
   })
-  @ApiTooManyRequestsResponse({ description: 'Resend cooldown or per-phone/per-IP limit reached (details.retryAfterSeconds)' })
+  @ApiTooManyRequestsResponse({
+    description: 'Resend cooldown or per-phone/per-IP limit reached (details.retryAfterSeconds)',
+  })
   request(@Body() dto: OtpRequestDto, @Req() req: Request) {
     return this.auth.requestCode(dto.phone, clientIp(req), dto.language);
   }
@@ -29,17 +32,27 @@ export class AuthController {
   @Public()
   @Post('otp/verify')
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  @ApiOperation({ summary: 'Verify the SMS code and obtain access/refresh tokens (creates the account on first sign-in)' })
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @ApiOperation({
+    summary:
+      'Verify the SMS code and obtain access/refresh tokens (creates the account on first sign-in)',
+  })
   verify(@Body() dto: OtpVerifyDto, @Req() req: Request) {
-    return this.auth.verifyCode(dto.phone, dto.code, { ip: clientIp(req), userAgent: userAgent(req) }, dto.language);
+    return this.auth.verifyCode(
+      dto.phone,
+      dto.code,
+      { ip: clientIp(req), userAgent: userAgent(req) },
+      dto.language,
+    );
   }
 
   @Public()
   @Post('refresh')
   @HttpCode(200)
-  @Throttle({ default: { limit: 30, ttl: 60_000 } })
-  @ApiOperation({ summary: 'Rotate the refresh token. Reusing an old refresh token revokes the whole session.' })
+  @Throttle({ default: { limit: 600, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Rotate the refresh token. Reusing an old refresh token revokes the whole session.',
+  })
   refresh(@Body() dto: RefreshDto, @Req() req: Request) {
     return this.auth.refresh(dto.refreshToken, { ip: clientIp(req), userAgent: userAgent(req) });
   }

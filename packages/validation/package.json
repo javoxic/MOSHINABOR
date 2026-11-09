@@ -24,7 +24,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/src"],
+    "roots": [
+      "<rootDir>/src"
+    ],
     "moduleNameMapper": {
       "^@moshina/shared$": "<rootDir>/../shared/src/index.ts"
     }

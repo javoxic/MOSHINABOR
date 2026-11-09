@@ -8,13 +8,20 @@ type Tree = { [k: string]: unknown };
 function mergeDeep(a: object, b: object): Tree {
   const out: Tree = { ...(a as Tree) };
   for (const [k, v] of Object.entries(b)) {
-    out[k] = v && typeof v === 'object' && !Array.isArray(v) && typeof out[k] === 'object' ? mergeDeep(out[k] as object, v as object) : v;
+    out[k] =
+      v && typeof v === 'object' && !Array.isArray(v) && typeof out[k] === 'object'
+        ? mergeDeep(out[k] as object, v as object)
+        : v;
   }
   return out;
 }
 
 void i18n.use(initReactI18next).init({
-  resources: { uz: { translation: uz }, ru: { translation: mergeDeep(ru, ruPluralForms) }, en: { translation: en } },
+  resources: {
+    uz: { translation: uz },
+    ru: { translation: mergeDeep(ru, ruPluralForms) },
+    en: { translation: en },
+  },
   lng: 'uz',
   fallbackLng: 'uz',
   supportedLngs: ['uz', 'ru', 'en'],

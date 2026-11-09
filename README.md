@@ -4,13 +4,13 @@ Automotive maintenance management platform for vehicle owners in Uzbekistan: veh
 schedules with date/mileage reminders, service history, expenses (UZS) and push notifications —
 with a web administration dashboard.
 
-| Part | Stack | Path |
-|---|---|---|
-| Mobile app (iOS / Android) | Expo SDK 54, React Native 0.81, Expo Router, TanStack Query, Zustand, RHF + Zod | [`mobile/`](mobile) |
-| Web admin | React 19, Vite 7, React Router 7, TanStack Query, Recharts, CSS Modules | [`admin/`](admin) |
-| API + worker | NestJS 11, Prisma 6, PostgreSQL 16, Redis 7, BullMQ, Swagger | [`backend/`](backend) |
-| Shared code | constants, phone normalization, maintenance engine, Zod schemas, API types | [`packages/`](packages) |
-| Infrastructure | Dockerfiles, nginx, Docker Compose, backups, CI | [`infrastructure/`](infrastructure), [`.github/`](.github) |
+| Part                       | Stack                                                                           | Path                                                       |
+| -------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Mobile app (iOS / Android) | Expo SDK 54, React Native 0.81, Expo Router, TanStack Query, Zustand, RHF + Zod | [`mobile/`](mobile)                                        |
+| Web admin                  | React 19, Vite 7, React Router 7, TanStack Query, Recharts, CSS Modules         | [`admin/`](admin)                                          |
+| API + worker               | NestJS 11, Prisma 6, PostgreSQL 16, Redis 7, BullMQ, Swagger                    | [`backend/`](backend)                                      |
+| Shared code                | constants, phone normalization, maintenance engine, Zod schemas, API types      | [`packages/`](packages)                                    |
+| Infrastructure             | Dockerfiles, nginx, Docker Compose, backups, CI                                 | [`infrastructure/`](infrastructure), [`.github/`](.github) |
 
 Languages: Uzbek (Latin, default), Russian, English · Currency: UZS · Time zone: Asia/Tashkent · Dark theme only.
 
@@ -22,7 +22,7 @@ but cannot be verified without credentials:
 
 1. **SMS provider credentials** (Eskiz.uz for +998 numbers; optional Twilio for international numbers)
    and an Eskiz-approved OTP message template. Until configured, sign-in returns
-   `503 SMS_NOT_CONFIGURED` and the admin *System health* page shows the SMS provider as not configured.
+   `503 SMS_NOT_CONFIGURED` and the admin _System health_ page shows the SMS provider as not configured.
 2. **Expo / EAS project + FCM/APNs credentials** for push notifications and store builds.
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#external-services-and-credentials).
@@ -63,6 +63,10 @@ log instead of being sent.
 - [Security](docs/SECURITY.md)
 - [Deployment, mobile builds & production checklist](docs/DEPLOYMENT.md)
 - [Testing report](docs/TESTING.md)
+- **External-services onboarding:** [operator handover](docs/OPERATOR_HANDOVER.md) · [VPS setup](docs/VPS_SETUP_GUIDE.md) · [SMS (Eskiz)](docs/SMS_PROVIDER_SETUP.md) · [mobile builds & push](docs/MOBILE_PUSH_SETUP.md) · [backups & monitoring](docs/BACKUP_MONITORING_SETUP.md)
+- **First staging deployment:** [runbook](docs/DEPLOYMENT_RUNBOOK.md) · [external dependencies](docs/EXTERNAL_DEPENDENCIES.md) · [go-live checklist (GO/NO-GO)](docs/GO_LIVE_CHECKLIST.md)
+- **Controlled pilot:** [staging deployment](docs/STAGING_DEPLOYMENT.md) · [pilot test plan](docs/PILOT_TEST_PLAN.md) · [release notes](docs/RELEASE_NOTES.md) · [rollback plan](docs/ROLLBACK_PLAN.md)
+- **Audit (2026-11-09):** [production audit](docs/PRODUCTION_AUDIT.md) · [security review](docs/SECURITY_REVIEW.md) · [remaining risks](docs/REMAINING_RISKS.md) · [launch checklist](docs/PRODUCTION_CHECKLIST.md)
 
 ## Common commands
 

@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Patch,
+  Post,
+  Put,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/auth.decorators';
@@ -26,16 +37,24 @@ export class MeController {
 
   @Put('settings')
   @ApiOperation({ summary: 'Update language and notification preferences' })
-  settings(@CurrentUser() user: AuthUser, @Body() dto: UpdateSettingsDto): Promise<UserProfileView> {
+  settings(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateSettingsDto,
+  ): Promise<UserProfileView> {
     return this.users.updateSettings(user.id, dto);
   }
 
   @Post('avatar')
-  @ApiOperation({ summary: 'Upload profile photo (JPEG/PNG/WebP/HEIC, max 8 MB)' })
+  @ApiOperation({ summary: 'Upload profile photo (JPEG/PNG/WebP, max 8 MB)' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiBody({
+    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
+  })
   @UseInterceptors(FileInterceptor('file', imageUploadOptions))
-  avatar(@CurrentUser() user: AuthUser, @UploadedFile() file: Express.Multer.File | undefined): Promise<UserProfileView> {
+  avatar(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ): Promise<UserProfileView> {
     return this.users.setAvatar(user.id, file);
   }
 
@@ -47,7 +66,9 @@ export class MeController {
 
   @Post('deletion-request')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Request account deletion (data is permanently deleted after the grace period)' })
+  @ApiOperation({
+    summary: 'Request account deletion (data is permanently deleted after the grace period)',
+  })
   requestDeletion(@CurrentUser() user: AuthUser): Promise<UserProfileView> {
     return this.users.requestDeletion(user.id);
   }

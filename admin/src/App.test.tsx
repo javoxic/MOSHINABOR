@@ -15,7 +15,13 @@ const analyst: AdminProfile = {
   email: 'analyst@moshinabor.test',
   fullName: 'Ana Lyst',
   role: { id: 'r1', code: 'ANALYST', name: 'Analyst' },
-  permissions: ['dashboard.view', 'maintenance.view', 'notifications.view', 'users.view', 'vehicles.view'],
+  permissions: [
+    'dashboard.view',
+    'maintenance.view',
+    'notifications.view',
+    'users.view',
+    'vehicles.view',
+  ],
 };
 
 function renderAt(path: string) {
@@ -37,7 +43,11 @@ afterEach(() => {
 describe('login', () => {
   it('validates input and shows server errors', async () => {
     useAdminAuth.setState({ status: 'anonymous' });
-    const spy = vi.spyOn(client, 'login').mockRejectedValue(new client.ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password'));
+    const spy = vi
+      .spyOn(client, 'login')
+      .mockRejectedValue(
+        new client.ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password'),
+      );
     renderAt('/login');
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(await screen.findByText('Enter a valid email')).toBeInTheDocument();
@@ -59,8 +69,19 @@ describe('login', () => {
 describe('role-based navigation', () => {
   beforeEach(() => {
     useAdminAuth.setState({ status: 'authenticated', accessToken: 't', admin: analyst });
+    vi.spyOn(AdminApi, 'appConfig').mockResolvedValue({
+      deploymentEnvironment: 'staging',
+      maintenanceMode: true,
+    });
     vi.spyOn(AdminApi, 'dashboard').mockResolvedValue({
-      totals: { users: 12, activeUsers30d: 6, vehicles: 15, maintenanceRecords: 40, schedules: 22, notificationsSent30d: 9 },
+      totals: {
+        users: 12,
+        activeUsers30d: 6,
+        vehicles: 15,
+        maintenanceRecords: 40,
+        schedules: 22,
+        notificationsSent30d: 9,
+      },
       registrationsByDay: [],
       recordsByMonth: [],
       notificationsByStatus: [],
@@ -80,6 +101,12 @@ describe('role-based navigation', () => {
     expect(nav).not.toHaveTextContent('Settings');
   });
 
+  it('shows the staging and maintenance banners so environments cannot be confused', async () => {
+    renderAt('/');
+    expect(await screen.findByText(/STAGING ENVIRONMENT/)).toBeInTheDocument();
+    expect(screen.getByText(/Maintenance mode is ON/)).toBeInTheDocument();
+  });
+
   it('blocks direct navigation to forbidden pages', async () => {
     renderAt('/admins');
     expect(await screen.findByText('Access denied')).toBeInTheDocument();
@@ -87,7 +114,18 @@ describe('role-based navigation', () => {
 
   it('renders users with masked phones and filters', async () => {
     const users = vi.spyOn(AdminApi, 'users').mockResolvedValue({
-      items: [{ id: 'u1', phone: '+99890*****67', fullName: 'Aziz Karimov', status: 'ACTIVE', language: 'uz', vehicleCount: 2, createdAt: '2026-01-01T00:00:00Z', lastActiveAt: null }],
+      items: [
+        {
+          id: 'u1',
+          phone: '+99890*****67',
+          fullName: 'Aziz Karimov',
+          status: 'ACTIVE',
+          language: 'uz',
+          vehicleCount: 2,
+          createdAt: '2026-01-01T00:00:00Z',
+          lastActiveAt: null,
+        },
+      ],
       total: 1,
       page: 1,
       pageSize: 20,
@@ -97,7 +135,11 @@ describe('role-based navigation', () => {
     expect(screen.getByText('+99890*****67')).toBeInTheDocument();
     expect(screen.getByText('Phone numbers are masked for your role.')).toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText('Status'), 'RESTRICTED');
-    await waitFor(() => expect(users).toHaveBeenLastCalledWith(expect.objectContaining({ status: 'RESTRICTED', page: 1 })));
+    await waitFor(() =>
+      expect(users).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: 'RESTRICTED', page: 1 }),
+      ),
+    );
   });
 });
 
@@ -113,7 +155,14 @@ describe('table primitives', () => {
 
   it('renders rows and handles clicks', async () => {
     const onRow = vi.fn();
-    render(<DataTable caption="t" rows={[{ id: '1', name: 'A' }]} columns={[{ key: 'n', header: 'Name', render: (r) => r.name }]} onRowClick={onRow} />);
+    render(
+      <DataTable
+        caption="t"
+        rows={[{ id: '1', name: 'A' }]}
+        columns={[{ key: 'n', header: 'Name', render: (r) => r.name }]}
+        onRowClick={onRow}
+      />,
+    );
     await userEvent.click(screen.getByText('A'));
     expect(onRow).toHaveBeenCalledWith({ id: '1', name: 'A' });
   });

@@ -33,7 +33,12 @@ export function toApiError(err: unknown): ApiError {
   if (err instanceof AxiosError) {
     if (err.response) {
       const body = err.response.data as Partial<ApiErrorBody> | undefined;
-      return new ApiError(err.response.status, body?.code ?? `HTTP_${err.response.status}`, body?.message ?? err.message, body?.details);
+      return new ApiError(
+        err.response.status,
+        body?.code ?? `HTTP_${err.response.status}`,
+        body?.message ?? err.message,
+        body?.details,
+      );
     }
     if (err.code === 'ECONNABORTED') return new ApiError(0, 'TIMEOUT', 'Request timed out');
     return new ApiError(0, 'NETWORK', 'Network error');
@@ -62,16 +67,27 @@ const KNOWN = new Set([
   'REFRESH_TOKEN_INVALID',
   'REFRESH_TOKEN_REUSED',
   'UNAUTHORIZED',
+  'MAINTENANCE_MODE',
+  'PILOT_ACCESS_ONLY',
 ]);
 
 /** Human-readable, translated message for any error. */
 export function errorMessage(t: TFunction, err: unknown): string {
   const e = toApiError(err);
-  if (e.code === 'OTP_INVALID' && typeof (e.details as { attemptsRemaining?: number })?.attemptsRemaining === 'number') {
-    return t('errors.OTP_INVALID_REMAINING', { count: (e.details as { attemptsRemaining: number }).attemptsRemaining });
+  if (
+    e.code === 'OTP_INVALID' &&
+    typeof (e.details as { attemptsRemaining?: number })?.attemptsRemaining === 'number'
+  ) {
+    return t('errors.OTP_INVALID_REMAINING', {
+      count: (e.details as { attemptsRemaining: number }).attemptsRemaining,
+    });
   }
   if ((e.code === 'OTP_RESEND_COOLDOWN' || e.code === 'RATE_LIMITED') && e.retryAfterSeconds) {
     return t('errors.retryAfter', { seconds: e.retryAfterSeconds });
+  }
+  if (e.code === 'MAINTENANCE_MODE') {
+    const custom = (e.details as { customMessage?: string | null } | undefined)?.customMessage;
+    return custom || t('errors.MAINTENANCE_MODE');
   }
   if (KNOWN.has(e.code)) return t(`errors.${e.code}`);
   if (e.code === 'VALIDATION_FAILED') return t('errors.VALIDATION_FAILED');

@@ -23,15 +23,23 @@ export class IdempotencyInterceptor implements NestInterceptor {
     const res = context.switchToHttp().getResponse<Response>();
     const key = req.headers['idempotency-key'];
     if (req.method !== 'POST' || typeof key !== 'string' || !req.user) return next.handle();
-    if (!/^[A-Za-z0-9_-]{8,64}$/.test(key)) throw AppException.validation('Invalid Idempotency-Key header');
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(key))
+      throw AppException.validation('Invalid Idempotency-Key header');
 
     const cacheKey = `idem:${req.user.id}:${req.path}:${key}`;
-    return from(this.redis.set(cacheKey, JSON.stringify({ state: 'pending' }), 'EX', TTL_SECONDS, 'NX')).pipe(
+    return from(
+      this.redis.set(cacheKey, JSON.stringify({ state: 'pending' }), 'EX', TTL_SECONDS, 'NX'),
+    ).pipe(
       switchMap((acquired) => {
         if (acquired) {
           return next.handle().pipe(
             tap((body: unknown) => {
-              void this.redis.set(cacheKey, JSON.stringify({ state: 'done', status: res.statusCode, body }), 'EX', TTL_SECONDS);
+              void this.redis.set(
+                cacheKey,
+                JSON.stringify({ state: 'done', status: res.statusCode, body }),
+                'EX',
+                TTL_SECONDS,
+              );
             }),
             catchError((err: unknown) => {
               void this.redis.del(cacheKey);
@@ -41,9 +49,13 @@ export class IdempotencyInterceptor implements NestInterceptor {
         }
         return from(this.redis.get(cacheKey)).pipe(
           switchMap((raw) => {
-            const cached = raw ? (JSON.parse(raw) as { state: string; status?: number; body?: unknown }) : null;
+            const cached = raw
+              ? (JSON.parse(raw) as { state: string; status?: number; body?: unknown })
+              : null;
             if (!cached || cached.state !== 'done') {
-              throw AppException.conflict('A request with this Idempotency-Key is still being processed');
+              throw AppException.conflict(
+                'A request with this Idempotency-Key is still being processed',
+              );
             }
             res.status(cached.status ?? 200);
             res.setHeader('Idempotent-Replay', 'true');

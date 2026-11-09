@@ -61,8 +61,14 @@ export class UsersService {
     };
   }
 
-  async findOrCreateByPhone(phone: string, language: Language): Promise<{ user: User & { settings: UserSettings | null }; isNew: boolean }> {
-    const existing = await this.prisma.user.findUnique({ where: { phone }, include: { settings: true } });
+  async findOrCreateByPhone(
+    phone: string,
+    language: Language,
+  ): Promise<{ user: User & { settings: UserSettings | null }; isNew: boolean }> {
+    const existing = await this.prisma.user.findUnique({
+      where: { phone },
+      include: { settings: true },
+    });
     if (existing) return { user: existing, isNew: false };
     try {
       const created = await this.prisma.user.create({
@@ -72,14 +78,20 @@ export class UsersService {
       return { user: created, isNew: true };
     } catch (err) {
       // Parallel verification for the same phone: fall back to the row created by the other request.
-      const again = await this.prisma.user.findUnique({ where: { phone }, include: { settings: true } });
+      const again = await this.prisma.user.findUnique({
+        where: { phone },
+        include: { settings: true },
+      });
       if (again) return { user: again, isNew: false };
       throw err;
     }
   }
 
   async getProfile(userId: string): Promise<UserProfileView> {
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { settings: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { settings: true },
+    });
     if (!user) throw AppException.notFound('User');
     return this.toView(user);
   }
@@ -98,7 +110,10 @@ export class UsersService {
     return this.getProfile(userId);
   }
 
-  async setAvatar(userId: string, upload: Express.Multer.File | undefined): Promise<UserProfileView> {
+  async setAvatar(
+    userId: string,
+    upload: Express.Multer.File | undefined,
+  ): Promise<UserProfileView> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     const file = await this.files.storeImage(userId, 'AVATAR', upload);
     await this.prisma.user.update({ where: { id: userId }, data: { avatarFileId: file.id } });
@@ -119,16 +134,24 @@ export class UsersService {
     const scheduled = new Date(now.getTime() + this.env.ACCOUNT_DELETION_GRACE_DAYS * 86_400_000);
     await this.prisma.user.update({
       where: { id: userId },
-      data: { status: 'DELETION_PENDING', deletionRequestedAt: now, deletionScheduledAt: scheduled },
+      data: {
+        status: 'DELETION_PENDING',
+        deletionRequestedAt: now,
+        deletionScheduledAt: scheduled,
+      },
     });
     // Stop reminders immediately.
-    await this.prisma.pushDevice.updateMany({ where: { userId, disabledAt: null }, data: { disabledAt: now } });
+    await this.prisma.pushDevice.updateMany({
+      where: { userId, disabledAt: null },
+      data: { disabledAt: now },
+    });
     return this.getProfile(userId);
   }
 
   async cancelDeletion(userId: string): Promise<UserProfileView> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    if (user.status !== 'DELETION_PENDING') throw AppException.conflict('No pending deletion request');
+    if (user.status !== 'DELETION_PENDING')
+      throw AppException.conflict('No pending deletion request');
     await this.prisma.user.update({
       where: { id: userId },
       data: { status: 'ACTIVE', deletionRequestedAt: null, deletionScheduledAt: null },
@@ -145,7 +168,10 @@ export class UsersService {
     });
     let purged = 0;
     for (const { id } of due) {
-      const files = await this.prisma.storedFile.findMany({ where: { ownerUserId: id }, select: { storageKey: true } });
+      const files = await this.prisma.storedFile.findMany({
+        where: { ownerUserId: id },
+        select: { storageKey: true },
+      });
       await this.tokens.revokeAllForUser(id, 'deleted');
       // Cascading foreign keys remove vehicles, schedules, records, expenses, notifications, devices and files.
       await this.prisma.user.delete({ where: { id } });

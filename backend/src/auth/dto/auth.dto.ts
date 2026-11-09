@@ -3,7 +3,10 @@ import { IsIn, IsOptional, IsString, Length, Matches, MaxLength } from 'class-va
 import { LANGUAGES, type Language } from '@moshina/shared';
 
 export class OtpRequestDto {
-  @ApiProperty({ example: '+998901234567', description: 'Phone in any common format; normalized to E.164' })
+  @ApiProperty({
+    example: '+998901234567',
+    description: 'Phone in any common format; normalized to E.164',
+  })
   @IsString()
   @Length(5, 25)
   phone: string;
@@ -24,7 +27,10 @@ export class OtpVerifyDto {
   @Matches(/^\d{6}$/, { message: 'code must be 6 digits' })
   code: string;
 
-  @ApiPropertyOptional({ enum: LANGUAGES, description: 'Preferred language stored for new accounts' })
+  @ApiPropertyOptional({
+    enum: LANGUAGES,
+    description: 'Preferred language stored for new accounts',
+  })
   @IsOptional()
   @IsIn(LANGUAGES)
   language?: Language;

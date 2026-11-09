@@ -1,12 +1,16 @@
 # Security
 
+> The independent audit of 2026-11-09 is in [SECURITY_REVIEW.md](SECURITY_REVIEW.md),
+> [PRODUCTION_AUDIT.md](PRODUCTION_AUDIT.md) and [REMAINING_RISKS.md](REMAINING_RISKS.md).
+
 ## Controls implemented
 
 ### Authentication
+
 - [x] SMS OTP: 6 digits from `crypto.randomInt`, stored as `HMAC-SHA256(OTP_PEPPER, phone:code)`, 5-minute
       expiry, max 5 attempts counted atomically (`UPDATE … WHERE attempts < max`), single use, previous codes
       invalidated on resend, constant-time comparison.
-- [x] Abuse protection: 60 s resend cooldown, 5/hour and 10/day per phone, 20/hour per IP, Redis lock per
+- [x] Abuse protection: 60 s resend cooldown, 5/hour and 10/day per phone, 60/hour per IP (carrier-NAT aware), Redis lock per
       phone against races, endpoint throttling (Redis-backed, shared by all API instances).
 - [x] No enumeration: identical OTP request responses for new and existing numbers.
 - [x] OTP never returned by the API nor logged (pino redaction of `*.code`, SMS text never logged; the
@@ -20,6 +24,7 @@
       endpoints, access token in memory only, absolute 12 h session lifetime.
 
 ### Authorization
+
 - [x] Global fail-closed guard: every route needs a user token unless explicitly public; admin controllers
       use `AdminGuard` which reloads admin, role and permissions from the DB on every request.
 - [x] Route-enumeration test ensures every non-public route returns 401 anonymously.
@@ -31,6 +36,7 @@
       settings, templates, announcements, category changes, manual reminder runs.
 
 ### Input / output
+
 - [x] DTO validation with whitelist + `forbidNonWhitelisted`; Zod validation on clients.
 - [x] Prisma parameterized queries; raw SQL only via tagged templates.
 - [x] Uploads: 8 MB limit, magic-byte type detection, decoding/re-encoding with sharp (EXIF/GPS stripped,
@@ -40,12 +46,14 @@
 - [x] JSON body limit 256 KB.
 
 ### Transport / headers
+
 - [x] helmet (HSTS, nosniff, frameguard, etc.), `x-powered-by` disabled; admin nginx sets a strict CSP
       (`default-src 'self'`, `frame-ancestors 'none'`).
 - [x] CORS allow-list (no wildcard in production, credentials only for listed origins).
 - [x] `trust proxy` configured explicitly (`TRUST_PROXY`) so rate limits use the real client IP.
 
 ### Secrets and configuration
+
 - [x] All secrets from environment; startup fails on missing/short/duplicate secrets; production refuses
       the dev SMS logger, wildcard CORS, and a missing SMS callback secret.
 - [x] SMS delivery webhooks authenticated with a constant-time-compared secret; secret redacted from logs.
@@ -53,17 +61,19 @@
 - [x] Containers run as non-root; images contain no build tooling or source maps.
 
 ### Privacy
+
 - [x] Account deletion request with 30-day grace period, then hard delete of all user data and files.
+- [x] Backups encrypted with GnuPG AES-256 (fail-closed without a passphrase); mobile purges cached data and images on sign-out.
 - [x] Push disabled immediately on deletion request; data minimization in admin views.
 
 ## Accepted residual risks (dependency audit)
 
 `pnpm audit --prod` after upgrades/overrides reports:
 
-| Package | Severity | Where | Assessment |
-|---|---|---|---|
-| `image-size` < 2.0.3 | high | `expo > @expo/metro` (build-time) | Only parses the project's own image assets during bundling; not shipped to devices or servers. The patched 2.x line is API-incompatible with Metro. Re-evaluate when Expo updates. |
-| `deepmerge` 4.x | low | `expo > @expo/config` (build-time) | No patched version published; build-time config merge of trusted files. |
+| Package              | Severity | Where                              | Assessment                                                                                                                                                                         |
+| -------------------- | -------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `image-size` < 2.0.3 | high     | `expo > @expo/metro` (build-time)  | Only parses the project's own image assets during bundling; not shipped to devices or servers. The patched 2.x line is API-incompatible with Metro. Re-evaluate when Expo updates. |
+| `deepmerge` 4.x      | low      | `expo > @expo/config` (build-time) | No patched version published; build-time config merge of trusted files.                                                                                                            |
 
 Resolved: sharp (libvips/libheif/librsvg CVEs, upgraded to 0.35.5), zod (memory exhaustion, upgraded to
 4.6), multer, postcss, decode-uri-component, glob, minimatch, deepmerge-ts (pnpm overrides).

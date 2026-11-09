@@ -18,7 +18,9 @@ const Audit = lazy(() => import('@/pages/Audit'));
 const Settings = lazy(() => import('@/pages/Settings'));
 const Account = lazy(() => import('@/pages/Account'));
 
-const guard = (permission: AdminPermission, el: ReactNode) => <RequirePermission permission={permission}>{el}</RequirePermission>;
+const guard = (permission: AdminPermission, el: ReactNode) => (
+  <RequirePermission permission={permission}>{el}</RequirePermission>
+);
 
 export function AppRoutes() {
   return (
@@ -32,7 +34,10 @@ export function AppRoutes() {
             </RequireAuth>
           }
         >
-          <Route index element={<HomeRedirect>{guard('dashboard.view', <Dashboard />)}</HomeRedirect>} />
+          <Route
+            index
+            element={<HomeRedirect>{guard('dashboard.view', <Dashboard />)}</HomeRedirect>}
+          />
           <Route path="users" element={guard('users.view', <Users />)} />
           <Route path="users/:id" element={guard('users.view', <UserDetail />)} />
           <Route path="vehicles" element={guard('vehicles.view', <Vehicles />)} />
@@ -43,7 +48,14 @@ export function AppRoutes() {
           <Route path="audit" element={guard('audit.view', <Audit />)} />
           <Route path="settings" element={guard('settings.view', <Settings />)} />
           <Route path="account" element={<Account />} />
-          <Route path="*" element={<div style={{ padding: 48, textAlign: 'center' }}><h1>Page not found</h1></div>} />
+          <Route
+            path="*"
+            element={
+              <div style={{ padding: 48, textAlign: 'center' }}>
+                <h1>Page not found</h1>
+              </div>
+            }
+          />
         </Route>
       </Routes>
     </Suspense>

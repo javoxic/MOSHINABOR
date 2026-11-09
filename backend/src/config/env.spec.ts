@@ -25,7 +25,35 @@ describe('environment validation', () => {
 
   it('requires the {code} placeholder in custom OTP templates', () => {
     expect(() => loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Ваш код' })).toThrow(/\{code\}/);
-    expect(loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Код: {code}' }).SMS_OTP_TEMPLATE_RU).toBe('Код: {code}');
+    expect(loadEnv({ ...base, SMS_OTP_TEMPLATE_RU: 'Код: {code}' }).SMS_OTP_TEMPLATE_RU).toBe(
+      'Код: {code}',
+    );
+  });
+
+  it('disables Swagger by default only in production', () => {
+    expect(loadEnv(base).SWAGGER_ENABLED).toBe(true);
+    expect(
+      loadEnv({ ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30) })
+        .SWAGGER_ENABLED,
+    ).toBe(false);
+    expect(
+      loadEnv({
+        ...base,
+        NODE_ENV: 'production',
+        SMS_CALLBACK_SECRET: 'x'.repeat(30),
+        SWAGGER_ENABLED: 'true',
+      }).SWAGGER_ENABLED,
+    ).toBe(true);
+  });
+
+  it('refuses test/placeholder secrets in production', () => {
+    const prod = { ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30) };
+    expect(() =>
+      loadEnv({ ...prod, JWT_ACCESS_SECRET: 'test-access-secret-0123456789abcdefghijklmnop' }),
+    ).toThrow(/test\/placeholder/);
+    expect(() =>
+      loadEnv({ ...prod, OTP_PEPPER: 'CHANGE_ME_CHANGE_ME_CHANGE_ME_CHANGE_ME' }),
+    ).toThrow(/test\/placeholder/);
   });
 
   it('rejects short secrets', () => {
@@ -36,7 +64,9 @@ describe('environment validation', () => {
     const prod = { ...base, NODE_ENV: 'production', SMS_CALLBACK_SECRET: 'x'.repeat(30) };
     expect(() => loadEnv({ ...prod, SMS_PROVIDER: 'log' })).toThrow(/not allowed in production/);
     expect(() => loadEnv({ ...prod, CORS_ORIGINS: '*' })).toThrow(/Wildcard/);
-    expect(() => loadEnv({ ...prod, JWT_ADMIN_SECRET: base.JWT_ACCESS_SECRET })).toThrow(/must differ/);
+    expect(() => loadEnv({ ...prod, JWT_ADMIN_SECRET: base.JWT_ACCESS_SECRET })).toThrow(
+      /must differ/,
+    );
     expect(() => loadEnv({ ...base, NODE_ENV: 'production' })).toThrow(/SMS_CALLBACK_SECRET/);
     expect(() => loadEnv(prod)).not.toThrow();
   });

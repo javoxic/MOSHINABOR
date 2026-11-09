@@ -24,7 +24,10 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (context.getType() !== 'http') return true;
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (isPublic) return true;
     const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
 
@@ -49,9 +52,16 @@ export class JwtAuthGuard implements CanActivate {
       throw AppException.unauthorized('Session is no longer valid');
     }
     if (user.status === 'RESTRICTED') {
-      throw new AppException(ERROR_CODES.ACCOUNT_RESTRICTED, HttpStatus.FORBIDDEN, 'Your account has been restricted. Contact support.');
+      throw new AppException(
+        ERROR_CODES.ACCOUNT_RESTRICTED,
+        HttpStatus.FORBIDDEN,
+        'Your account has been restricted. Contact support.',
+      );
     }
-    if (!user.lastActiveAt || now.getTime() - user.lastActiveAt.getTime() > ACTIVITY_UPDATE_INTERVAL_MS) {
+    if (
+      !user.lastActiveAt ||
+      now.getTime() - user.lastActiveAt.getTime() > ACTIVITY_UPDATE_INTERVAL_MS
+    ) {
       await this.prisma.user.update({ where: { id: payload.sub }, data: { lastActiveAt: now } });
     }
     req.user = { id: payload.sub, sessionFamilyId: payload.fam };

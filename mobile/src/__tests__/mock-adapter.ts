@@ -1,4 +1,9 @@
-import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import {
+  AxiosError,
+  type AxiosAdapter,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
 type Handler = (cfg: InternalAxiosRequestConfig) => [number, unknown];
 
@@ -30,8 +35,21 @@ export default class MockAdapter {
     } catch (err) {
       throw new AxiosError((err as Error).message, 'ERR_NETWORK', config);
     }
-    const response: AxiosResponse = { status, statusText: String(status), data, headers: {}, config };
-    if (status >= 400) throw new AxiosError(`Request failed with status ${status}`, 'ERR_BAD_RESPONSE', config, null, response);
+    const response: AxiosResponse = {
+      status,
+      statusText: String(status),
+      data,
+      headers: {},
+      config,
+    };
+    if (status >= 400)
+      throw new AxiosError(
+        `Request failed with status ${status}`,
+        'ERR_BAD_RESPONSE',
+        config,
+        null,
+        response,
+      );
     return response;
   };
 }

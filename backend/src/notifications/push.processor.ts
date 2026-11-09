@@ -16,7 +16,9 @@ export class PushProcessor extends WorkerHost {
     try {
       await this.push.sendForNotification(job.data.notificationId);
     } catch (err) {
-      this.logger.warn(`Push job ${job.id} attempt ${job.attemptsMade + 1} failed: ${(err as Error).message}`);
+      this.logger.warn(
+        `Push job ${job.id} attempt ${job.attemptsMade + 1} failed: ${(err as Error).message}`,
+      );
       throw err;
     }
   }

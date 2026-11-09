@@ -30,7 +30,9 @@ export async function seed(prisma: PrismaClient): Promise<void> {
           code,
           name: ADMIN_ROLE_NAMES[code],
           isSystem: true,
-          permissions: { create: DEFAULT_ROLE_PERMISSIONS[code].map((p) => ({ permissionCode: p })) },
+          permissions: {
+            create: DEFAULT_ROLE_PERMISSIONS[code].map((p) => ({ permissionCode: p })),
+          },
         },
       });
     } else if (code === 'SUPER_ADMIN') {
@@ -43,7 +45,9 @@ export async function seed(prisma: PrismaClient): Promise<void> {
   }
 
   for (const [i, t] of DEFAULT_SERVICE_TYPES.entries()) {
-    const existing = await prisma.serviceType.findFirst({ where: { ownerUserId: null, code: t.code } });
+    const existing = await prisma.serviceType.findFirst({
+      where: { ownerUserId: null, code: t.code },
+    });
     if (!existing) {
       await prisma.serviceType.create({
         data: {

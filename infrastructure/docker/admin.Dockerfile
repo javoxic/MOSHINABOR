@@ -19,6 +19,7 @@ RUN cd admin && npx tsc -p tsconfig.app.json && npx vite build
 FROM nginx:1.27-alpine AS runtime
 RUN rm /etc/nginx/conf.d/default.conf
 COPY infrastructure/docker/nginx-admin.conf /etc/nginx/templates/default.conf.template
+COPY infrastructure/docker/nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /repo/admin/dist /usr/share/nginx/html
 ENV API_UPSTREAM=api:3000 SERVER_NAME=_
 EXPOSE 80

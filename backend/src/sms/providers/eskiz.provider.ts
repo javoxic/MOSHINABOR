@@ -1,7 +1,12 @@
 import { Logger } from '@nestjs/common';
 import type { Redis } from 'ioredis';
 import type { Env } from '../../config/env';
-import { SmsProvider, SmsProviderError, SmsSendRequest, SmsSendResult } from '../sms-provider.interface';
+import {
+  SmsProvider,
+  SmsProviderError,
+  SmsSendRequest,
+  SmsSendResult,
+} from '../sms-provider.interface';
 
 const TOKEN_CACHE_KEY = 'sms:eskiz:token';
 const TOKEN_TTL_SECONDS = 25 * 24 * 3600; // Eskiz tokens are valid for 30 days.
@@ -30,7 +35,11 @@ export class EskizSmsProvider implements SmsProvider {
     form.set('password', this.env.ESKIZ_PASSWORD ?? '');
     const res = await this.request('/auth/login', { method: 'POST', body: form });
     if (!res.ok) {
-      throw new SmsProviderError(`Eskiz authentication failed (HTTP ${res.status})`, false, `HTTP_${res.status}`);
+      throw new SmsProviderError(
+        `Eskiz authentication failed (HTTP ${res.status})`,
+        false,
+        `HTTP_${res.status}`,
+      );
     }
     const json = (await res.json()) as { data?: { token?: string } };
     const token = json.data?.token;
@@ -49,14 +58,22 @@ export class EskizSmsProvider implements SmsProvider {
 
   private async request(path: string, init: RequestInit): Promise<Response> {
     try {
-      return await this.fetchImpl(`${this.env.ESKIZ_BASE_URL}${path}`, { ...init, signal: AbortSignal.timeout(10_000) });
+      return await this.fetchImpl(`${this.env.ESKIZ_BASE_URL}${path}`, {
+        ...init,
+        signal: AbortSignal.timeout(10_000),
+      });
     } catch (err) {
-      throw new SmsProviderError(`Eskiz request failed: ${(err as Error).message}`, true, 'NETWORK');
+      throw new SmsProviderError(
+        `Eskiz request failed: ${(err as Error).message}`,
+        true,
+        'NETWORK',
+      );
     }
   }
 
   async send(req: SmsSendRequest): Promise<SmsSendResult> {
-    if (!this.isConfigured()) throw new SmsProviderError('Eskiz credentials are not configured', false, 'NOT_CONFIGURED');
+    if (!this.isConfigured())
+      throw new SmsProviderError('Eskiz credentials are not configured', false, 'NOT_CONFIGURED');
     const doSend = async (token: string): Promise<Response> => {
       const form = new FormData();
       form.set('mobile_phone', req.to.replace(/^\+/, ''));
@@ -68,7 +85,11 @@ export class EskizSmsProvider implements SmsProvider {
           `${this.env.API_PUBLIC_URL}/v1/webhooks/sms/eskiz?secret=${encodeURIComponent(this.env.SMS_CALLBACK_SECRET)}`,
         );
       }
-      return this.request('/message/sms/send', { method: 'POST', body: form, headers: { Authorization: `Bearer ${token}` } });
+      return this.request('/message/sms/send', {
+        method: 'POST',
+        body: form,
+        headers: { Authorization: `Bearer ${token}` },
+      });
     };
 
     let res = await doSend(await this.token());
@@ -102,6 +123,7 @@ export class EskizSmsProvider implements SmsProvider {
 export function mapEskizStatus(status: string | undefined): 'DELIVERED' | 'FAILED' | 'SENT' {
   const s = (status ?? '').toUpperCase();
   if (s === 'DELIVRD' || s === 'DELIVERED') return 'DELIVERED';
-  if (['UNDELIV', 'UNDELIVERED', 'EXPIRED', 'REJECTD', 'REJECTED', 'FAILED'].includes(s)) return 'FAILED';
+  if (['UNDELIV', 'UNDELIVERED', 'EXPIRED', 'REJECTD', 'REJECTED', 'FAILED'].includes(s))
+    return 'FAILED';
   return 'SENT';
 }

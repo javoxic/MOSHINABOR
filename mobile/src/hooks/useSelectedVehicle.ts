@@ -10,7 +10,8 @@ export function useSelectedVehicle() {
   const select = useAppStore((s) => s.selectVehicle);
   const vehicles = useQuery({ queryKey: qk.vehicles, queryFn: Api.vehicles });
   const list = useMemo(() => vehicles.data ?? [], [vehicles.data]);
-  const selected = list.find((v) => v.id === selectedId) ?? list.find((v) => v.isPrimary) ?? list[0] ?? null;
+  const selected =
+    list.find((v) => v.id === selectedId) ?? list.find((v) => v.isPrimary) ?? list[0] ?? null;
 
   useEffect(() => {
     if (vehicles.isSuccess && selectedId && !list.some((v) => v.id === selectedId)) select(null);

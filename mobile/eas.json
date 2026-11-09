@@ -1,25 +1,61 @@
 {
-  "cli": { "version": ">= 16.0.0", "appVersionSource": "local" },
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
   "build": {
-    "development": {
-      "developmentClient": true,
+    "pilot": {
       "distribution": "internal",
-      "env": { "EXPO_PUBLIC_API_URL": "https://api-staging.moshinabor.uz" }
+      "channel": "pilot",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging.moshinabor.uz",
+        "APP_VARIANT": "pilot"
+      },
+      "environment": "preview",
+      "autoIncrement": true
     },
-    "preview": {
-      "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://api-staging.moshinabor.uz" }
+    "pilot-testflight": {
+      "distribution": "store",
+      "channel": "pilot",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging.moshinabor.uz",
+        "APP_VARIANT": "pilot"
+      },
+      "environment": "preview",
+      "autoIncrement": true
     },
     "production": {
-      "autoIncrement": false,
-      "android": { "buildType": "app-bundle" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://api.moshinabor.uz" }
+      "autoIncrement": true,
+      "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.moshinabor.uz"
+      },
+      "environment": "production"
     }
   },
   "submit": {
+    "pilot-testflight": {
+      "android": {
+        "track": "internal"
+      },
+      "ios": {}
+    },
     "production": {
-      "android": { "track": "internal" },
+      "android": {
+        "track": "internal"
+      },
       "ios": {}
     }
   }

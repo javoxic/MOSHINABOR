@@ -1,11 +1,12 @@
 import { DynamicModule, Module, type Type } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { UserThrottlerGuard } from './common/guards/user-throttler.guard';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { LoggerModule } from 'nestjs-pino';
 import type { Env } from './config/env';
-import { AppConfigModule } from './config/config.module';
+import { APP_ENV, AppConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisFactory, RedisModule } from './redis/redis.module';
 import { SettingsModule } from './settings/settings.module';
@@ -24,6 +25,8 @@ import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { JobsModule } from './jobs/jobs.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AccessModule } from './access/access.module';
+import { MaintenanceGuard } from './access/maintenance.guard';
 import { IdempotencyInterceptor } from './common/interceptors/idempotency.interceptor';
 
 @Module({})
@@ -37,7 +40,10 @@ export class AppModule {
       LoggerModule.forRoot({
         pinoHttp: {
           level: env.LOG_LEVEL,
-          transport: env.NODE_ENV === 'development' ? { target: 'pino-pretty', options: { singleLine: true } } : undefined,
+          transport:
+            env.NODE_ENV === 'development'
+              ? { target: 'pino-pretty', options: { singleLine: true } }
+              : undefined,
           // Never log credentials, cookies, tokens or verification codes.
           redact: {
             paths: [
@@ -53,7 +59,11 @@ export class AppModule {
             censor: '[REDACTED]',
           },
           serializers: {
-            req: (req: { id: string; method: string; url: string }) => ({ id: req.id, method: req.method, url: req.url.replace(/secret=[^&]+/, 'secret=[REDACTED]') }),
+            req: (req: { id: string; method: string; url: string }) => ({
+              id: req.id,
+              method: req.method,
+              url: req.url.replace(/secret=[^&]+/, 'secret=[REDACTED]'),
+            }),
           },
           autoLogging: { ignore: (req) => (req.url ?? '').startsWith('/v1/health') },
           customProps: () => ({ service: 'moshina-bor-api' }),
@@ -67,9 +77,9 @@ export class AppModule {
         useFactory: (f: RedisFactory) => ({ connection: f.create({ maxRetriesPerRequest: null }) }),
       }),
       ThrottlerModule.forRootAsync({
-        inject: [RedisFactory],
-        useFactory: (f: RedisFactory) => ({
-          throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }],
+        inject: [RedisFactory, APP_ENV],
+        useFactory: (f: RedisFactory, e: Env) => ({
+          throttlers: [{ name: 'default', ttl: 60_000, limit: e.RATE_LIMIT_PER_MINUTE }],
           storage: new ThrottlerStorageRedisService(f.create()),
         }),
       }),
@@ -90,6 +100,7 @@ export class AppModule {
         DashboardModule,
         HealthModule,
         AdminModule,
+        AccessModule,
       );
     }
     if (withJobs) imports.push(JobsModule);
@@ -99,7 +110,8 @@ export class AppModule {
       imports,
       providers: withHttp
         ? [
-            { provide: APP_GUARD, useClass: ThrottlerGuard },
+            { provide: APP_GUARD, useClass: UserThrottlerGuard },
+            { provide: APP_GUARD, useClass: MaintenanceGuard },
             { provide: APP_GUARD, useClass: JwtAuthGuard },
             { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
           ]

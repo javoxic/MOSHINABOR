@@ -25,11 +25,16 @@ export default function ScheduleDetailsScreen() {
   const s = schedule.data;
   const history = useQuery({
     queryKey: qk.records({ vehicleId: s?.vehicleId, serviceTypeId: s?.serviceType.id }),
-    queryFn: () => Api.records({ vehicleId: s!.vehicleId, serviceTypeId: s!.serviceType.id, pageSize: 10 }),
+    queryFn: () =>
+      Api.records({ vehicleId: s!.vehicleId, serviceTypeId: s!.serviceType.id, pageSize: 10 }),
     enabled: !!s,
   });
   const onError = (e: unknown) => Alert.alert(t('errors.title'), errorMessage(t, e));
-  const toggle = useMutation({ mutationFn: () => Api.updateSchedule(id, { isActive: !s!.isActive }), onSuccess: () => invalidate(), onError });
+  const toggle = useMutation({
+    mutationFn: () => Api.updateSchedule(id, { isActive: !s!.isActive }),
+    onSuccess: () => invalidate(),
+    onError,
+  });
   const remove = useMutation({
     mutationFn: () => Api.deleteSchedule(id),
     onSuccess: async () => {
@@ -57,11 +62,24 @@ export default function ScheduleDetailsScreen() {
     <Screen
       back
       title={name}
-      right={<IconButton icon="create-outline" label={t('maintenance.editSchedule')} onPress={() => router.push({ pathname: '/maintenance/[id]/edit', params: { id } })} />}
+      right={
+        <IconButton
+          icon="create-outline"
+          label={t('maintenance.editSchedule')}
+          onPress={() => router.push({ pathname: '/maintenance/[id]/edit', params: { id } })}
+        />
+      }
       refreshing={schedule.isRefetching}
       onRefresh={() => schedule.refetch()}
       dataUpdatedAt={schedule.dataUpdatedAt}
-      footer={<Button title={t('maintenance.complete')} icon="checkmark-circle-outline" onPress={() => router.push({ pathname: '/maintenance/[id]/complete', params: { id } })} testID="complete-open" />}
+      footer={
+        <Button
+          title={t('maintenance.complete')}
+          icon="checkmark-circle-outline"
+          onPress={() => router.push({ pathname: '/maintenance/[id]/complete', params: { id } })}
+          testID="complete-open"
+        />
+      }
     >
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -76,7 +94,9 @@ export default function ScheduleDetailsScreen() {
         </View>
         {s.computed.triggeredBy ? (
           <Text variant="caption" tone="muted" style={{ marginTop: spacing.sm }}>
-            {s.computed.triggeredBy === 'MILEAGE' ? t('maintenance.triggeredByMileage') : t('maintenance.triggeredByDate')}
+            {s.computed.triggeredBy === 'MILEAGE'
+              ? t('maintenance.triggeredByMileage')
+              : t('maintenance.triggeredByDate')}
           </Text>
         ) : null}
       </Card>
@@ -88,19 +108,48 @@ export default function ScheduleDetailsScreen() {
 
       <SectionHeader title={t('maintenance.nextDue')} />
       <Card style={{ padding: spacing.xs }}>
-        <ListRow title={t('maintenance.nextDueDate')} value={s.nextDueDate ? formatDate(s.nextDueDate, i18n.language) : t('common.notSet')} />
-        <ListRow title={t('maintenance.nextDueMileage')} value={s.nextDueMileage != null ? km(s.nextDueMileage, i18n.language) : t('common.notSet')} />
-        <ListRow title={t('maintenance.lastServiceDate')} value={formatDate(s.lastServiceDate, i18n.language)} />
-        <ListRow title={t('maintenance.lastServiceMileage')} value={km(s.lastServiceMileage, i18n.language)} />
-        <ListRow title={t('maintenance.intervalKm')} value={s.intervalKm ? km(s.intervalKm, i18n.language) : '—'} />
-        <ListRow title={t('maintenance.intervalDays')} value={s.intervalDays ? `${s.intervalDays} ${t('common.days')}` : '—'} />
-        {s.estimatedCost ? <ListRow title={t('maintenance.estimatedCost')} value={money(s.estimatedCost, i18n.language)} /> : null}
+        <ListRow
+          title={t('maintenance.nextDueDate')}
+          value={s.nextDueDate ? formatDate(s.nextDueDate, i18n.language) : t('common.notSet')}
+        />
+        <ListRow
+          title={t('maintenance.nextDueMileage')}
+          value={
+            s.nextDueMileage != null ? km(s.nextDueMileage, i18n.language) : t('common.notSet')
+          }
+        />
+        <ListRow
+          title={t('maintenance.lastServiceDate')}
+          value={formatDate(s.lastServiceDate, i18n.language)}
+        />
+        <ListRow
+          title={t('maintenance.lastServiceMileage')}
+          value={km(s.lastServiceMileage, i18n.language)}
+        />
+        <ListRow
+          title={t('maintenance.intervalKm')}
+          value={s.intervalKm ? km(s.intervalKm, i18n.language) : '—'}
+        />
+        <ListRow
+          title={t('maintenance.intervalDays')}
+          value={s.intervalDays ? `${s.intervalDays} ${t('common.days')}` : '—'}
+        />
+        {s.estimatedCost ? (
+          <ListRow
+            title={t('maintenance.estimatedCost')}
+            value={money(s.estimatedCost, i18n.language)}
+          />
+        ) : null}
         {s.notes ? <ListRow title={t('maintenance.notes')} subtitle={s.notes} /> : null}
       </Card>
 
       <SectionHeader title={t('maintenance.history')} />
       {(history.data?.items ?? []).map((r) => (
-        <RecordRow key={r.id} record={r} onPress={() => router.push({ pathname: '/history/[id]', params: { id: r.id } })} />
+        <RecordRow
+          key={r.id}
+          record={r}
+          onPress={() => router.push({ pathname: '/history/[id]', params: { id: r.id } })}
+        />
       ))}
       {history.data && history.data.items.length === 0 ? (
         <Card>
@@ -109,7 +158,13 @@ export default function ScheduleDetailsScreen() {
       ) : null}
 
       <View style={{ gap: spacing.sm, marginTop: spacing.xxl }}>
-        <Button title={s.isActive ? t('maintenance.pause') : t('maintenance.resume')} variant="secondary" icon={s.isActive ? 'pause-outline' : 'play-outline'} onPress={() => toggle.mutate()} loading={toggle.isPending} />
+        <Button
+          title={s.isActive ? t('maintenance.pause') : t('maintenance.resume')}
+          variant="secondary"
+          icon={s.isActive ? 'pause-outline' : 'play-outline'}
+          onPress={() => toggle.mutate()}
+          loading={toggle.isPending}
+        />
         <Button
           title={t('common.delete')}
           variant="danger"

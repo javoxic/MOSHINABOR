@@ -11,12 +11,18 @@ async function bootstrap(): Promise<void> {
   if (env.PROCESS_ROLE === 'worker') {
     throw new Error('PROCESS_ROLE=worker must be started with dist/worker.js');
   }
-  const app = await NestFactory.create<NestExpressApplication>(AppModule.register(env), { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule.register(env), {
+    bufferLogs: true,
+  });
   app.useLogger(app.get(Logger));
   configureApp(app, env);
   if (env.SWAGGER_ENABLED) setupSwagger(app);
   await app.listen(env.PORT, '0.0.0.0');
-  app.get(Logger).log(`MOSHINA BOR API listening on port ${env.PORT} (role=${env.PROCESS_ROLE}, env=${env.NODE_ENV})`);
+  app
+    .get(Logger)
+    .log(
+      `MOSHINA BOR API listening on port ${env.PORT} (role=${env.PROCESS_ROLE}, env=${env.NODE_ENV})`,
+    );
 }
 
 bootstrap().catch((err: unknown) => {

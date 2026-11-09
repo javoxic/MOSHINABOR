@@ -12,7 +12,10 @@ test.describe('Admin authentication', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('signs in, restores the session after reload via the httpOnly cookie, and signs out', async ({ page, context }) => {
+  test('signs in, restores the session after reload via the httpOnly cookie, and signs out', async ({
+    page,
+    context,
+  }) => {
     await loginAs(page, 'super');
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     const cookies = await context.cookies();

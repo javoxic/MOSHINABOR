@@ -2,18 +2,43 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { adminCreateSchema, adminPasswordSchema, adminRoleSchema, z, type AdminCreateInput, type AdminRoleInput } from '@moshina/validation';
+import {
+  adminCreateSchema,
+  adminPasswordSchema,
+  adminRoleSchema,
+  z,
+  type AdminCreateInput,
+  type AdminRoleInput,
+} from '@moshina/validation';
 import type { AdminRole, AdminUserAccount } from '@moshina/api-types';
 import { AdminApi } from '@/api/endpoints';
 import { errorText } from '@/api/client';
 import { useAdminAuth } from '@/store/auth';
-import { Badge, Button, Card, ConfirmDialog, DataTable, ErrorState, Field, Input, Loading, Modal, PageHeader, Pagination, Select, Tabs, useToast } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  DataTable,
+  ErrorState,
+  Field,
+  Input,
+  Loading,
+  Modal,
+  PageHeader,
+  Pagination,
+  Select,
+  Tabs,
+  useToast,
+} from '@/components/ui';
 import { fmtDateTime } from '@/utils/format';
 
 function CreateAdmin({ roles, onClose }: { roles: AdminRole[]; onClose: () => void }) {
   const qc = useQueryClient();
   const toast = useToast((s) => s.show);
-  const { register, handleSubmit, formState } = useForm<AdminCreateInput>({ resolver: zodResolver(adminCreateSchema) });
+  const { register, handleSubmit, formState } = useForm<AdminCreateInput>({
+    resolver: zodResolver(adminCreateSchema),
+  });
   const create = useMutation({
     mutationFn: (v: AdminCreateInput) => AdminApi.createAdmin(v),
     onSuccess: async () => {
@@ -24,7 +49,21 @@ function CreateAdmin({ roles, onClose }: { roles: AdminRole[]; onClose: () => vo
     onError: (e) => toast(errorText(e), 'danger'),
   });
   return (
-    <Modal title="New administrator" open onClose={onClose} footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={handleSubmit((v) => create.mutate(v))} loading={create.isPending}>Create</Button></>}>
+    <Modal
+      title="New administrator"
+      open
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit((v) => create.mutate(v))} loading={create.isPending}>
+            Create
+          </Button>
+        </>
+      }
+    >
       <Field label="Full name" htmlFor="ad-name" error={formState.errors.fullName?.message}>
         <Input id="ad-name" {...register('fullName')} />
       </Field>
@@ -43,7 +82,12 @@ function CreateAdmin({ roles, onClose }: { roles: AdminRole[]; onClose: () => vo
           ))}
         </Select>
       </Field>
-      <Field label="Initial password" htmlFor="ad-pw" error={formState.errors.password?.message} hint="At least 12 characters with upper- and lowercase letters and a digit. Share it through a secure channel.">
+      <Field
+        label="Initial password"
+        htmlFor="ad-pw"
+        error={formState.errors.password?.message}
+        hint="At least 12 characters with upper- and lowercase letters and a digit. Share it through a secure channel."
+      >
         <Input id="ad-pw" type="password" autoComplete="new-password" {...register('password')} />
       </Field>
     </Modal>
@@ -56,10 +100,15 @@ function RoleEditor({ role, onClose }: { role: AdminRole | null; onClose: () => 
   const perms = useQuery({ queryKey: ['admin', 'permissions'], queryFn: AdminApi.permissions });
   const { register, handleSubmit, formState } = useForm<AdminRoleInput>({
     resolver: zodResolver(adminRoleSchema),
-    defaultValues: { name: role?.name ?? '', description: role?.description ?? '', permissions: role?.permissions ?? [] },
+    defaultValues: {
+      name: role?.name ?? '',
+      description: role?.description ?? '',
+      permissions: role?.permissions ?? [],
+    },
   });
   const save = useMutation({
-    mutationFn: (v: AdminRoleInput) => (role ? AdminApi.updateRole(role.id, v) : AdminApi.createRole(v)),
+    mutationFn: (v: AdminRoleInput) =>
+      role ? AdminApi.updateRole(role.id, v) : AdminApi.createRole(v),
     onSuccess: async () => {
       toast(role ? 'Role updated' : 'Role created');
       await qc.invalidateQueries({ queryKey: ['admin', 'roles'] });
@@ -68,8 +117,27 @@ function RoleEditor({ role, onClose }: { role: AdminRole | null; onClose: () => 
     onError: (e) => toast(errorText(e), 'danger'),
   });
   return (
-    <Modal title={role ? `Edit role · ${role.name}` : 'New role'} open onClose={onClose} footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={handleSubmit((v) => save.mutate(v))} loading={save.isPending}>Save</Button></>}>
-      <Field label="Name" htmlFor="r-name" error={formState.errors.name?.message} hint={role?.isSystem ? 'System role names cannot be changed' : undefined}>
+    <Modal
+      title={role ? `Edit role · ${role.name}` : 'New role'}
+      open
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit((v) => save.mutate(v))} loading={save.isPending}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <Field
+        label="Name"
+        htmlFor="r-name"
+        error={formState.errors.name?.message}
+        hint={role?.isSystem ? 'System role names cannot be changed' : undefined}
+      >
         <Input id="r-name" disabled={role?.isSystem} {...register('name')} />
       </Field>
       <Field label="Description" htmlFor="r-desc">
@@ -81,7 +149,10 @@ function RoleEditor({ role, onClose }: { role: AdminRole | null; onClose: () => 
         </legend>
         {perms.isPending ? <Loading /> : null}
         {(perms.data ?? []).map((p) => (
-          <label key={p.code} style={{ display: 'flex', gap: 8, padding: '4px 0', alignItems: 'flex-start' }}>
+          <label
+            key={p.code}
+            style={{ display: 'flex', gap: 8, padding: '4px 0', alignItems: 'flex-start' }}
+          >
             <input type="checkbox" value={p.code} {...register('permissions')} />
             <span>
               <span className="mono">{p.code}</span>
@@ -92,7 +163,11 @@ function RoleEditor({ role, onClose }: { role: AdminRole | null; onClose: () => 
             </span>
           </label>
         ))}
-        {formState.errors.permissions ? <span style={{ color: 'var(--danger)', fontSize: 12 }}>{formState.errors.permissions.message}</span> : null}
+        {formState.errors.permissions ? (
+          <span style={{ color: 'var(--danger)', fontSize: 12 }}>
+            {formState.errors.permissions.message}
+          </span>
+        ) : null}
       </fieldset>
     </Modal>
   );
@@ -111,7 +186,10 @@ export default function AdminsPage() {
   const [editingRole, setEditingRole] = useState<AdminRole | null | 'new'>(null);
   const [toggling, setToggling] = useState<AdminUserAccount | null>(null);
   const [resetting, setResetting] = useState<AdminUserAccount | null>(null);
-  const admins = useQuery({ queryKey: ['admin', 'admins', page], queryFn: () => AdminApi.admins({ page, pageSize: 25 }) });
+  const admins = useQuery({
+    queryKey: ['admin', 'admins', page],
+    queryFn: () => AdminApi.admins({ page, pageSize: 25 }),
+  });
   const roles = useQuery({ queryKey: ['admin', 'roles'], queryFn: AdminApi.roles });
   const pw = useForm<{ password: string }>({ resolver: zodResolver(passwordForm) });
 
@@ -125,7 +203,8 @@ export default function AdminsPage() {
     onError: (e) => toast(errorText(e), 'danger'),
   });
   const reset = useMutation({
-    mutationFn: ({ id, password }: { id: string; password: string }) => AdminApi.resetAdminPassword(id, password),
+    mutationFn: ({ id, password }: { id: string; password: string }) =>
+      AdminApi.resetAdminPassword(id, password),
     onSuccess: () => {
       setResetting(null);
       pw.reset();
@@ -147,9 +226,26 @@ export default function AdminsPage() {
       <PageHeader
         title="Administrators"
         subtitle="Accounts, roles and permissions"
-        actions={canManage ? (tab === 'admins' ? <Button onClick={() => setCreating(true)} disabled={!roles.data}>New administrator</Button> : <Button onClick={() => setEditingRole('new')}>New role</Button>) : null}
+        actions={
+          canManage ? (
+            tab === 'admins' ? (
+              <Button onClick={() => setCreating(true)} disabled={!roles.data}>
+                New administrator
+              </Button>
+            ) : (
+              <Button onClick={() => setEditingRole('new')}>New role</Button>
+            )
+          ) : null
+        }
       />
-      <Tabs value={tab} onChange={setTab} tabs={[{ value: 'admins', label: 'Administrators' }, { value: 'roles', label: 'Roles & permissions' }]} />
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { value: 'admins', label: 'Administrators' },
+          { value: 'roles', label: 'Roles & permissions' },
+        ]}
+      />
       {tab === 'admins' ? (
         admins.isPending ? (
           <Loading />
@@ -168,7 +264,14 @@ export default function AdminsPage() {
                   header: 'Role',
                   render: (a) =>
                     canManage && a.id !== me?.id && roles.data ? (
-                      <Select aria-label={`Role of ${a.email}`} value={a.role.id} onChange={(e) => update.mutate({ id: a.id, body: { roleId: e.target.value } })} style={{ minWidth: 160 }}>
+                      <Select
+                        aria-label={`Role of ${a.email}`}
+                        value={a.role.id}
+                        onChange={(e) =>
+                          update.mutate({ id: a.id, body: { roleId: e.target.value } })
+                        }
+                        style={{ minWidth: 160 }}
+                      >
                         {roles.data.map((r) => (
                           <option key={r.id} value={r.id}>
                             {r.name}
@@ -179,7 +282,15 @@ export default function AdminsPage() {
                       a.role.name
                     ),
                 },
-                { key: 's', header: 'Status', render: (a) => <Badge tone={a.isActive ? 'success' : 'neutral'}>{a.isActive ? 'Active' : 'Disabled'}</Badge> },
+                {
+                  key: 's',
+                  header: 'Status',
+                  render: (a) => (
+                    <Badge tone={a.isActive ? 'success' : 'neutral'}>
+                      {a.isActive ? 'Active' : 'Disabled'}
+                    </Badge>
+                  ),
+                },
                 { key: 'l', header: 'Last login', render: (a) => fmtDateTime(a.lastLoginAt) },
                 {
                   key: 'a',
@@ -190,7 +301,11 @@ export default function AdminsPage() {
                         <Button size="small" variant="secondary" onClick={() => setResetting(a)}>
                           Set password
                         </Button>
-                        <Button size="small" variant={a.isActive ? 'ghost' : 'secondary'} onClick={() => setToggling(a)}>
+                        <Button
+                          size="small"
+                          variant={a.isActive ? 'ghost' : 'secondary'}
+                          onClick={() => setToggling(a)}
+                        >
                           {a.isActive ? 'Disable' : 'Enable'}
                         </Button>
                       </div>
@@ -198,7 +313,12 @@ export default function AdminsPage() {
                 },
               ]}
             />
-            <Pagination page={admins.data.page} pageSize={admins.data.pageSize} total={admins.data.total} onPage={setPage} />
+            <Pagination
+              page={admins.data.page}
+              pageSize={admins.data.pageSize}
+              total={admins.data.total}
+              onPage={setPage}
+            />
           </>
         )
       ) : roles.isPending ? (
@@ -218,7 +338,12 @@ export default function AdminsPage() {
                       Edit
                     </Button>
                     {!r.isSystem ? (
-                      <Button size="small" variant="ghost" disabled={r.adminCount > 0} onClick={() => delRole.mutate(r.id)}>
+                      <Button
+                        size="small"
+                        variant="ghost"
+                        disabled={r.adminCount > 0}
+                        onClick={() => delRole.mutate(r.id)}
+                      >
                         Delete
                       </Button>
                     ) : null}
@@ -240,26 +365,62 @@ export default function AdminsPage() {
           ))}
         </div>
       )}
-      {creating && roles.data ? <CreateAdmin roles={roles.data} onClose={() => setCreating(false)} /> : null}
-      {editingRole ? <RoleEditor role={editingRole === 'new' ? null : editingRole} onClose={() => setEditingRole(null)} /> : null}
+      {creating && roles.data ? (
+        <CreateAdmin roles={roles.data} onClose={() => setCreating(false)} />
+      ) : null}
+      {editingRole ? (
+        <RoleEditor
+          role={editingRole === 'new' ? null : editingRole}
+          onClose={() => setEditingRole(null)}
+        />
+      ) : null}
       <ConfirmDialog
         open={!!toggling}
         title={toggling?.isActive ? 'Disable administrator' : 'Enable administrator'}
-        message={toggling?.isActive ? `${toggling.email} will be signed out immediately and cannot sign in.` : `${toggling?.email} will be able to sign in again.`}
+        message={
+          toggling?.isActive
+            ? `${toggling.email} will be signed out immediately and cannot sign in.`
+            : `${toggling?.email} will be able to sign in again.`
+        }
         confirmLabel={toggling?.isActive ? 'Disable' : 'Enable'}
         danger={toggling?.isActive}
         loading={update.isPending}
         onCancel={() => setToggling(null)}
-        onConfirm={() => toggling && update.mutate({ id: toggling.id, body: { isActive: !toggling.isActive } })}
+        onConfirm={() =>
+          toggling && update.mutate({ id: toggling.id, body: { isActive: !toggling.isActive } })
+        }
       />
       <Modal
         title={`Set password · ${resetting?.email ?? ''}`}
         open={!!resetting}
         onClose={() => setResetting(null)}
-        footer={<><Button variant="secondary" onClick={() => setResetting(null)}>Cancel</Button><Button onClick={pw.handleSubmit((v) => resetting && reset.mutate({ id: resetting.id, password: v.password }))} loading={reset.isPending}>Save</Button></>}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setResetting(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={pw.handleSubmit(
+                (v) => resetting && reset.mutate({ id: resetting.id, password: v.password }),
+              )}
+              loading={reset.isPending}
+            >
+              Save
+            </Button>
+          </>
+        }
       >
-        <Field label="New password" htmlFor="reset-pw" error={pw.formState.errors.password?.message}>
-          <Input id="reset-pw" type="password" autoComplete="new-password" {...pw.register('password')} />
+        <Field
+          label="New password"
+          htmlFor="reset-pw"
+          error={pw.formState.errors.password?.message}
+        >
+          <Input
+            id="reset-pw"
+            type="password"
+            autoComplete="new-password"
+            {...pw.register('password')}
+          />
         </Field>
       </Modal>
     </>

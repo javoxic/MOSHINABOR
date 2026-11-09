@@ -11,7 +11,10 @@ export interface NormalizedPhone {
  * interpreted as Uzbekistan numbers (e.g. "90 123 45 67" or "998901234567").
  * Only mobile (or fixed-line-or-mobile) numbers are accepted because an SMS must be delivered.
  */
-export function normalizePhone(input: string, defaultCountry: CountryCode = 'UZ'): NormalizedPhone | null {
+export function normalizePhone(
+  input: string,
+  defaultCountry: CountryCode = 'UZ',
+): NormalizedPhone | null {
   if (typeof input !== 'string') return null;
   let cleaned = input.trim().replace(/[\s\-().]/g, '');
   if (cleaned.length === 0 || cleaned.length > 20) return null;

@@ -44,9 +44,14 @@ test.describe('Role-based access', () => {
     await dialog.getByRole('button', { name: 'Create' }).click();
     await expect(page.getByRole('cell', { name: 'agent@e2e.moshinabor.test' })).toBeVisible();
 
-    await page.getByRole('row', { name: /agent@e2e\.moshinabor\.test/ }).getByRole('button', { name: 'Disable' }).click();
+    await page
+      .getByRole('row', { name: /agent@e2e\.moshinabor\.test/ })
+      .getByRole('button', { name: 'Disable' })
+      .click();
     await page.getByRole('dialog').getByRole('button', { name: 'Disable' }).click();
-    await expect(page.getByRole('row', { name: /agent@e2e\.moshinabor\.test/ })).toContainText('Disabled');
+    await expect(page.getByRole('row', { name: /agent@e2e\.moshinabor\.test/ })).toContainText(
+      'Disabled',
+    );
 
     await page.getByRole('link', { name: 'Audit log' }).click();
     await expect(page.getByRole('cell', { name: 'admins.create' }).first()).toBeVisible();

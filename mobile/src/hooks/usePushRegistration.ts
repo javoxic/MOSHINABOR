@@ -10,10 +10,16 @@ import { Api } from '@/api/endpoints';
 import { queryClient } from '@/api/queryClient';
 import { useAuthStore } from '@/store/auth';
 
-export const PUSH_TOKEN_KEY = 'mb.pushToken';
+import { PUSH_TOKEN_KEY } from '@/session-cleanup';
+export { PUSH_TOKEN_KEY };
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
 });
 
 async function registerToken(token: string): Promise<void> {
@@ -38,11 +44,16 @@ export async function ensurePushRegistration(): Promise<'registered' | 'denied' 
   }
   const current = await Notifications.getPermissionsAsync();
   let granted = current.granted;
-  if (!granted && current.canAskAgain) granted = (await Notifications.requestPermissionsAsync()).granted;
+  if (!granted && current.canAskAgain)
+    granted = (await Notifications.requestPermissionsAsync()).granted;
   if (!granted) return 'denied';
-  const projectId = (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ?? Constants.easConfig?.projectId;
+  const projectId =
+    (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ??
+    Constants.easConfig?.projectId;
   if (!projectId) {
-    console.warn('EAS project id is not configured; push notifications are unavailable in this build.');
+    console.warn(
+      'EAS project id is not configured; push notifications are unavailable in this build.',
+    );
     return 'unavailable';
   }
   const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
@@ -65,8 +76,10 @@ export function usePushRegistration(): void {
     });
     const tapped = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as Record<string, string | undefined>;
-      if (data.scheduleId) router.push({ pathname: '/maintenance/[id]', params: { id: data.scheduleId } });
-      else if (data.vehicleId && data.type === 'MILEAGE_UPDATE_REQUIRED') router.push({ pathname: '/vehicles/[id]', params: { id: data.vehicleId } });
+      if (data.scheduleId)
+        router.push({ pathname: '/maintenance/[id]', params: { id: data.scheduleId } });
+      else if (data.vehicleId && data.type === 'MILEAGE_UPDATE_REQUIRED')
+        router.push({ pathname: '/vehicles/[id]', params: { id: data.vehicleId } });
       else router.push('/notifications');
     });
     return () => {

@@ -13,7 +13,10 @@ export class DashboardController {
   @Get()
   @ApiOperation({ summary: 'Home screen data for the selected (or primary) vehicle' })
   @ApiQuery({ name: 'vehicleId', required: false })
-  get(@CurrentUser() user: AuthUser, @Query('vehicleId', new ParseUUIDPipe({ optional: true })) vehicleId?: string) {
+  get(
+    @CurrentUser() user: AuthUser,
+    @Query('vehicleId', new ParseUUIDPipe({ optional: true })) vehicleId?: string,
+  ) {
     return this.dashboard.get(user.id, vehicleId);
   }
 }

@@ -1,22 +1,24 @@
 # Deployment
 
+> For the staging environment and the controlled pilot, see [STAGING_DEPLOYMENT.md](STAGING_DEPLOYMENT.md). For production, the same scripts apply with `.env`: `./check-config.sh .env`, `./deploy.sh .env <version>` (encrypted pre-deployment backup plus a readiness gate), `./rollback.sh .env <version>` ([ROLLBACK_PLAN.md](ROLLBACK_PLAN.md)) and `./monitor.sh .env` from cron. The bundled Caddy edge (started by `deploy.sh` when `API_DOMAIN` is set) provides TLS, hides the admin API and `/docs` on the public API host, and IP-restricts the admin host.
+
 ## External services and credentials
 
-| Service | Needed for | What to obtain | Where to put it | Status in this repo |
-|---|---|---|---|---|
-| **Eskiz.uz** | SMS OTP to +998 numbers (sign-in) | Eskiz account (email + password), sender ID (`4546` default or an approved alpha name), **OTP template approved in the Eskiz cabinet** matching `SMS_OTP_TEMPLATE_*` exactly | `ESKIZ_EMAIL`, `ESKIZ_PASSWORD`, `ESKIZ_FROM`, `SMS_OTP_TEMPLATE_UZ/RU/EN` | Integration implemented (login + token cache + re-auth, send, delivery callbacks); **awaiting credentials** |
-| Twilio (optional) | SMS to non-Uzbek numbers | Account SID, Auth Token, sender number or Messaging Service SID | `SMS_INTERNATIONAL_PROVIDER=twilio`, `TWILIO_*` | Implemented; optional |
-| **Expo / EAS** | Push tokens, store builds, OTA updates | Expo account, EAS project (`eas init`) | `EAS_PROJECT_ID` (mobile build env); optional `EXPO_ACCESS_TOKEN` (API) | Implemented; **awaiting project** |
-| **Firebase (FCM)** | Android push delivery | Firebase project → `google-services.json`, FCM V1 service-account key uploaded to EAS (`eas credentials`) | EAS secret file `GOOGLE_SERVICES_JSON` | Awaiting |
-| **Apple Developer** | iOS builds + APNs | Apple Developer Program membership; EAS manages certificates and the APNs key | `eas credentials` | Awaiting |
-| Google Play / App Store Connect | Store distribution | Developer accounts, app records | `eas submit` | Awaiting |
+| Service                         | Needed for                             | What to obtain                                                                                                                                                               | Where to put it                                                            | Status in this repo                                                                                         |
+| ------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Eskiz.uz**                    | SMS OTP to +998 numbers (sign-in)      | Eskiz account (email + password), sender ID (`4546` default or an approved alpha name), **OTP template approved in the Eskiz cabinet** matching `SMS_OTP_TEMPLATE_*` exactly | `ESKIZ_EMAIL`, `ESKIZ_PASSWORD`, `ESKIZ_FROM`, `SMS_OTP_TEMPLATE_UZ/RU/EN` | Integration implemented (login + token cache + re-auth, send, delivery callbacks); **awaiting credentials** |
+| Twilio (optional)               | SMS to non-Uzbek numbers               | Account SID, Auth Token, sender number or Messaging Service SID                                                                                                              | `SMS_INTERNATIONAL_PROVIDER=twilio`, `TWILIO_*`                            | Implemented; optional                                                                                       |
+| **Expo / EAS**                  | Push tokens, store builds, OTA updates | Expo account, EAS project (`eas init`)                                                                                                                                       | `EAS_PROJECT_ID` (mobile build env); optional `EXPO_ACCESS_TOKEN` (API)    | Implemented; **awaiting project**                                                                           |
+| **Firebase (FCM)**              | Android push delivery                  | Firebase project → `google-services.json`, FCM V1 service-account key uploaded to EAS (`eas credentials`)                                                                    | EAS secret file `GOOGLE_SERVICES_JSON`                                     | Awaiting                                                                                                    |
+| **Apple Developer**             | iOS builds + APNs                      | Apple Developer Program membership; EAS manages certificates and the APNs key                                                                                                | `eas credentials`                                                          | Awaiting                                                                                                    |
+| Google Play / App Store Connect | Store distribution                     | Developer accounts, app records                                                                                                                                              | `eas submit`                                                               | Awaiting                                                                                                    |
 
 Until Eskiz is configured, `POST /v1/auth/otp/request` returns `503 SMS_NOT_CONFIGURED` and the admin
 **Settings → System health** page shows the SMS provider as not configured. Nothing pretends to succeed.
 
 **Verifying SMS after configuration:** request a code for a real test phone in the app (or
 `curl -X POST https://<host>/v1/auth/otp/request -H 'content-type: application/json' -d '{"phone":"+998…"}'`),
-confirm the SMS arrives, and check *System health → Last successful send*. Delivery reports arrive at
+confirm the SMS arrives, and check _System health → Last successful send_. Delivery reports arrive at
 `/v1/webhooks/sms/eskiz?secret=…` (set `API_PUBLIC_URL` to the public HTTPS origin).
 
 ## Server deployment (Docker Compose, single host)
@@ -27,7 +29,9 @@ Requirements: Linux host with Docker 24+ and Compose v2, a domain with DNS, a TL
 ```bash
 git clone <repo> moshina-bor && cd moshina-bor/infrastructure/deployment
 cp .env.production.example .env
-# Fill every value; generate secrets with: openssl rand -base64 48
+# Fill every value; generate secrets with: openssl rand -hex 32 (URL-safe)
+mkdir -p secrets && openssl rand -base64 48 > secrets/backup_passphrase && chmod 600 secrets/backup_passphrase
+# ^ keep a copy of the passphrase in your password manager — encrypted backups need it to restore
 docker compose up -d --build
 docker compose ps                 # all services healthy
 docker compose exec -e ADMIN_EMAIL=you@company.uz -e ADMIN_NAME="Your Name" \
@@ -62,12 +66,13 @@ Migrations are forward-only; take a backup (`docker compose exec backup sh /scri
 
 ### Backups and restore
 
-Automatic daily backups land in `BACKUP_DIR` (database dump + uploaded files, 14-day retention).
+Automatic daily backups land in `BACKUP_DIR` as `db-*.dump.gpg` and `storage-*.tar.gz.gpg` (AES-256,
+mode 0600, 14-day retention). `restore.sh` decrypts them with `secrets/backup_passphrase`.
 Copy them off-host (e.g. `rclone`/`aws s3 sync` to versioned, encrypted object storage via cron).
 
 ```bash
 docker compose stop api worker
-./restore.sh backups/db-YYYYmmdd-HHMMSS.dump backups/storage-YYYYmmdd-HHMMSS.tar.gz
+./restore.sh backups/db-YYYYmmdd-HHMMSS.dump.gpg backups/storage-YYYYmmdd-HHMMSS.tar.gz.gpg
 docker compose up -d api worker
 ```
 
@@ -127,11 +132,13 @@ eas submit --platform ios --profile production      # uploads to App Store Conne
 Local build alternative (macOS + Xcode 16): `npx expo prebuild --platform ios && cd ios && pod install`,
 then archive in Xcode.
 
-Before each store release bump `version` in `app.config.ts` and `IOS_BUILD_NUMBER` / `ANDROID_VERSION_CODE`.
+Before each store release bump `version` in `app.config.ts`. Build numbers (`buildNumber` / `versionCode`) are managed remotely by EAS (`appVersionSource: remote`, `autoIncrement: true`), so every build gets a new one automatically.
 Verification available in CI without credentials: `npx expo export --platform android --platform ios`
 (produces the Hermes bundles that go into the binaries).
 
 ## Production configuration checklist
+
+The step-by-step launch checklist is [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md).
 
 - [ ] DNS + TLS for the admin/API hostname; HTTP redirected to HTTPS.
 - [ ] `.env` filled: unique `JWT_ACCESS_SECRET`, `JWT_ADMIN_SECRET`, `OTP_PEPPER`, `SMS_CALLBACK_SECRET`,

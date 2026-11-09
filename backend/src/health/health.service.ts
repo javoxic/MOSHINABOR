@@ -26,10 +26,17 @@ export class HealthService {
   async database() {
     const start = Date.now();
     try {
-      const rows = await this.prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
+      const rows = await this.prisma.$queryRaw<
+        { count: bigint }[]
+      >`SELECT COUNT(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
       return { ok: true, latencyMs: Date.now() - start, migrations: Number(rows[0]?.count ?? 0) };
     } catch (err) {
-      return { ok: false, latencyMs: null, migrations: null, error: (err as Error).message.slice(0, 200) };
+      return {
+        ok: false,
+        latencyMs: null,
+        migrations: null,
+        error: (err as Error).message.slice(0, 200),
+      };
     }
   }
 
@@ -61,13 +68,25 @@ export class HealthService {
       status: degraded ? ('degraded' as const) : ('ok' as const),
       version: VERSION,
       environment: this.env.NODE_ENV,
+      deploymentEnvironment: this.env.DEPLOYMENT_ENVIRONMENT,
       uptimeSeconds: Math.round(process.uptime()),
       database,
       redis,
       sms,
-      push: { provider: 'expo' as const, accessTokenConfigured: Boolean(this.env.EXPO_ACCESS_TOKEN) },
+      push: {
+        provider: 'expo' as const,
+        accessTokenConfigured: Boolean(this.env.EXPO_ACCESS_TOKEN),
+      },
       queues: counts
-        ? [{ name: PUSH_QUEUE, waiting: counts.waiting ?? 0, active: counts.active ?? 0, failed: counts.failed ?? 0, delayed: counts.delayed ?? 0 }]
+        ? [
+            {
+              name: PUSH_QUEUE,
+              waiting: counts.waiting ?? 0,
+              active: counts.active ?? 0,
+              failed: counts.failed ?? 0,
+              delayed: counts.delayed ?? 0,
+            },
+          ]
         : [],
       storage: { driver: 'local', writable },
     };

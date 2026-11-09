@@ -1,6 +1,18 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Length, Matches, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { FUEL_TYPES, type FuelType } from '@moshina/shared';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
@@ -27,22 +39,32 @@ export class CreateVehicleDto {
   year: number;
 
   @ApiProperty({ example: '01 A 123 BC' })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase().replace(/\s+/g, ' ') : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase().replace(/\s+/g, ' ') : value,
+  )
   @IsString()
   @Length(2, 20)
   registrationNumber: string;
 
   @ApiPropertyOptional({ example: 'XWB4A11BDLA123456', nullable: true })
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? (value.trim() === '' ? null : value.trim().toUpperCase()) : value))
-  @Matches(/^[A-HJ-NPR-Z0-9]{17}$/, { message: 'vin must be 17 characters (letters I, O, Q are not allowed)' })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? (value.trim() === '' ? null : value.trim().toUpperCase()) : value,
+  )
+  @Matches(/^[A-HJ-NPR-Z0-9]{17}$/, {
+    message: 'vin must be 17 characters (letters I, O, Q are not allowed)',
+  })
   vin?: string | null;
 
   @ApiProperty({ enum: FUEL_TYPES })
   @IsIn(FUEL_TYPES)
   fuelType: FuelType;
 
-  @ApiPropertyOptional({ example: 1.5, nullable: true, description: 'Engine displacement in litres' })
+  @ApiPropertyOptional({
+    example: 1.5,
+    nullable: true,
+    description: 'Engine displacement in litres',
+  })
   @IsOptional()
   @Transform(emptyToNull)
   @Type(() => Number)
@@ -60,14 +82,18 @@ export class CreateVehicleDto {
 
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? (value.trim() === '' ? null : value.trim()) : value))
+  @Transform(({ value }) =>
+    typeof value === 'string' ? (value.trim() === '' ? null : value.trim()) : value,
+  )
   @IsString()
   @MaxLength(1000)
   notes?: string | null;
 }
 
 export class UpdateVehicleDto extends PartialType(CreateVehicleDto) {
-  @ApiPropertyOptional({ description: 'Allow lowering the odometer value to correct a typing mistake' })
+  @ApiPropertyOptional({
+    description: 'Allow lowering the odometer value to correct a typing mistake',
+  })
   @IsOptional()
   @IsBoolean()
   correctMileage?: boolean;

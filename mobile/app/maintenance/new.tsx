@@ -16,7 +16,11 @@ export default function NewScheduleScreen() {
   const params = useLocalSearchParams<{ vehicleId?: string }>();
   const { list, selected, vehicles } = useSelectedVehicle();
   const vehicle = list.find((v) => v.id === params.vehicleId) ?? selected;
-  const existing = useQuery({ queryKey: qk.schedules(vehicle?.id ?? null), queryFn: () => Api.schedules({ vehicleId: vehicle?.id }), enabled: !!vehicle });
+  const existing = useQuery({
+    queryKey: qk.schedules(vehicle?.id ?? null),
+    queryFn: () => Api.schedules({ vehicleId: vehicle?.id }),
+    enabled: !!vehicle,
+  });
   const invalidate = useInvalidateData();
   const idem = useIdempotencyKey();
   const create = useMutation({
@@ -28,13 +32,21 @@ export default function NewScheduleScreen() {
     },
   });
   return (
-    <Screen back title={t('maintenance.addSchedule')} subtitle={vehicle ? `${vehicle.brand} ${vehicle.model}` : undefined}>
+    <Screen
+      back
+      title={t('maintenance.addSchedule')}
+      subtitle={vehicle ? `${vehicle.brand} ${vehicle.model}` : undefined}
+    >
       {vehicles.isPending ? (
         <LoadingState />
       ) : vehicles.isError && !vehicles.data ? (
         <ErrorState message={errorMessage(t, vehicles.error)} onRetry={() => vehicles.refetch()} />
       ) : !vehicle ? (
-        <EmptyState title={t('maintenance.noVehicle')} actionLabel={t('vehicle.add')} onAction={() => router.replace('/vehicles/new')} />
+        <EmptyState
+          title={t('maintenance.noVehicle')}
+          actionLabel={t('vehicle.add')}
+          onAction={() => router.replace('/vehicles/new')}
+        />
       ) : (
         <ScheduleForm
           vehicle={vehicle}

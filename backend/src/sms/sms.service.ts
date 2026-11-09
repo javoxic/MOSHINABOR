@@ -2,7 +2,12 @@ import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { ERROR_CODES, isUzbekPhone } from '@moshina/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppException } from '../common/errors/app-exception';
-import { SmsProvider, SmsProviderError, SmsSendRequest, SmsSendResult } from './sms-provider.interface';
+import {
+  SmsProvider,
+  SmsProviderError,
+  SmsSendRequest,
+  SmsSendResult,
+} from './sms-provider.interface';
 
 export const SMS_PRIMARY_PROVIDER = Symbol('SMS_PRIMARY_PROVIDER');
 export const SMS_INTERNATIONAL_PROVIDER = Symbol('SMS_INTERNATIONAL_PROVIDER');
@@ -44,7 +49,9 @@ export class SmsService {
       );
     }
     if (!provider.isConfigured()) {
-      this.logger.error(`SMS provider "${provider.name}" is not configured — cannot deliver verification codes`);
+      this.logger.error(
+        `SMS provider "${provider.name}" is not configured — cannot deliver verification codes`,
+      );
       await this.recordEvent(provider.name, false, 'Provider not configured');
       throw new AppException(
         ERROR_CODES.SMS_NOT_CONFIGURED,
@@ -57,9 +64,15 @@ export class SmsService {
       await this.recordEvent(provider.name, true, null);
       return { ...result, provider: provider.name };
     } catch (err) {
-      const message = err instanceof SmsProviderError ? err.message : `Unexpected SMS error: ${(err as Error).message}`;
+      const message =
+        err instanceof SmsProviderError
+          ? err.message
+          : `Unexpected SMS error: ${(err as Error).message}`;
       // Never log the message text: it contains the verification code.
-      this.logger.error({ provider: provider.name, reference: req.reference, error: message }, 'SMS send failed');
+      this.logger.error(
+        { provider: provider.name, reference: req.reference, error: message },
+        'SMS send failed',
+      );
       await this.recordEvent(provider.name, false, message);
       throw new AppException(
         ERROR_CODES.SMS_SEND_FAILED,
@@ -69,7 +82,11 @@ export class SmsService {
     }
   }
 
-  private async recordEvent(provider: string, success: boolean, error: string | null): Promise<void> {
+  private async recordEvent(
+    provider: string,
+    success: boolean,
+    error: string | null,
+  ): Promise<void> {
     await this.prisma.smsProviderEvent
       .create({ data: { provider, success, error: error?.slice(0, 500) ?? null } })
       .catch((e: Error) => this.logger.warn(`Failed to record SMS provider event: ${e.message}`));
@@ -85,8 +102,14 @@ export class SmsService {
     lastError: string | null;
   }> {
     const [lastSuccess, lastFailure] = await Promise.all([
-      this.prisma.smsProviderEvent.findFirst({ where: { success: true }, orderBy: { createdAt: 'desc' } }),
-      this.prisma.smsProviderEvent.findFirst({ where: { success: false }, orderBy: { createdAt: 'desc' } }),
+      this.prisma.smsProviderEvent.findFirst({
+        where: { success: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.smsProviderEvent.findFirst({
+        where: { success: false },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
     return {
       provider: this.primary.name,

@@ -34,7 +34,10 @@ export class TokenService {
     private readonly prisma: PrismaService,
   ) {}
 
-  private async signAccess(userId: string, familyId: string): Promise<{ token: string; expiresAt: Date }> {
+  private async signAccess(
+    userId: string,
+    familyId: string,
+  ): Promise<{ token: string; expiresAt: Date }> {
     const expiresAt = new Date(Date.now() + this.env.ACCESS_TOKEN_TTL_SECONDS * 1000);
     const payload: AccessPayload = { sub: userId, fam: familyId, typ: 'user' };
     const token = await this.jwt.signAsync(payload, {
@@ -95,20 +98,32 @@ export class TokenService {
       where: { tokenHash: sha256(refreshToken) },
       include: { user: { select: { status: true } } },
     });
-    const invalid = new AppException(ERROR_CODES.REFRESH_TOKEN_INVALID, HttpStatus.UNAUTHORIZED, 'Session expired. Please sign in again.');
+    const invalid = new AppException(
+      ERROR_CODES.REFRESH_TOKEN_INVALID,
+      HttpStatus.UNAUTHORIZED,
+      'Session expired. Please sign in again.',
+    );
     if (!existing) throw invalid;
 
     if (existing.revokedAt) {
       if (existing.revokedReason === 'rotated') {
         await this.revokeFamily(existing.familyId, 'reuse_detected');
-        throw new AppException(ERROR_CODES.REFRESH_TOKEN_REUSED, HttpStatus.UNAUTHORIZED, 'Session was revoked for security reasons. Please sign in again.');
+        throw new AppException(
+          ERROR_CODES.REFRESH_TOKEN_REUSED,
+          HttpStatus.UNAUTHORIZED,
+          'Session was revoked for security reasons. Please sign in again.',
+        );
       }
       throw invalid;
     }
     if (existing.expiresAt <= now) throw invalid;
     if (existing.user.status === 'RESTRICTED') {
       await this.revokeFamily(existing.familyId, 'restricted');
-      throw new AppException(ERROR_CODES.ACCOUNT_RESTRICTED, HttpStatus.FORBIDDEN, 'Your account has been restricted. Contact support.');
+      throw new AppException(
+        ERROR_CODES.ACCOUNT_RESTRICTED,
+        HttpStatus.FORBIDDEN,
+        'Your account has been restricted. Contact support.',
+      );
     }
     if (existing.user.status === 'DELETED') {
       await this.revokeFamily(existing.familyId, 'deleted');
@@ -135,7 +150,10 @@ export class TokenService {
           userAgent: ctx.userAgent,
         },
       });
-      await tx.refreshToken.update({ where: { id: existing.id }, data: { replacedById: created.id } });
+      await tx.refreshToken.update({
+        where: { id: existing.id },
+        data: { replacedById: created.id },
+      });
     });
 
     const access = await this.signAccess(existing.userId, existing.familyId);
@@ -163,7 +181,10 @@ export class TokenService {
   }
 
   async familyOf(refreshToken: string): Promise<{ familyId: string; userId: string } | null> {
-    const t = await this.prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) }, select: { familyId: true, userId: true } });
+    const t = await this.prisma.refreshToken.findUnique({
+      where: { tokenHash: sha256(refreshToken) },
+      select: { familyId: true, userId: true },
+    });
     return t;
   }
 }

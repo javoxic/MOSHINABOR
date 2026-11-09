@@ -54,7 +54,15 @@ export function ExpenseForm({
   };
   const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   const submit = handleSubmit((v) =>
-    onSubmit({ vehicleId: v.vehicleId, category: v.category, amount: v.amount, date: v.date, mileage: v.mileage ?? null, liters: v.category === 'FUEL' ? (v.liters ?? null) : null, description: v.description ?? null }),
+    onSubmit({
+      vehicleId: v.vehicleId,
+      category: v.category,
+      amount: v.amount,
+      date: v.date,
+      mileage: v.mileage ?? null,
+      liters: v.category === 'FUEL' ? (v.liters ?? null) : null,
+      description: v.description ?? null,
+    }),
   );
   return (
     <View>
@@ -62,30 +70,122 @@ export function ExpenseForm({
         <Controller
           control={control}
           name="vehicleId"
-          render={({ field }) => <SelectField label={t('vehicle.details')} value={field.value} onChange={field.onChange} options={vehicles.map((v) => ({ value: v.id, label: `${v.brand} ${v.model} · ${v.registrationNumber}` }))} />}
+          render={({ field }) => (
+            <SelectField
+              label={t('vehicle.details')}
+              value={field.value}
+              onChange={field.onChange}
+              options={vehicles.map((v) => ({
+                value: v.id,
+                label: `${v.brand} ${v.model} · ${v.registrationNumber}`,
+              }))}
+            />
+          )}
         />
       ) : null}
       <Controller
         control={control}
         name="category"
-        render={({ field }) => <SelectField label={t('expenses.category')} value={field.value} onChange={field.onChange} options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`expenses.categories.${c}`) }))} error={err('category')} />}
+        render={({ field }) => (
+          <SelectField
+            label={t('expenses.category')}
+            value={field.value}
+            onChange={field.onChange}
+            options={EXPENSE_CATEGORIES.map((c) => ({
+              value: c,
+              label: t(`expenses.categories.${c}`),
+            }))}
+            error={err('category')}
+          />
+        )}
       />
-      <Controller control={control} name="amount" render={({ field }) => <TextField label={t('expenses.amount')} keyboardType="decimal-pad" suffix="UZS" value={str(field.value)} onChangeText={(v) => field.onChange(decimalInput(v))} error={err('amount')} testID="expense-amount" />} />
-      <Controller control={control} name="date" render={({ field }) => <DateField label={t('expenses.date')} value={String(field.value)} onChange={field.onChange} maximumDate={new Date()} error={err('date')} />} />
+      <Controller
+        control={control}
+        name="amount"
+        render={({ field }) => (
+          <TextField
+            label={t('expenses.amount')}
+            keyboardType="decimal-pad"
+            suffix="UZS"
+            value={str(field.value)}
+            onChangeText={(v) => field.onChange(decimalInput(v))}
+            error={err('amount')}
+            testID="expense-amount"
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="date"
+        render={({ field }) => (
+          <DateField
+            label={t('expenses.date')}
+            value={String(field.value)}
+            onChange={field.onChange}
+            maximumDate={new Date()}
+            error={err('date')}
+          />
+        )}
+      />
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
-          <Controller control={control} name="mileage" render={({ field }) => <TextField label={t('expenses.mileage')} optional keyboardType="number-pad" value={str(field.value)} onChangeText={(v) => field.onChange(digitsOnly(v))} error={err('mileage')} />} />
+          <Controller
+            control={control}
+            name="mileage"
+            render={({ field }) => (
+              <TextField
+                label={t('expenses.mileage')}
+                optional
+                keyboardType="number-pad"
+                value={str(field.value)}
+                onChangeText={(v) => field.onChange(digitsOnly(v))}
+                error={err('mileage')}
+              />
+            )}
+          />
         </View>
         {category === 'FUEL' ? (
           <View style={{ flex: 1 }}>
-            <Controller control={control} name="liters" render={({ field }) => <TextField label={t('expenses.liters')} optional keyboardType="decimal-pad" value={str(field.value)} onChangeText={(v) => field.onChange(decimalInput(v))} error={err('liters')} />} />
+            <Controller
+              control={control}
+              name="liters"
+              render={({ field }) => (
+                <TextField
+                  label={t('expenses.liters')}
+                  optional
+                  keyboardType="decimal-pad"
+                  value={str(field.value)}
+                  onChangeText={(v) => field.onChange(decimalInput(v))}
+                  error={err('liters')}
+                />
+              )}
+            />
           </View>
         ) : null}
       </View>
-      <Controller control={control} name="description" render={({ field }) => <TextField label={t('expenses.description')} optional value={str(field.value)} onChangeText={field.onChange} error={err('description')} />} />
+      <Controller
+        control={control}
+        name="description"
+        render={({ field }) => (
+          <TextField
+            label={t('expenses.description')}
+            optional
+            value={str(field.value)}
+            onChangeText={field.onChange}
+            error={err('description')}
+          />
+        )}
+      />
       {serverError ? <InlineNotice tone="danger" text={errorMessage(t, serverError)} /> : null}
       {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
-      <Button title={t('common.save')} onPress={submit} loading={submitting} disabled={isOffline} style={{ marginTop: spacing.lg }} testID="expense-submit" />
+      <Button
+        title={t('common.save')}
+        onPress={submit}
+        loading={submitting}
+        disabled={isOffline}
+        style={{ marginTop: spacing.lg }}
+        testID="expense-submit"
+      />
     </View>
   );
 }

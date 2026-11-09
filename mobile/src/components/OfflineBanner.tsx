@@ -15,12 +15,20 @@ export function OfflineBanner({ dataUpdatedAt }: { dataUpdatedAt?: number }) {
     <View style={styles.banner} accessibilityRole="alert" accessibilityLiveRegion="polite">
       <Ionicons name="cloud-offline-outline" size={16} color={colors.warning} />
       <Text variant="caption" style={{ color: colors.warning, marginLeft: spacing.sm, flex: 1 }}>
-        {dataUpdatedAt ? t('offline.cached', { time: formatDateTime(new Date(dataUpdatedAt), i18n.language) }) : t('offline.banner')}
+        {dataUpdatedAt
+          ? t('offline.cached', { time: formatDateTime(new Date(dataUpdatedAt), i18n.language) })
+          : t('offline.banner')}
       </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.warningSoft, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningSoft,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
 });

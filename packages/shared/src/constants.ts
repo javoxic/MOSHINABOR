@@ -7,7 +7,15 @@ export const DEFAULT_LANGUAGE: Language = 'uz';
 export const TIMEZONE = 'Asia/Tashkent';
 export const CURRENCY = 'UZS';
 
-export const FUEL_TYPES = ['PETROL', 'DIESEL', 'GAS_METHANE', 'GAS_PROPANE', 'HYBRID', 'ELECTRIC', 'PETROL_GAS'] as const;
+export const FUEL_TYPES = [
+  'PETROL',
+  'DIESEL',
+  'GAS_METHANE',
+  'GAS_PROPANE',
+  'HYBRID',
+  'ELECTRIC',
+  'PETROL_GAS',
+] as const;
 export type FuelType = (typeof FUEL_TYPES)[number];
 
 export const EXPENSE_CATEGORIES = ['FUEL', 'MAINTENANCE', 'REPAIR', 'PARTS', 'OTHER'] as const;
@@ -46,21 +54,141 @@ export interface DefaultServiceType {
 }
 
 export const DEFAULT_SERVICE_TYPES: DefaultServiceType[] = [
-  { code: 'ENGINE_OIL', nameUz: 'Motor moyi', nameRu: 'Моторное масло', nameEn: 'Engine oil', suggestedIntervalDays: 180, suggestedIntervalKm: 8000, icon: 'oil' },
-  { code: 'OIL_FILTER', nameUz: 'Moy filtri', nameRu: 'Масляный фильтр', nameEn: 'Oil filter', suggestedIntervalDays: 180, suggestedIntervalKm: 8000, icon: 'filter' },
-  { code: 'AIR_FILTER', nameUz: 'Havo filtri', nameRu: 'Воздушный фильтр', nameEn: 'Air filter', suggestedIntervalDays: 365, suggestedIntervalKm: 15000, icon: 'air' },
-  { code: 'CABIN_FILTER', nameUz: 'Salon filtri', nameRu: 'Салонный фильтр', nameEn: 'Cabin filter', suggestedIntervalDays: 365, suggestedIntervalKm: 15000, icon: 'cabin' },
-  { code: 'FUEL_FILTER', nameUz: "Yoqilg'i filtri", nameRu: 'Топливный фильтр', nameEn: 'Fuel filter', suggestedIntervalDays: 730, suggestedIntervalKm: 30000, icon: 'fuel' },
-  { code: 'BRAKE_PADS', nameUz: 'Tormoz kolodkalari', nameRu: 'Тормозные колодки', nameEn: 'Brake pads', suggestedIntervalDays: null, suggestedIntervalKm: 30000, icon: 'brake' },
-  { code: 'BRAKE_FLUID', nameUz: 'Tormoz suyuqligi', nameRu: 'Тормозная жидкость', nameEn: 'Brake fluid', suggestedIntervalDays: 730, suggestedIntervalKm: 40000, icon: 'drop' },
-  { code: 'COOLANT', nameUz: 'Antifriz', nameRu: 'Антифриз', nameEn: 'Coolant / antifreeze', suggestedIntervalDays: 730, suggestedIntervalKm: 40000, icon: 'thermometer' },
-  { code: 'SPARK_PLUGS', nameUz: 'Svechalar', nameRu: 'Свечи зажигания', nameEn: 'Spark plugs', suggestedIntervalDays: 730, suggestedIntervalKm: 30000, icon: 'spark' },
-  { code: 'BATTERY', nameUz: 'Akkumulyator', nameRu: 'Аккумулятор', nameEn: 'Battery', suggestedIntervalDays: 1460, suggestedIntervalKm: null, icon: 'battery' },
-  { code: 'TIRES', nameUz: 'Shinalar', nameRu: 'Шины', nameEn: 'Tires', suggestedIntervalDays: 180, suggestedIntervalKm: null, icon: 'tire' },
-  { code: 'TIMING_BELT', nameUz: 'GRM tasmasi', nameRu: 'Ремень ГРМ', nameEn: 'Timing belt', suggestedIntervalDays: 1825, suggestedIntervalKm: 60000, icon: 'belt' },
-  { code: 'DRIVE_BELT', nameUz: 'Generator tasmasi', nameRu: 'Приводной ремень', nameEn: 'Drive belt', suggestedIntervalDays: 1460, suggestedIntervalKm: 60000, icon: 'belt' },
-  { code: 'TRANSMISSION_OIL', nameUz: 'Uzatmalar qutisi moyi', nameRu: 'Трансмиссионное масло', nameEn: 'Transmission oil', suggestedIntervalDays: 1460, suggestedIntervalKm: 60000, icon: 'gear' },
-  { code: 'OTHER', nameUz: 'Boshqa xizmat', nameRu: 'Другое обслуживание', nameEn: 'Other service', suggestedIntervalDays: null, suggestedIntervalKm: null, icon: 'wrench' },
+  {
+    code: 'ENGINE_OIL',
+    nameUz: 'Motor moyi',
+    nameRu: 'Моторное масло',
+    nameEn: 'Engine oil',
+    suggestedIntervalDays: 180,
+    suggestedIntervalKm: 8000,
+    icon: 'oil',
+  },
+  {
+    code: 'OIL_FILTER',
+    nameUz: 'Moy filtri',
+    nameRu: 'Масляный фильтр',
+    nameEn: 'Oil filter',
+    suggestedIntervalDays: 180,
+    suggestedIntervalKm: 8000,
+    icon: 'filter',
+  },
+  {
+    code: 'AIR_FILTER',
+    nameUz: 'Havo filtri',
+    nameRu: 'Воздушный фильтр',
+    nameEn: 'Air filter',
+    suggestedIntervalDays: 365,
+    suggestedIntervalKm: 15000,
+    icon: 'air',
+  },
+  {
+    code: 'CABIN_FILTER',
+    nameUz: 'Salon filtri',
+    nameRu: 'Салонный фильтр',
+    nameEn: 'Cabin filter',
+    suggestedIntervalDays: 365,
+    suggestedIntervalKm: 15000,
+    icon: 'cabin',
+  },
+  {
+    code: 'FUEL_FILTER',
+    nameUz: "Yoqilg'i filtri",
+    nameRu: 'Топливный фильтр',
+    nameEn: 'Fuel filter',
+    suggestedIntervalDays: 730,
+    suggestedIntervalKm: 30000,
+    icon: 'fuel',
+  },
+  {
+    code: 'BRAKE_PADS',
+    nameUz: 'Tormoz kolodkalari',
+    nameRu: 'Тормозные колодки',
+    nameEn: 'Brake pads',
+    suggestedIntervalDays: null,
+    suggestedIntervalKm: 30000,
+    icon: 'brake',
+  },
+  {
+    code: 'BRAKE_FLUID',
+    nameUz: 'Tormoz suyuqligi',
+    nameRu: 'Тормозная жидкость',
+    nameEn: 'Brake fluid',
+    suggestedIntervalDays: 730,
+    suggestedIntervalKm: 40000,
+    icon: 'drop',
+  },
+  {
+    code: 'COOLANT',
+    nameUz: 'Antifriz',
+    nameRu: 'Антифриз',
+    nameEn: 'Coolant / antifreeze',
+    suggestedIntervalDays: 730,
+    suggestedIntervalKm: 40000,
+    icon: 'thermometer',
+  },
+  {
+    code: 'SPARK_PLUGS',
+    nameUz: 'Svechalar',
+    nameRu: 'Свечи зажигания',
+    nameEn: 'Spark plugs',
+    suggestedIntervalDays: 730,
+    suggestedIntervalKm: 30000,
+    icon: 'spark',
+  },
+  {
+    code: 'BATTERY',
+    nameUz: 'Akkumulyator',
+    nameRu: 'Аккумулятор',
+    nameEn: 'Battery',
+    suggestedIntervalDays: 1460,
+    suggestedIntervalKm: null,
+    icon: 'battery',
+  },
+  {
+    code: 'TIRES',
+    nameUz: 'Shinalar',
+    nameRu: 'Шины',
+    nameEn: 'Tires',
+    suggestedIntervalDays: 180,
+    suggestedIntervalKm: null,
+    icon: 'tire',
+  },
+  {
+    code: 'TIMING_BELT',
+    nameUz: 'GRM tasmasi',
+    nameRu: 'Ремень ГРМ',
+    nameEn: 'Timing belt',
+    suggestedIntervalDays: 1825,
+    suggestedIntervalKm: 60000,
+    icon: 'belt',
+  },
+  {
+    code: 'DRIVE_BELT',
+    nameUz: 'Generator tasmasi',
+    nameRu: 'Приводной ремень',
+    nameEn: 'Drive belt',
+    suggestedIntervalDays: 1460,
+    suggestedIntervalKm: 60000,
+    icon: 'belt',
+  },
+  {
+    code: 'TRANSMISSION_OIL',
+    nameUz: 'Uzatmalar qutisi moyi',
+    nameRu: 'Трансмиссионное масло',
+    nameEn: 'Transmission oil',
+    suggestedIntervalDays: 1460,
+    suggestedIntervalKm: 60000,
+    icon: 'gear',
+  },
+  {
+    code: 'OTHER',
+    nameUz: 'Boshqa xizmat',
+    nameRu: 'Другое обслуживание',
+    nameEn: 'Other service',
+    suggestedIntervalDays: null,
+    suggestedIntervalKm: null,
+    icon: 'wrench',
+  },
 ];
 
 export const ADMIN_PERMISSIONS = [
@@ -117,8 +245,22 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<AdminRoleCode, readonly AdminPermi
     'audit.view',
     'settings.view',
   ],
-  SUPPORT: ['dashboard.view', 'users.view', 'users.view_pii', 'users.manage', 'vehicles.view', 'maintenance.view', 'notifications.view'],
-  ANALYST: ['dashboard.view', 'users.view', 'vehicles.view', 'maintenance.view', 'notifications.view'],
+  SUPPORT: [
+    'dashboard.view',
+    'users.view',
+    'users.view_pii',
+    'users.manage',
+    'vehicles.view',
+    'maintenance.view',
+    'notifications.view',
+  ],
+  ANALYST: [
+    'dashboard.view',
+    'users.view',
+    'vehicles.view',
+    'maintenance.view',
+    'notifications.view',
+  ],
 };
 
 export const ADMIN_ROLE_NAMES: Record<AdminRoleCode, string> = {
@@ -140,6 +282,12 @@ export interface SystemSettingsShape {
   'app.defaultLanguage': string;
   'app.supportPhone': string;
   'app.supportEmail': string;
+  /** Emergency switch: the mobile API answers 503 MAINTENANCE_MODE; admin and health keep working. */
+  'app.maintenanceMode': boolean;
+  /** Optional text shown to users during maintenance (any language; max 200 chars). */
+  'app.maintenanceMessage': string;
+  /** 'open' = anyone can register; 'allowlist' = only invited phone numbers (pilot). */
+  'access.registrationMode': string;
 }
 
 export const DEFAULT_SYSTEM_SETTINGS: SystemSettingsShape = {
@@ -153,12 +301,18 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettingsShape = {
   'app.defaultLanguage': 'uz',
   'app.supportPhone': '',
   'app.supportEmail': '',
+  'app.maintenanceMode': false,
+  'app.maintenanceMessage': '',
+  'access.registrationMode': 'open',
 };
+
+export const REGISTRATION_MODES = ['open', 'allowlist'] as const;
+export type RegistrationMode = (typeof REGISTRATION_MODES)[number];
 export type SystemSettingKey = keyof typeof DEFAULT_SYSTEM_SETTINGS;
 
 export const UPLOAD_LIMITS = {
   maxImageBytes: 8 * 1024 * 1024,
-  allowedImageMime: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+  allowedImageMime: ['image/jpeg', 'image/png', 'image/webp'],
   maxImagesPerVehicle: 10,
   maxAttachmentsPerRecord: 10,
 };
@@ -187,5 +341,7 @@ export const ERROR_CODES = {
   ADMIN_LOCKED: 'ADMIN_LOCKED',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  MAINTENANCE_MODE: 'MAINTENANCE_MODE',
+  PILOT_ACCESS_ONLY: 'PILOT_ACCESS_ONLY',
 } as const;
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

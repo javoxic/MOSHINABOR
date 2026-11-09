@@ -19,7 +19,13 @@ import { TextField } from './Fields';
 import { AuthImage } from './Misc';
 import { InlineNotice } from './States';
 
-export const STATUS_TONE: Record<ScheduleStatus, BadgeTone> = { OK: 'success', DUE_SOON: 'warning', DUE: 'danger', OVERDUE: 'danger', UNKNOWN: 'neutral' };
+export const STATUS_TONE: Record<ScheduleStatus, BadgeTone> = {
+  OK: 'success',
+  DUE_SOON: 'warning',
+  DUE: 'danger',
+  OVERDUE: 'danger',
+  UNKNOWN: 'neutral',
+};
 
 export function StatusBadge({ status }: { status: ScheduleStatus }) {
   const { t } = useTranslation();
@@ -27,14 +33,37 @@ export function StatusBadge({ status }: { status: ScheduleStatus }) {
 }
 
 const SERVICE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-  oil: 'water-outline', filter: 'funnel-outline', air: 'leaf-outline', cabin: 'snow-outline', fuel: 'flame-outline', brake: 'disc-outline',
-  drop: 'water-outline', thermometer: 'thermometer-outline', spark: 'flash-outline', battery: 'battery-charging-outline', tire: 'ellipse-outline',
-  belt: 'sync-outline', gear: 'cog-outline', wrench: 'build-outline',
+  oil: 'water-outline',
+  filter: 'funnel-outline',
+  air: 'leaf-outline',
+  cabin: 'snow-outline',
+  fuel: 'flame-outline',
+  brake: 'disc-outline',
+  drop: 'water-outline',
+  thermometer: 'thermometer-outline',
+  spark: 'flash-outline',
+  battery: 'battery-charging-outline',
+  tire: 'ellipse-outline',
+  belt: 'sync-outline',
+  gear: 'cog-outline',
+  wrench: 'build-outline',
 };
 
-export function ServiceIcon({ icon, tone = 'accent' }: { icon: string; tone?: 'accent' | 'danger' | 'warning' }) {
-  const bg = tone === 'danger' ? colors.dangerSoft : tone === 'warning' ? colors.warningSoft : colors.accentSoft;
-  const fg = tone === 'danger' ? colors.danger : tone === 'warning' ? colors.warning : colors.accent;
+export function ServiceIcon({
+  icon,
+  tone = 'accent',
+}: {
+  icon: string;
+  tone?: 'accent' | 'danger' | 'warning';
+}) {
+  const bg =
+    tone === 'danger'
+      ? colors.dangerSoft
+      : tone === 'warning'
+        ? colors.warningSoft
+        : colors.accentSoft;
+  const fg =
+    tone === 'danger' ? colors.danger : tone === 'warning' ? colors.warning : colors.accent;
   return (
     <View style={[styles.serviceIcon, { backgroundColor: bg }]}>
       <Ionicons name={SERVICE_ICONS[icon] ?? 'build-outline'} size={20} color={fg} />
@@ -54,28 +83,53 @@ export function useDueText() {
       else parts.push(t('maintenance.daysOverdue', { count: -daysRemaining }));
     }
     if (kmRemaining != null) {
-      parts.push(kmRemaining >= 0 ? t('maintenance.kmLeft', { value: km(kmRemaining, i18n.language) }) : t('maintenance.kmOverdue', { value: km(-kmRemaining, i18n.language) }));
+      parts.push(
+        kmRemaining >= 0
+          ? t('maintenance.kmLeft', { value: km(kmRemaining, i18n.language) })
+          : t('maintenance.kmOverdue', { value: km(-kmRemaining, i18n.language) }),
+      );
     }
     return parts.join(' · ');
   };
 }
 
-export function ScheduleCard({ schedule, onPress }: { schedule: MaintenanceSchedule; onPress: () => void }) {
+export function ScheduleCard({
+  schedule,
+  onPress,
+}: {
+  schedule: MaintenanceSchedule;
+  onPress: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const dueText = useDueText();
   const status = schedule.computed.status;
-  const tone = status === 'OVERDUE' || status === 'DUE' ? 'danger' : status === 'DUE_SOON' ? 'warning' : 'default';
+  const tone =
+    status === 'OVERDUE' || status === 'DUE'
+      ? 'danger'
+      : status === 'DUE_SOON'
+        ? 'warning'
+        : 'default';
   const name = serviceTypeName(schedule.serviceType, i18n.language);
   return (
-    <Card onPress={onPress} tone={tone} style={{ marginTop: spacing.sm }} accessibilityLabel={`${name}, ${t(`maintenance.status.${status}`)}, ${dueText(schedule)}`}>
+    <Card
+      onPress={onPress}
+      tone={tone}
+      style={{ marginTop: spacing.sm }}
+      accessibilityLabel={`${name}, ${t(`maintenance.status.${status}`)}, ${dueText(schedule)}`}
+    >
       <View style={styles.row}>
-        <ServiceIcon icon={schedule.serviceType.icon} tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'accent'} />
+        <ServiceIcon
+          icon={schedule.serviceType.icon}
+          tone={tone === 'danger' ? 'danger' : tone === 'warning' ? 'warning' : 'accent'}
+        />
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text variant="bodyStrong" numberOfLines={1}>
             {name}
           </Text>
           <Text variant="caption" tone="secondary" numberOfLines={1}>
-            {schedule.isActive ? dueText(schedule) || t('maintenance.status.UNKNOWN') : t('maintenance.paused')}
+            {schedule.isActive
+              ? dueText(schedule) || t('maintenance.status.UNKNOWN')
+              : t('maintenance.paused')}
           </Text>
         </View>
         <StatusBadge status={status} />
@@ -107,14 +161,31 @@ export function RecordRow({ record, onPress }: { record: ServiceRecord; onPress:
             {record.serviceProvider ? ` · ${record.serviceProvider}` : ''}
           </Text>
         </View>
-        {record.cost ? <Text variant="caption" style={{ fontWeight: '600' }}>{money(record.cost, i18n.language)}</Text> : null}
-        {record.attachments.length ? <Ionicons name="attach" size={16} color={colors.textMuted} style={{ marginLeft: spacing.xs }} /> : null}
+        {record.cost ? (
+          <Text variant="caption" style={{ fontWeight: '600' }}>
+            {money(record.cost, i18n.language)}
+          </Text>
+        ) : null}
+        {record.attachments.length ? (
+          <Ionicons
+            name="attach"
+            size={16}
+            color={colors.textMuted}
+            style={{ marginLeft: spacing.xs }}
+          />
+        ) : null}
       </View>
     </Card>
   );
 }
 
-const CATEGORY_ICON: Record<string, keyof typeof Ionicons.glyphMap> = { FUEL: 'flame-outline', MAINTENANCE: 'build-outline', REPAIR: 'hammer-outline', PARTS: 'cube-outline', OTHER: 'receipt-outline' };
+const CATEGORY_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  FUEL: 'flame-outline',
+  MAINTENANCE: 'build-outline',
+  REPAIR: 'hammer-outline',
+  PARTS: 'cube-outline',
+  OTHER: 'receipt-outline',
+};
 
 export function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: () => void }) {
   const { t, i18n } = useTranslation();
@@ -122,13 +193,21 @@ export function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: ()
     <Card onPress={onPress} style={{ marginTop: spacing.sm }}>
       <View style={styles.row}>
         <View style={styles.serviceIcon}>
-          <Ionicons name={CATEGORY_ICON[expense.category] ?? 'receipt-outline'} size={20} color={colors.accent} />
+          <Ionicons
+            name={CATEGORY_ICON[expense.category] ?? 'receipt-outline'}
+            size={20}
+            color={colors.accent}
+          />
         </View>
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text variant="bodyStrong">{t(`expenses.categories.${expense.category}`)}</Text>
           <Text variant="caption" tone="secondary" numberOfLines={1}>
             {formatDate(expense.date, i18n.language)}
-            {expense.description ? ` · ${expense.description}` : expense.serviceRecordId ? ` · ${t('expenses.fromService')}` : ''}
+            {expense.description
+              ? ` · ${expense.description}`
+              : expense.serviceRecordId
+                ? ` · ${t('expenses.fromService')}`
+                : ''}
           </Text>
         </View>
         <Text variant="bodyStrong">{money(expense.amount, i18n.language)}</Text>
@@ -140,9 +219,17 @@ export function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: ()
 export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: () => void }) {
   const { t, i18n } = useTranslation();
   return (
-    <Card onPress={onPress} style={{ marginTop: spacing.md, padding: 0, overflow: 'hidden' }} accessibilityLabel={`${vehicle.brand} ${vehicle.model} ${vehicle.registrationNumber}`}>
+    <Card
+      onPress={onPress}
+      style={{ marginTop: spacing.md, padding: 0, overflow: 'hidden' }}
+      accessibilityLabel={`${vehicle.brand} ${vehicle.model} ${vehicle.registrationNumber}`}
+    >
       {vehicle.coverImageUrl ? (
-        <AuthImage uri={vehicle.coverImageUrl} style={styles.cover} accessibilityLabel={`${vehicle.brand} ${vehicle.model}`} />
+        <AuthImage
+          uri={vehicle.coverImageUrl}
+          style={styles.cover}
+          accessibilityLabel={`${vehicle.brand} ${vehicle.model}`}
+        />
       ) : (
         <View style={[styles.cover, styles.coverEmpty]}>
           <Ionicons name="car-sport" size={48} color={colors.borderStrong} />
@@ -162,7 +249,8 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
             </Text>
           </View>
           <Text variant="caption" tone="secondary" style={{ marginLeft: spacing.sm }}>
-            {vehicle.year} · {t(`vehicle.fuel.${vehicle.fuelType}`)} · {km(vehicle.currentMileage, i18n.language)}
+            {vehicle.year} · {t(`vehicle.fuel.${vehicle.fuelType}`)} ·{' '}
+            {km(vehicle.currentMileage, i18n.language)}
           </Text>
         </View>
       </View>
@@ -171,7 +259,15 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
 }
 
 /** Bottom sheet to record a new odometer reading. */
-export function MileageSheet({ vehicle, visible, onClose }: { vehicle: Vehicle; visible: boolean; onClose: () => void }) {
+export function MileageSheet({
+  vehicle,
+  visible,
+  onClose,
+}: {
+  vehicle: Vehicle;
+  visible: boolean;
+  onClose: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const invalidate = useInvalidateData();
   const { isOffline } = useNetworkStatus();
@@ -200,7 +296,9 @@ export function MileageSheet({ vehicle, visible, onClose }: { vehicle: Vehicle; 
         <Text variant="heading">{t('vehicle.mileageTitle')}</Text>
         <Text variant="caption" tone="secondary" style={{ marginBottom: spacing.lg }}>
           {t('vehicle.mileageHint', { value: km(vehicle.currentMileage, i18n.language) })}
-          {vehicle.mileageUpdatedAt ? ` · ${t('vehicle.mileageUpdated', { time: formatDateTime(new Date(vehicle.mileageUpdatedAt), i18n.language) })}` : ''}
+          {vehicle.mileageUpdatedAt
+            ? ` · ${t('vehicle.mileageUpdated', { time: formatDateTime(new Date(vehicle.mileageUpdatedAt), i18n.language) })}`
+            : ''}
         </Text>
         <TextField
           label={t('vehicle.currentMileage')}
@@ -213,21 +311,45 @@ export function MileageSheet({ vehicle, visible, onClose }: { vehicle: Vehicle; 
           testID="mileage-input"
         />
         {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
-        <Button title={t('common.save')} onPress={submit} loading={save.isPending} disabled={isOffline} style={{ marginTop: spacing.md }} />
+        <Button
+          title={t('common.save')}
+          onPress={submit}
+          loading={save.isPending}
+          disabled={isOffline}
+          style={{ marginTop: spacing.md }}
+        />
       </View>
     </Modal>
   );
 }
 
-export function VehicleSwitcher({ vehicles, selectedId, onSelect }: { vehicles: Vehicle[]; selectedId: string | null; onSelect: (id: string) => void }) {
+export function VehicleSwitcher({
+  vehicles,
+  selectedId,
+  onSelect,
+}: {
+  vehicles: Vehicle[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
   if (vehicles.length < 2) return null;
   return (
     <View style={styles.switcher} accessibilityRole="tablist">
       {vehicles.map((v) => {
         const active = v.id === selectedId;
         return (
-          <Pressable key={v.id} accessibilityRole="tab" accessibilityState={{ selected: active }} onPress={() => onSelect(v.id)} style={[styles.chip, active && styles.chipActive]}>
-            <Text variant="caption" style={{ fontWeight: '600', color: active ? colors.text : colors.textSecondary }} numberOfLines={1}>
+          <Pressable
+            key={v.id}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            onPress={() => onSelect(v.id)}
+            style={[styles.chip, active && styles.chipActive]}
+          >
+            <Text
+              variant="caption"
+              style={{ fontWeight: '600', color: active ? colors.text : colors.textSecondary }}
+              numberOfLines={1}
+            >
               {v.brand} {v.model}
             </Text>
           </Pressable>
@@ -239,13 +361,44 @@ export function VehicleSwitcher({ vehicles, selectedId, onSelect }: { vehicles: 
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  serviceIcon: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  serviceIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cover: { width: '100%', height: 150 },
-  coverEmpty: { backgroundColor: colors.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
-  plate: { borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
+  coverEmpty: {
+    backgroundColor: colors.surfaceRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plate: {
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
   backdrop: { flex: 1, backgroundColor: colors.overlay },
-  sheet: { backgroundColor: colors.surfaceRaised, padding: spacing.xl, paddingBottom: spacing.xxxl, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl },
+  sheet: {
+    backgroundColor: colors.surfaceRaised,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+  },
   switcher: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
-  chip: { minHeight: 36, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', backgroundColor: colors.surface },
+  chip: {
+    minHeight: 36,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
   chipActive: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
 });
