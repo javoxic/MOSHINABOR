@@ -280,7 +280,7 @@ export function ScheduleForm({
       {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
       <Button
         title={t('common.save')}
-        onPress={submit}
+        onPress={() => void submit()}
         loading={submitting}
         disabled={isOffline || selectedTypeId === CUSTOM}
         style={{ marginTop: spacing.lg }}

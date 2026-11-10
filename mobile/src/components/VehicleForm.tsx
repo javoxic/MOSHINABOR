@@ -247,7 +247,7 @@ export function VehicleForm({
       {isOffline ? <InlineNotice text={t('offline.blocked')} /> : null}
       <Button
         title={submitLabel}
-        onPress={submit}
+        onPress={() => void submit()}
         loading={submitting}
         disabled={isOffline}
         style={{ marginTop: spacing.lg }}

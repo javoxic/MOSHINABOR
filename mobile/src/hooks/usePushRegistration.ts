@@ -67,9 +67,18 @@ export function usePushRegistration(): void {
   useEffect(() => {
     if (status !== 'signedIn') return;
     ensurePushRegistration().catch((e: unknown) => console.warn('Push registration failed', e));
-    const tokenSub = Notifications.addPushTokenListener(() => {
-      ensurePushRegistration().catch((e: unknown) => console.warn('Push token refresh failed', e));
-    });
+    // Since expo-notifications 55 this call throws in Expo Go on Android (remote push is not
+    // available there). Catch it so the rest of the notification setup keeps working.
+    let tokenSub: { remove(): void } | undefined;
+    try {
+      tokenSub = Notifications.addPushTokenListener(() => {
+        ensurePushRegistration().catch((e: unknown) =>
+          console.warn('Push token refresh failed', e),
+        );
+      });
+    } catch (e) {
+      console.warn('Push token updates are unavailable in this environment', e);
+    }
     const received = Notifications.addNotificationReceivedListener(() => {
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -83,7 +92,7 @@ export function usePushRegistration(): void {
       else router.push('/notifications');
     });
     return () => {
-      tokenSub.remove();
+      tokenSub?.remove();
       received.remove();
       tapped.remove();
     };

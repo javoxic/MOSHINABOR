@@ -49,7 +49,7 @@ export default function PhoneScreen() {
       footer={
         <Button
           title={t('auth.sendCode')}
-          onPress={submit}
+          onPress={() => void submit()}
           loading={request.isPending}
           disabled={isOffline}
           testID="send-code"
@@ -77,7 +77,7 @@ export default function PhoneScreen() {
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            onSubmitEditing={submit}
+            onSubmitEditing={() => void submit()}
             error={
               formState.errors.phone
                 ? t(formState.errors.phone.message ?? 'validation.phone')

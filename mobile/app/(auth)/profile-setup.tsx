@@ -37,7 +37,7 @@ export default function ProfileSetupScreen() {
       footer={
         <Button
           title={t('common.continue')}
-          onPress={submit}
+          onPress={() => void submit()}
           loading={save.isPending}
           testID="profile-continue"
         />

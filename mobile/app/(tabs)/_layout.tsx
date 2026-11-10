@@ -1,13 +1,29 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import type { ColorValue } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth';
 import { colors } from '@/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 const icon = (name: IconName, focusedName: IconName) =>
-  function TabIcon({ color, focused, size }: { color: string; focused: boolean; size: number }) {
-    return <Ionicons name={focused ? focusedName : name} size={size} color={color} />;
+  function TabIcon({
+    color,
+    focused,
+    size,
+  }: {
+    color: ColorValue;
+    focused: boolean;
+    size: number;
+  }) {
+    // RN 0.88 types the tab tint as ColorValue; the tab bar always passes a colour string.
+    return (
+      <Ionicons
+        name={focused ? focusedName : name}
+        size={size}
+        color={typeof color === 'string' ? color : undefined}
+      />
+    );
   };
 
 export default function TabsLayout() {

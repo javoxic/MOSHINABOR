@@ -4,9 +4,8 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@moshina/shared": ["../packages/shared/src/index.ts"],
       "@moshina/validation": ["../packages/validation/src/index.ts"],
       "@moshina/api-types": ["../packages/api-types/src/index.ts"]

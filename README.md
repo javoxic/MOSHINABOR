@@ -6,7 +6,7 @@ with a web administration dashboard.
 
 | Part                       | Stack                                                                           | Path                                                       |
 | -------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Mobile app (iOS / Android) | Expo SDK 54, React Native 0.81, Expo Router, TanStack Query, Zustand, RHF + Zod | [`mobile/`](mobile)                                        |
+| Mobile app (iOS / Android) | Expo SDK 58, React Native 0.88, Expo Router, TanStack Query, Zustand, RHF + Zod | [`mobile/`](mobile)                                        |
 | Web admin                  | React 19, Vite 7, React Router 7, TanStack Query, Recharts, CSS Modules         | [`admin/`](admin)                                          |
 | API + worker               | NestJS 11, Prisma 6, PostgreSQL 16, Redis 7, BullMQ, Swagger                    | [`backend/`](backend)                                      |
 | Shared code                | constants, phone normalization, maintenance engine, Zod schemas, API types      | [`packages/`](packages)                                    |

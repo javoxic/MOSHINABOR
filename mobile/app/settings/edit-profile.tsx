@@ -56,7 +56,7 @@ export default function EditProfileScreen() {
       {save.isError ? <InlineNotice tone="danger" text={errorMessage(t, save.error)} /> : null}
       <Button
         title={t('common.save')}
-        onPress={handleSubmit((v) => save.mutate(v.fullName))}
+        onPress={() => void handleSubmit((v) => save.mutate(v.fullName))()}
         loading={save.isPending}
         style={{ marginTop: spacing.lg }}
       />

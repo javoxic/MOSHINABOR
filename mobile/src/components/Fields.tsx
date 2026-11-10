@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
+  type TextInputInstance,
   View,
   type TextInputProps,
 } from 'react-native';
@@ -61,7 +62,7 @@ export interface TextFieldProps extends TextInputProps {
   suffix?: string;
 }
 
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   { label, error, hint, optional, suffix, style, multiline, ...rest },
   ref,
 ) {

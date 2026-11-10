@@ -18,12 +18,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
   backgroundColor: '#0B0D10',
-  newArchEnabled: true,
-  splash: {
-    image: './assets/splash.png',
-    resizeMode: 'contain',
-    backgroundColor: '#0B0D10',
-  },
+  // SDK 55+ always uses the New Architecture; the `newArchEnabled` field no longer exists.
+  // The top-level `splash` field was removed from the config schema; the splash screen is
+  // configured by the `expo-splash-screen` plugin below (same image and background colour).
   ios: {
     bundleIdentifier: `${process.env.IOS_BUNDLE_IDENTIFIER ?? 'uz.moshinabor.app'}${ID_SUFFIX}`,
     buildNumber: process.env.IOS_BUILD_NUMBER ?? '1',
@@ -61,6 +58,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     '@react-native-community/datetimepicker',
+    // Added by `expo install --fix` for SDK 58 (these modules ship config plugins).
+    'expo-font',
+    'expo-image',
+    'expo-status-bar',
+    'expo-web-browser',
   ],
   experiments: { typedRoutes: true },
   extra: {
